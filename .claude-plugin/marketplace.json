@@ -3,7 +3,7 @@
   "metadata": {
     "description": "Personal collection of Claude Code plugins",
     "version": "1.0.0",
-    "pluginRoot": "../plugins"
+    "pluginRoot": "./plugins"
   },
   "owner": {
     "name": "Scott",
@@ -12,7 +12,7 @@
   "plugins": [
     {
       "name": "swift-engineer",
-      "source": "../plugins/swift-engineer"
+      "source": "./plugins/swift-engineer"
     }
   ]
 }
