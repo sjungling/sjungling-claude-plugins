@@ -1,0 +1,12 @@
+{
+  "name": "swift-engineer",
+  "description": "Swift and iOS development expert with code formatting tools",
+  "version": "1.0.0",
+  "author": {
+    "name": "Scott",
+    "email": "scott.jungling@gmail.com"
+  },
+  "license": "MIT",
+  "keywords": ["swift", "ios", "macos", "xcode", "swiftui", "formatting"],
+  "category": "development"
+}
