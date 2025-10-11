@@ -13,6 +13,18 @@
     {
       "name": "swift-engineer",
       "source": "./plugins/swift-engineer"
+    },
+    {
+      "name": "cli-developer",
+      "source": "./plugins/cli-developer"
+    },
+    {
+      "name": "technical-writer",
+      "source": "./plugins/technical-writer"
+    },
+    {
+      "name": "openrewrite-author",
+      "source": "./plugins/openrewrite-author"
     }
   ]
 }
