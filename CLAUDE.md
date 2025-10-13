@@ -47,6 +47,9 @@ Each plugin can contain:
 **openrewrite-author** (`plugins/openrewrite-author/`):
 - Agent: `yaml-recipe-expert.md` - Expert in creating OpenRewrite recipes for YAML files using LST structure and visitor patterns (Java 8 compatible)
 
+**claude-on-claude** (`plugins/claude-on-claude/`):
+- Agent: `claude-code-builder.md` - Expert in creating Claude Code subagents, slash commands, plugins, and plugin marketplaces using latest documentation from docs.claude.com
+
 ## Creating New Plugins
 
 When adding a new plugin to the marketplace:
