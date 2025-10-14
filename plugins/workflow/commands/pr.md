@@ -1,0 +1,108 @@
+---
+description: Create a pull request with conventional commits formatting
+preapprovedTools:
+  - Bash(git:*)
+  - Bash(gh:*)
+  - Read(**/*.*)
+  - Grep
+  - Glob
+  - TodoWrite
+---
+
+You are tasked with creating a pull request following these strict requirements:
+
+# Branch Management
+1. Check the current branch using `git branch --show-current`
+2. Get the default branch using `git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@'`
+3. If we're on the main/default branch:
+   - Analyze the changes to determine the appropriate conventional commit type
+   - Create a new branch using the format: `{type}/{short-description}` (e.g., `fix/auth-token-validation`, `feat/add-dark-mode`)
+   - The short-description should be kebab-case and descriptive
+   - Check out the new branch
+
+# Conventional Commit Types
+Use these standard types for commits and branch names:
+- `feat`: New feature
+- `fix`: Bug fix
+- `docs`: Documentation only
+- `style`: Code style changes (formatting, no logic change)
+- `refactor`: Code refactoring (no functional changes)
+- `perf`: Performance improvements
+- `test`: Adding or updating tests
+- `chore`: Build process, dependencies, tooling
+- `ci`: CI/CD configuration changes
+- `revert`: Reverting previous commits
+
+# Commit Creation
+1. Review all staged and unstaged changes using `git status` and `git diff`
+2. Review recent commit messages for style consistency using `git log -5 --oneline`
+3. Stage all relevant changes (avoid staging secrets, credentials, or unnecessary files)
+4. Create commits with:
+   - **Title format**: `{type}({scope}): {short description}` or `{type}: {short description}`
+   - Title should be max 72 characters
+   - Use imperative mood ("add feature" not "added feature")
+   - **Extended description**: Multi-line explanation of:
+     - What changed and why
+     - Any breaking changes or important notes
+     - Related issues or tickets
+   - NEVER include co-authorship credit to Claude or any AI agent
+   - Format: Use git commit with heredoc for proper multi-line formatting
+
+Example commit:
+```bash
+git commit -m "$(cat <<'EOF'
+feat(auth): add user authentication system
+
+Implements JWT-based authentication with refresh tokens.
+Includes middleware for protected routes and token validation.
+Adds login, logout, and token refresh endpoints.
+
+Breaking change: API now requires Authorization header for protected routes.
+EOF
+)"
+```
+
+# Pull Request Creation
+1. Push the branch to remote with tracking: `git push -u origin {branch-name}`
+2. Create PR using `gh pr create` with:
+   - **PR Title**: Same format as commit title - `{type}({scope}): {short description}`
+   - **PR Description**: Use Problem & Solution format with heredoc:
+
+```bash
+gh pr create --title "type(scope): description" --body "$(cat <<'EOF'
+## Problem
+[Describe the problem being solved, why this change is needed, or what gap this fills]
+
+## Solution
+[Explain the approach taken to solve the problem]
+[Include specific implementation details]
+[Note any important technical decisions]
+
+## Testing
+[How to test these changes]
+
+## Related Issues
+[Link any related issues if applicable]
+EOF
+)"
+```
+
+3. Return the PR URL to the user
+
+# Important Rules
+- NEVER add "Co-Authored-By: Claude" or any AI attribution to commits or PRs
+- NEVER push directly to main/default branch
+- Always use conventional commit format
+- Keep commit titles concise and descriptive (max 72 chars)
+- Include meaningful extended descriptions for context
+- Ensure commits are atomic and focused
+- Use Problem & Solution format for all PR descriptions
+
+# Workflow Summary
+1. Check current branch → create feature branch if on main
+2. Review changes → determine commit type
+3. Stage files → create conventional commit with extended description
+4. Push branch → create PR with Problem & Solution format
+5. Return PR URL
+
+Proceed with creating the pull request following these guidelines.

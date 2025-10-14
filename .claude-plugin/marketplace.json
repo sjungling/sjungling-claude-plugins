@@ -29,6 +29,10 @@
     {
       "name": "claude-on-claude",
       "source": "./plugins/claude-on-claude"
+    },
+    {
+      "name": "workflow",
+      "source": "./plugins/workflow"
     }
   ]
 }
