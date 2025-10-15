@@ -36,7 +36,17 @@ Use these standard types for commits and branch names:
 # Commit Creation
 1. Review all staged and unstaged changes using `git status` and `git diff`
 2. Review recent commit messages for style consistency using `git log -5 --oneline`
-3. Stage all relevant changes (avoid staging secrets, credentials, or unnecessary files)
+3. **Selectively stage files** (NEVER use `git add .` or `git add -A`):
+   - Review the output of `git status` carefully
+   - Stage files individually using `git add <file1> <file2> ...`
+   - **EXCLUDE these file patterns** (never stage):
+     - Secret/credential files: `.env`, `.env.*`, `credentials.json`, `secrets.*`, `*.key`, `*.pem`
+     - IDE configs: `.vscode/`, `.idea/`, `*.swp`, `*.swo`, `.DS_Store`
+     - Build artifacts: `node_modules/`, `dist/`, `build/`, `target/`, `*.log`
+     - Temporary files: `tmp/`, `temp/`, `*.tmp`, `*.cache`
+     - Personal configs: `.env.local`, `config.local.*`
+   - If you detect any of these patterns in changed files, **STOP and ask the user** before proceeding
+   - Only stage files that are directly related to the changes being committed
 4. Create commits with:
    - **Title format**: `{type}({scope}): {short description}` or `{type}: {short description}`
    - Title should be max 72 characters
@@ -92,17 +102,20 @@ EOF
 # Important Rules
 - NEVER add "Co-Authored-By: Claude" or any AI attribution to commits or PRs
 - NEVER push directly to main/default branch
+- NEVER use `git add .` or `git add -A` - always stage files selectively
 - Always use conventional commit format
 - Keep commit titles concise and descriptive (max 72 chars)
 - Include meaningful extended descriptions for context
 - Ensure commits are atomic and focused
 - Use Problem & Solution format for all PR descriptions
+- STOP and ask user if potentially sensitive files are detected in changes
 
 # Workflow Summary
 1. Check current branch → create feature branch if on main
-2. Review changes → determine commit type
-3. Stage files → create conventional commit with extended description
-4. Push branch → create PR with Problem & Solution format
-5. Return PR URL
+2. Review changes with `git status` and `git diff` → determine commit type
+3. **Selectively stage files** (review each file, exclude sensitive/generated files)
+4. Create conventional commit with extended description
+5. Push branch → create PR with Problem & Solution format
+6. Return PR URL
 
 Proceed with creating the pull request following these guidelines.
