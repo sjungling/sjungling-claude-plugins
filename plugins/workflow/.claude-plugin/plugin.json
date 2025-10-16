@@ -1,0 +1,11 @@
+{
+  "name": "workflow",
+  "description": "Workflow automation commands for Git operations with conventional commits formatting for pull requests",
+  "version": "1.0.0",
+  "author": {
+    "name": "Scott",
+    "email": "scott.jungling@gmail.com"
+  },
+  "license": "MIT",
+  "keywords": ["git", "workflow", "pull-request", "conventional-commits", "automation"]
+}

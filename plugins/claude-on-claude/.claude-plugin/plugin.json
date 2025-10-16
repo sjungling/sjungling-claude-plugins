@@ -1,0 +1,11 @@
+{
+  "name": "claude-on-claude",
+  "description": "Expert in creating Claude Code subagents, slash commands, skills, plugins, and plugin marketplaces using latest documentation",
+  "version": "1.0.0",
+  "author": {
+    "name": "Scott",
+    "email": "scott.jungling@gmail.com"
+  },
+  "license": "MIT",
+  "keywords": ["claude-code", "plugins", "agents", "commands", "skills", "meta"]
+}

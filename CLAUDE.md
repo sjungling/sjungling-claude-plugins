@@ -30,7 +30,8 @@ The repository uses a marketplace configuration (`.claude-plugin/marketplace.jso
 Each plugin can contain:
 - **Agents** (`agents/` subdirectory): Custom agent definitions with specialized prompts and behaviors
 - **Commands** (`commands/` subdirectory): Slash command implementations that execute workflows
-- Both agents and commands are defined in markdown files with YAML frontmatter
+- **Skills** (`skills/` subdirectory): Reusable prompt templates that Claude automatically invokes based on context
+- Components are defined in markdown files with YAML frontmatter (skills and agents require frontmatter, commands don't)
 
 ### Current Plugins
 
@@ -45,7 +46,9 @@ Each plugin can contain:
 - Agent: `technical-writer.md` - Documentation specialist for all technical writing tasks (README, API docs, guides, specs, release notes) plus Obsidian vault management via obsidian-cli
 
 **openrewrite-author** (`plugins/openrewrite-author/`):
-- Agent: `yaml-recipe-expert.md` - Expert in creating OpenRewrite recipes for YAML files using LST structure and visitor patterns (Java 8 compatible)
+- Skill: `rewrite-yaml.md` - Expert in creating OpenRewrite recipes for YAML files using LST structure, visitor patterns, JsonPath matching (Java 8 compatible)
+- Reference: `openrewrite-traits-guide.md` - Comprehensive guide for implementing OpenRewrite Traits with matcher patterns
+- Agent (legacy): `yaml-recipe-expert.md` - Original agent implementation (prefer skills for better integration)
 
 **claude-on-claude** (`plugins/claude-on-claude/`):
 - Agent: `claude-code-builder.md` - Expert in creating Claude Code subagents, slash commands, plugins, and plugin marketplaces using latest documentation from docs.claude.com
@@ -59,6 +62,8 @@ When adding a new plugin to the marketplace:
    plugins/<plugin-name>/
    ├── agents/           # Optional: custom agents
    ├── commands/         # Optional: slash commands
+   ├── skills/           # Optional: reusable skills
+   ├── SKILLS.md         # Required if skills/ exists: skills index
    └── README.md         # Plugin documentation
    ```
 
@@ -88,6 +93,21 @@ When adding a new plugin to the marketplace:
    - No YAML frontmatter required
    - Content is the command's prompt/workflow that executes when invoked
    - Example: `swift-lint.md` contains instructions to run swift-format tools
+
+6. **Skill file format** (`skills/<name>.md`):
+   ```markdown
+   ---
+   name: skill-name
+   description: Detailed description including when to use this skill and specific triggers
+   ---
+
+   [Skill prompt content]
+   ```
+
+7. **Skills index format** (`SKILL.md`):
+   - Required if plugin contains skills
+   - Documents all skills in the plugin
+   - Includes usage examples and reference materials
 
 ## Installing Plugins from This Marketplace
 

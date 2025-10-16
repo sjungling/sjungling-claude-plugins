@@ -1,0 +1,11 @@
+{
+  "name": "technical-writer",
+  "description": "Technical documentation specialist for README files, API docs, user guides, specifications, and release notes with Obsidian vault management",
+  "version": "1.0.0",
+  "author": {
+    "name": "Scott",
+    "email": "scott.jungling@gmail.com"
+  },
+  "license": "MIT",
+  "keywords": ["documentation", "technical-writing", "readme", "api-docs", "obsidian", "markdown"]
+}

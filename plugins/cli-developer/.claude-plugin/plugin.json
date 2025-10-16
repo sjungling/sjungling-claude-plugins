@@ -1,0 +1,11 @@
+{
+  "name": "cli-developer",
+  "description": "Expert CLI/TUI design consultant for command structure, visual design, accessibility, and UX patterns",
+  "version": "1.0.0",
+  "author": {
+    "name": "Scott",
+    "email": "scott.jungling@gmail.com"
+  },
+  "license": "MIT",
+  "keywords": ["cli", "tui", "terminal", "command-line", "ux", "design", "accessibility"]
+}

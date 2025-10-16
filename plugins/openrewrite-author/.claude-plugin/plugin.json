@@ -1,0 +1,11 @@
+{
+  "name": "openrewrite-author",
+  "description": "Expert in creating OpenRewrite recipes for YAML files using LST structure, visitor patterns, JsonPath matching, and Java 8 compatible recipe development with comprehensive Traits guide",
+  "version": "1.0.0",
+  "author": {
+    "name": "Scott",
+    "email": "scott.jungling@gmail.com"
+  },
+  "license": "MIT",
+  "keywords": ["openrewrite", "yaml", "recipes", "refactoring", "github-actions", "java"]
+}

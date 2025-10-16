@@ -7,6 +7,5 @@
     "email": "scott.jungling@gmail.com"
   },
   "license": "MIT",
-  "keywords": ["swift", "ios", "macos", "xcode", "swiftui", "formatting"],
-  "category": "development"
+  "keywords": ["swift", "ios", "macos", "xcode", "swiftui", "formatting"]
 }
