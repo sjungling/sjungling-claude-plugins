@@ -36,8 +36,9 @@ Each plugin can contain:
 ### Current Plugins
 
 **swift-engineer** (`plugins/swift-engineer/`):
-- Agent: `ios-swift-expert.md` - iOS/macOS development specialist
+- Skill: `ios-swift-expert` - Elite iOS and macOS development expertise that automatically activates when working with Swift, SwiftUI, UIKit, Xcode projects, or Apple frameworks
 - Command: `swift-lint.md` - Runs swift-format for code formatting and linting
+- Agent (legacy): `ios-swift-expert.md` - Original agent implementation (prefer skills for automatic activation)
 
 **cli-developer** (`plugins/cli-developer/`):
 - Agent: `cli-ux-designer.md` - Expert CLI/TUI design consultant for command structure, visual design, accessibility, and UX patterns
