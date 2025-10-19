@@ -1,5 +1,8 @@
 ---
 description: Create a conventional commit and push to current branch
+args:
+  - name: pre-commit-action
+    description: Optional action to perform before committing (e.g., "run tests", "update version", "lint code")
 preapprovedTools:
   - Bash(git:*)
   - Read(**/*.*)
@@ -9,6 +12,17 @@ preapprovedTools:
 ---
 
 You are tasked with creating a conventional commit and pushing to the current branch following these strict requirements:
+
+# Pre-Commit Action
+
+If the user provided a pre-commit action argument ($1), perform that action FIRST before proceeding with the commit workflow:
+- Read and understand what action is requested
+- Execute the requested action (e.g., run tests, update version numbers, run linters)
+- Verify the action completed successfully
+- If the action fails, STOP and report the error - do not proceed with commit
+- If the action succeeds, continue with the commit workflow below
+
+If no pre-commit action was specified, proceed directly to the commit workflow.
 
 # Conventional Commit Types
 Use these standard types for commits:
