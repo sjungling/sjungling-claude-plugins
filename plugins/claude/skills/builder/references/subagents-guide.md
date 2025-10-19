@@ -50,7 +50,7 @@ tools: Read, Write, Edit, Bash, Glob
 - Visible to users when selecting agents
 - Example:
   ```yaml
-  description: Expert in creating Claude Code subagents, slash commands, skills, plugins, and plugin marketplaces using latest documentation. Use when building or modifying Claude Code components, configuring plugin marketplaces, or following Claude Code conventions. Examples: <example>user: "Create a new subagent for Python linting" assistant: "Let me use the claude-code-builder agent to design the agent with proper frontmatter" <commentary>Creating subagents requires knowledge of Claude Code conventions and best practices.</commentary></example>
+  description: Expert in Python linting and code quality analysis. Use when reviewing Python code for style violations, potential bugs, or best practice violations. Examples: <example>user: "Review my Python code for linting issues" assistant: "Let me use the python-linter agent to analyze your code for quality issues" <commentary>Python linting requires knowledge of PEP 8 and common Python anti-patterns.</commentary></example>
   ```
 
 ### Optional Fields

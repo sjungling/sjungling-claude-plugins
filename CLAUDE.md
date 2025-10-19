@@ -53,8 +53,8 @@ Each plugin can contain:
 - Reference: `openrewrite-traits-guide.md` - Comprehensive guide for implementing OpenRewrite Traits with matcher patterns
 - Agent (legacy): `yaml-recipe-expert.md` - Original agent implementation (prefer skills for better integration)
 
-**claude-on-claude** (`plugins/claude-on-claude/`):
-- Agent: `claude-code-builder.md` - Expert in creating Claude Code subagents, slash commands, plugins, and plugin marketplaces using latest documentation from docs.claude.com
+**claude** (`plugins/claude/`):
+- Skill: `builder` - Expert in creating Claude Code subagents, skills, slash commands, plugins, and plugin marketplaces that automatically activates when working with .md files in .claude/ directories, agent/command/skill frontmatter, marketplace.json, or when discussing Claude Code extensibility
 
 ## Creating New Plugins
 

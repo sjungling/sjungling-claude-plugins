@@ -1,10 +1,10 @@
-# Claude-on-Claude Plugin
+# Claude Plugin
 
-A meta-plugin that provides expert assistance in creating Claude Code components including subagents, slash commands, plugins, and plugin marketplaces.
+A meta-plugin that provides expert assistance in creating Claude Code components including subagents, slash commands, skills, plugins, and plugin marketplaces.
 
 ## Overview
 
-The `claude-on-claude` plugin helps you build Claude Code extensions by providing a specialized subagent that:
+The `claude` plugin helps you build Claude Code extensions by providing automatic skill activation that:
 
 - References the latest official Claude Code documentation
 - Follows best practices for component creation
@@ -14,21 +14,27 @@ The `claude-on-claude` plugin helps you build Claude Code extensions by providin
 
 ## Components
 
-### Agents
+### Skills
 
-**claude-code-builder** - Expert in creating Claude Code components
+**builder** - Expert in creating Claude Code components (automatic activation)
 
-This agent specializes in:
+This skill automatically activates when working with Claude Code components and specializes in:
 - Creating custom subagents with proper YAML frontmatter
 - Writing slash commands with argument handling and tool preapprovals
 - Designing plugin structures and marketplace configurations
 - Following Claude Code conventions
 
-The agent automatically references these documentation sources:
+The skill includes comprehensive reference guides for:
 - [Slash Commands](https://docs.claude.com/en/docs/claude-code/slash-commands.md)
 - [Subagents](https://docs.claude.com/en/docs/claude-code/sub-agents.md)
 - [Plugins](https://docs.claude.com/en/docs/claude-code/plugins.md)
 - [Plugin Marketplaces](https://docs.claude.com/en/docs/claude-code/plugin-marketplaces.md)
+
+### Agents
+
+**builder** - Claude Code builder agent (explicit invocation)
+
+A delegatable agent that uses the `claude:builder` skill. Use this when you want to delegate Claude Code component creation to a specialized agent using the Task tool.
 
 ## Installation
 
@@ -41,40 +47,42 @@ First, add the marketplace to Claude Code:
 Then install this plugin:
 
 ```bash
-/plugin install claude-on-claude@claude-plugins
+/plugin install claude@claude-plugins
 ```
 
 ## Usage
 
-Once installed, you can use the `claude-code-builder` agent for tasks like:
+Once installed, the `builder` skill automatically activates when you're working on tasks like:
 
 ### Creating a New Subagent
 
+The skill activates automatically when working with agent markdown files or discussing Claude Code components:
+
 ```
-@claude-code-builder help me create a subagent for database schema design
+I need to create a subagent for database schema design
 ```
 
 ### Writing a Slash Command
 
 ```
-@claude-code-builder create a slash command that runs my test suite and generates a coverage report
+Create a slash command that runs my test suite and generates a coverage report
 ```
 
 ### Building a New Plugin
 
 ```
-@claude-code-builder I want to create a plugin for Go development with agents and commands
+I want to create a plugin for Go development with agents and commands
 ```
 
 ### Setting Up a Plugin Marketplace
 
 ```
-@claude-code-builder help me configure a plugin marketplace for my team
+Help me configure a plugin marketplace for my team
 ```
 
 ## Best Practices
 
-The `claude-code-builder` agent follows these conventions:
+The `builder` skill follows these conventions:
 
 1. **Naming**: Uses kebab-case for all component names
 2. **Documentation**: Always includes clear descriptions and usage examples
@@ -87,11 +95,11 @@ The `claude-code-builder` agent follows these conventions:
 ### Example: Creating a Subagent for API Testing
 
 ```
-You: @claude-code-builder create a subagent that helps test REST APIs
+You: Create a subagent that helps test REST APIs
 
-Agent: I'll help you create an API testing subagent. Let me fetch the latest documentation first...
+Claude: I'm using the builder skill to help you create an API testing subagent...
 
-[Agent creates a properly formatted agent file with:
+[Creates a properly formatted agent file with:
 - YAML frontmatter (name, description, model, color)
 - System prompt focused on API testing
 - References to relevant tools and workflows]
@@ -100,11 +108,11 @@ Agent: I'll help you create an API testing subagent. Let me fetch the latest doc
 ### Example: Slash Command with Preapprovals
 
 ```
-You: @claude-code-builder create a command that builds my Docker images and pushes to registry
+You: Create a command that builds my Docker images and pushes to registry
 
-Agent: I'll create a slash command with Docker CLI preapprovals...
+Claude: I'll create a slash command with Docker CLI preapprovals...
 
-[Agent creates command with:
+[Creates command with:
 - YAML frontmatter including allowed-tools
 - Preapproved docker commands
 - Clear workflow instructions]
@@ -112,10 +120,11 @@ Agent: I'll create a slash command with Docker CLI preapprovals...
 
 ## Tips
 
-- The agent will fetch current documentation to ensure accuracy
-- Ask for guidance on best practices for your specific use case
-- The agent can help refactor existing components to follow conventions
-- Use it to learn Claude Code plugin development patterns
+- The skill automatically activates when working with Claude Code components
+- Includes comprehensive reference guides bundled within the skill
+- Provides guidance on best practices for your specific use case
+- Can help refactor existing components to follow conventions
+- Learn Claude Code plugin development patterns through examples and references
 
 ## Contributing
 

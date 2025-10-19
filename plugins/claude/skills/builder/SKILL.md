@@ -1,5 +1,5 @@
 ---
-name: claude-code-builder
+name: builder
 description: Use when creating or modifying Claude Code components including subagents, skills, slash commands, plugins, or plugin marketplaces. Activates when working with .md files in .claude/ directories, agent/command/skill frontmatter, marketplace.json, or when discussing Claude Code extensibility.
 ---
 

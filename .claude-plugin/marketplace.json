@@ -27,8 +27,8 @@
       "source": "./plugins/openrewrite-author"
     },
     {
-      "name": "claude-on-claude",
-      "source": "./plugins/claude-on-claude"
+      "name": "claude",
+      "source": "./plugins/claude"
     },
     {
       "name": "workflow",
