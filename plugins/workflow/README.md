@@ -27,6 +27,15 @@ This command:
 - Creates structured PR with Problem & Solution format
 - Handles all git operations (staging, committing, pushing, PR creation)
 
+**`/commit-and-push`** - Create a conventional commit and push to current branch
+
+This command:
+- Reviews all staged and unstaged changes
+- Selectively stages files (excludes secrets, IDE configs, build artifacts)
+- Creates conventional commits with extended descriptions
+- Pushes only the current branch to remote
+- No branch creation or PR - just commit and push
+
 ## Installation
 
 First, add the marketplace to Claude Code (if not already added):
@@ -60,6 +69,25 @@ The command will:
    - Extended description with context
 5. Push to remote
 6. Create a PR with Problem & Solution format
+
+### Commit and Push Without PR
+
+To commit and push to your current branch without creating a PR:
+
+```
+/commit-and-push
+```
+
+The command will:
+1. Review all changed files
+2. Selectively stage files (excludes secrets, IDE configs, build artifacts)
+3. Create conventional commit with extended description
+4. Push to the current branch
+
+Use this when:
+- You're working on an existing PR and want to add more commits
+- You want to commit and push without creating a PR yet
+- You're pushing to a feature branch that already has a PR open
 
 ### Conventional Commit Types
 
@@ -134,7 +162,7 @@ The plugin enforces these conventions:
 
 ## Examples
 
-### Feature Addition
+### Creating a New Feature PR
 
 ```
 /pr
@@ -145,7 +173,7 @@ Creates:
 - Commit: `feat(ui): add dark mode toggle to settings`
 - PR: "Problem: Users requested dark mode. Solution: Added theme toggle..."
 
-### Bug Fix
+### Fixing a Bug with PR
 
 ```
 /pr
@@ -156,7 +184,7 @@ Creates:
 - Commit: `fix(auth): validate email format on login`
 - PR: "Problem: Login accepted invalid emails. Solution: Added email validation..."
 
-### Documentation
+### Adding Documentation with PR
 
 ```
 /pr
@@ -166,6 +194,19 @@ Creates:
 - Branch: `docs/api-endpoints`
 - Commit: `docs(api): document REST endpoints`
 - PR: "Problem: API endpoints were undocumented. Solution: Added comprehensive docs..."
+
+### Commit and Push to Existing Branch
+
+```
+/commit-and-push
+```
+
+On branch `feat/dark-mode-toggle`:
+- Reviews changes
+- Stages: `src/components/ThemeToggle.tsx`, `src/styles/themes.css`
+- Excludes: `.DS_Store`, `node_modules/`
+- Commit: `feat(ui): add theme persistence with localStorage`
+- Push to: `origin feat/dark-mode-toggle`
 
 ## Contributing
 

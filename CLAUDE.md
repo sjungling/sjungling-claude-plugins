@@ -44,7 +44,9 @@ Each plugin can contain:
 - Agent: `cli-ux-designer.md` - Expert CLI/TUI design consultant for command structure, visual design, accessibility, and UX patterns
 
 **technical-writer** (`plugins/technical-writer/`):
-- Agent: `technical-writer.md` - Documentation specialist for all technical writing tasks (README, API docs, guides, specs, release notes) plus Obsidian vault management via obsidian-cli
+- Skill: `technical-writer` - Expert in technical documentation (README, API docs, guides, tutorials, quickstarts, specs, release notes) that automatically activates when working with .md files in docs/ directories or README files
+- Agent: `technical-writer.md` - Legacy agent implementation (prefer skill for automatic activation)
+- Agent: `obsidian-vault-manager.md` - Obsidian vault management specialist using obsidian-cli
 
 **openrewrite-author** (`plugins/openrewrite-author/`):
 - Skill: `rewrite-yaml.md` - Expert in creating OpenRewrite recipes for YAML files using LST structure, visitor patterns, JsonPath matching (Java 8 compatible)

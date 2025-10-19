@@ -1,8 +1,6 @@
 ---
 name: rewrite-yaml
 description: Test-first development of production-quality OpenRewrite recipes for YAML manipulation using LST structure, visitor patterns, and JsonPath matching
-when_to_use: when creating or modifying OpenRewrite recipes for YAML files, or when user requests YAML manipulation via OpenRewrite
-version: 2.0.0
 ---
 
 # Writing OpenRewrite YAML Recipes
@@ -24,6 +22,7 @@ Create production-quality OpenRewrite recipes for YAML manipulation using test-f
 ## When NOT to Use This Skill
 
 Do not use this skill for:
+
 - General YAML editing (use standard Edit tools)
 - Non-OpenRewrite transformation tools
 - Java versions above 8 (skill specializes in Java 8 compatibility)
@@ -38,18 +37,23 @@ Do not use this skill for:
 ## The Workflow
 
 ### Phase 1: RED - Write Failing Tests
+
 Write test cases with before/after YAML examples using OpenRewrite's testing framework.
 
 ### Phase 2: Architecture Decision
+
 Choose declarative (YAML composition) vs imperative (Java Visitor) approach.
 
 ### Phase 3: GREEN - Minimal Implementation
+
 Implement just enough to make tests pass.
 
 ### Phase 4: REFACTOR - Apply OpenRewrite Idioms
+
 Improve recipe using traits, composition, and conventions.
 
 ### Phase 5: Documentation
+
 Add displayName, description (with markdown), and usage examples.
 
 ## Phase 1: RED - Write Failing Tests
@@ -88,6 +92,7 @@ void testRecipeName() {
 ### Verification
 
 **Run tests to confirm RED state:**
+
 - Tests must fail initially
 - Verify failure reason matches expectations (e.g., "recipe not implemented")
 
@@ -98,6 +103,7 @@ void testRecipeName() {
 ### Decision Framework
 
 **Start with:** Can this be done by composing existing recipes?
+
 - **YES** → Use declarative YAML recipe
 - **NO** → Need imperative Java recipe with Visitor
 
@@ -120,12 +126,14 @@ recipeList:
 ```
 
 **When to use declarative:**
+
 - Simple transformations using existing recipes
 - Searching for patterns
 - Standard modifications (change values, delete keys)
 - Composing multiple existing recipes
 
 **Common declarative recipes:**
+
 - `org.openrewrite.yaml.search.FindKey`, `FindValue` - searching
 - `org.openrewrite.yaml.ChangeKey`, `ChangeValue`, `DeleteKey` - modifications
 - `org.openrewrite.yaml.MergeYaml`, `CopyValue` - additions
@@ -133,6 +141,7 @@ recipeList:
 ### Imperative Recipe (Java Visitor)
 
 **When to use imperative:**
+
 - Complex logic or conditional transformations
 - Need to traverse YAML LST structure
 - Creating new YAML structures dynamically
@@ -151,6 +160,7 @@ recipeList:
 ### For Imperative Recipes (Java Visitor)
 
 **Extend the appropriate visitor:**
+
 - `YamlIsoVisitor<ExecutionContext>` - when not changing tree structure
 - `YamlVisitor<ExecutionContext>` - when structure may change
 
@@ -184,6 +194,7 @@ public class YourRecipe extends Recipe {
 ### Verification
 
 Run tests to achieve GREEN state:
+
 - All tests must pass
 - No changes to unrelated YAML structures
 - Formatting preserved
@@ -193,16 +204,19 @@ Run tests to achieve GREEN state:
 ### Checklist for Idiomatic Recipes
 
 **1. Trait Usage**
+
 - [ ] Can this recipe implement an existing trait?
 - [ ] Should a new trait be created for reusable matching logic?
 - [ ] Separate "what to find" (trait) from "what to do" (recipe)
 
 **2. Recipe Composition**
+
 - [ ] Can parts be extracted into smaller, composable recipes?
 - [ ] Are there opportunities for configurability (parameters)?
 - [ ] Could this be split into search recipe + modification recipe?
 
 **3. OpenRewrite Conventions**
+
 - [ ] Recipe has clear `displayName` and `description` (both support **markdown**)
 - [ ] Parameters use `@Option` annotations with descriptions
 - [ ] Recipe class is Java 8 compatible (no newer language features)
@@ -210,6 +224,7 @@ Run tests to achieve GREEN state:
 - [ ] Preserves formatting and comments where possible
 
 **4. Performance Considerations**
+
 - [ ] Minimize LST traversals (don't visit more than necessary)
 - [ ] Use preconditions to skip files that won't match
 - [ ] Return original object if no changes made (identity check)
@@ -225,13 +240,14 @@ Run tests to achieve GREEN state:
 ### Documentation Requirements
 
 **Recipe metadata (supports markdown):**
+
 - `displayName`: User-friendly name with markdown formatting
 - `description`: Detailed explanation with code examples, lists, links
 - `@Option` descriptions: Clear explanations with inline code examples
 
 **Example with markdown:**
 
-```java
+````java
 @Override
 public String getDisplayName() {
     return "Update GitHub Actions to `actions/checkout@v4`";
@@ -243,9 +259,10 @@ public String getDescription() {
            "**Before:**\n```yaml\n- uses: actions/checkout@v2\n```\n\n" +
            "**After:**\n```yaml\n- uses: actions/checkout@v4\n```";
 }
-```
+````
 
 **Usage examples:**
+
 - Add Javadoc with common use cases
 - Show before/after transformations
 - Document parameter effects
@@ -318,6 +335,7 @@ if (matcher.matches(getCursor()) && "uses".equals(entry.getKey().getValue())) {
 ```
 
 Common JsonPath patterns:
+
 - `$.jobs.*.steps[*].uses` - Match "uses" field in any step of any job
 - `$.on.push.branches[*]` - Match branch entries in push triggers
 - `$.env.*` - Match any environment variable
@@ -352,21 +370,25 @@ Override these methods in your YamlIsoVisitor:
 ### Key Utilities
 
 **SearchResult**: Mark elements in search recipes
+
 ```java
 SearchResult.found(element, "description")
 ```
 
 **ListUtils**: Transform collections safely
+
 ```java
 ListUtils.map(list, item -> transformedItem)
 ```
 
 **StringUtils**: Pattern matching
+
 ```java
 StringUtils.matchesGlob(value, "actions/*@v2")
 ```
 
 **Preconditions**: File filtering
+
 ```java
 new Preconditions.Not(new FindSourceFiles("**/test/**"))
 ```
@@ -459,12 +481,14 @@ For complex recipes that benefit from higher-level semantic abstractions, you ca
 **When you need detailed information about Traits**, refer to the companion guide: `./references/openrewrite-traits-guide.md`.
 
 **Quick Traits Overview:**
+
 - Traits implement `Trait<T extends Tree>` interface
 - Include a nested `Matcher` class extending `SimpleTraitMatcher<T>`
 - Use `matcher.asVisitor()` to convert to TreeVisitor in recipes
 - Provide semantic methods like `getActionRef()` instead of raw LST navigation
 
 **Example using Traits:**
+
 ```java
 @Override
 public TreeVisitor<?, ExecutionContext> getVisitor() {
@@ -497,6 +521,7 @@ For complete trait implementation patterns, matcher API details, and advanced ex
 ### Success Criteria
 
 Recipe is production-ready when:
+
 - Tests comprehensively cover happy path and edge cases
 - Implementation follows OpenRewrite idioms (traits, composition)
 - Documentation enables users to understand and use the recipe
