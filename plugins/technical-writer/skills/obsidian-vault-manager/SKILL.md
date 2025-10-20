@@ -1,9 +1,28 @@
 ---
 name: obsidian-vault-manager
-description: Use when working with Obsidian vaults, managing markdown notes with wiki-links, or needing to preserve internal link integrity during file operations - provides obsidian-cli workflows for reading, writing, searching, moving, and organizing notes while maintaining vault structure
+description: Expert in managing Obsidian vaults using obsidian-cli workflows for reading, writing, searching, moving, and organizing notes while preserving wiki-link integrity and vault structure. Automatically activates when working with Obsidian vaults, markdown notes with wiki-links, or when internal link integrity needs to be preserved during file operations.
 ---
 
 # Obsidian Vault Manager
+
+## Prerequisites
+
+Before performing vault operations:
+
+1. **Verify obsidian-cli is installed:**
+   ```bash
+   obsidian-cli --version
+   ```
+
+2. **If obsidian-cli is unavailable:**
+   - Install via: `npm install -g @johnlindquist/obsidian-cli`
+   - Fallback: Standard file operations can be used but will NOT preserve wiki-links
+   - Warning: Without obsidian-cli, moving notes will break all internal `[[wiki-links]]`
+
+3. **Verify vault is accessible:**
+   ```bash
+   obsidian-cli print-default
+   ```
 
 ## Overview
 
@@ -11,7 +30,7 @@ description: Use when working with Obsidian vaults, managing markdown notes with
 
 ## When to Use
 
-Use this skill when:
+This skill activates when:
 - Working with Obsidian vaults (`.md` files with `[[wiki-links]]`)
 - Moving/renaming notes (links must stay valid)
 - Creating notes with Obsidian-specific syntax (wiki-links, checkboxes, tags)
@@ -35,6 +54,11 @@ Use this skill when:
 | Search content | `obsidian-cli search-content "term"` | Searches note contents |
 | Search names | `obsidian-cli search` | Fuzzy search (interactive) |
 | Daily note | `obsidian-cli daily` | Create/open today's note |
+
+**See also:**
+- [Complete obsidian-cli Command Reference](./references/obsidian-cli-reference.md) - All commands with flags and advanced usage
+- [Obsidian Syntax Reference](./references/obsidian-syntax.md) - Wiki-links, tags, frontmatter, and markdown syntax
+- [Note Templates](./assets/templates/) - Daily note, project, and meeting templates
 
 ## Core Workflows
 
@@ -80,6 +104,8 @@ obsidian-cli create "Draft" --content "# Fresh content" --overwrite
 - Tags: `#project`
 - Checkboxes: `- [ ] Task`
 - Newlines: `\n`
+
+**Templates:** Use provided [note templates](./assets/templates/) as starting points for common note types (daily notes, projects, meetings).
 
 ### Searching and Organizing
 
@@ -134,7 +160,7 @@ obsidian-cli print "Found Note"
 
 ## Success Criteria
 
-Your vault operations succeed when:
+Vault operations succeed when:
 - All `[[wiki-links]]` remain valid after moves
 - Notes created in correct vault location
 - Markdown and frontmatter preserved

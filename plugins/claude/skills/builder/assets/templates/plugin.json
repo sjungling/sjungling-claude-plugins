@@ -1,0 +1,13 @@
+{
+  "name": "plugin-name",
+  "version": "1.0.0",
+  "description": "Brief description of what this plugin does",
+  "author": "Your Name",
+  "homepage": "https://github.com/username/repo",
+  "license": "MIT",
+  "keywords": ["keyword1", "keyword2", "keyword3"],
+  "category": "productivity",
+  "agents": [],
+  "commands": [],
+  "skills": []
+}

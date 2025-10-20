@@ -1,6 +1,6 @@
 ---
 name: technical-writer
-description: Use when creating, editing, or reviewing any technical documentation including README files, API documentation, user guides, tutorials, quickstarts, specifications, release notes, or inline code documentation. Automatically activates when working with .md files in docs/ directories, README files, or when discussing documentation structure, style guides, or content organization. Follows industry best practices for clear, accessible technical communication across all documentation types.
+description: Expert in technical documentation (README, API docs, guides, tutorials, quickstarts, specs, release notes) that automatically activates when creating, editing, or reviewing .md files in docs/ directories, README files, or when discussing documentation structure, style guides, or content organization. Follows industry best practices for clear, accessible technical communication across all documentation types.
 ---
 
 # Technical Documentation Expert
@@ -9,9 +9,7 @@ description: Use when creating, editing, or reviewing any technical documentatio
 
 Provides expert guidance for creating clear, comprehensive, and user-friendly technical documentation following industry best practices and structured content models.
 
-**Core principle:** Write for your audience with clarity, accessibility, and actionable content using standardized documentation patterns.
-
-**Announce at start:** "I'm using the Technical Documentation Expert skill to help with [specific documentation task]."
+**Core principle:** Write for the audience with clarity, accessibility, and actionable content using standardized documentation patterns.
 
 ## When to Use
 
@@ -59,59 +57,37 @@ Do not use this skill for:
 
 **Standard Article Elements:**
 
-- **Titles**: Sentence case, gerund for procedures, character limits (67/63/80 based on level)
-- **Intros**: 1-2 sentences explaining what content covers
-- **Prerequisites**: Structured list when applicable
-- **Permissions**: Frontmatter or inline statements
-- **Next steps**: Clear calls to action
+- Titles: Sentence case, gerund for procedures, character limits by level
+- Intros: 1-2 sentences explaining content
+- Prerequisites and permissions when applicable
+- Clear next steps
 
 **Information Architecture:**
 
-- Hierarchical: Doc sets → Categories → Map topics → Articles
-- Maximum 4 navigation levels
-- 10+ articles threshold before creating new categories
-- Consistent content ordering: Conceptual → Referential → Procedural → Troubleshooting
+- Hierarchical structure with maximum 4 navigation levels
+- Content ordering: Conceptual → Referential → Procedural → Troubleshooting
+
+**For detailed structure requirements:** See `./references/style-guide.md` section on Article Structure and Standard Elements.
 
 ### Style Guide Principles
 
-**Language and Tone:**
+Apply formatting and style rules from the comprehensive style guide:
 
-- Clear, simple, approachable language
-- Active voice preferred
-- Sentence case for all titles and headers
-- Avoid jargon, idioms, and regional phrases
+- Language: Clear, simple, active voice, sentence case
+- Technical formatting: Code in backticks, UI in bold, placeholders in ALL-CAPS
+- Structure: Numbered lists for procedures, bullets for non-sequential info
+- Links: Descriptive text, no "click here"
+- Alerts: Use Note, Tip, Important, Warning, Caution sparingly
 
-**Technical Formatting:**
-
-- Code in `backticks` (~60 character line length)
-- UI elements in **bold**
-- Placeholders in ALL-CAPS with dashes (YOUR-PROJECT)
-- Alt text for images (40-150 characters)
-- No command prompts in code examples
-
-**Structure:**
-
-- Numbered lists for procedures (capitalize first word, use periods)
-- Bullet lists for non-sequential info (asterisks, alphabetize when appropriate)
-- Alert types: Note, Tip, Important, Warning, Caution (use sparingly)
-- Descriptive link text (never "click here")
+**For detailed formatting rules:** See `./references/style-guide.md` sections on Language and Tone, Technical Writing Conventions, and Structure and Format.
 
 ### Procedural Content Ordering
 
-Within procedural sections, follow this sequence:
+Follow standard procedural sequence: Enabling → Using → Managing → Disabling → Destructive
 
-1. **Enabling** - Initial setup/activation
-2. **Using** - Regular operational tasks
-3. **Managing** - Administrative/configuration tasks
-4. **Disabling** - Deactivation procedures
-5. **Destructive** - Deletion/removal tasks
+Within individual steps: Optional info → Reason → Location → Action
 
-Within individual steps:
-
-- Optional information (if applicable)
-- Reason for the step (if not obvious)
-- Location where to perform the action
-- Action to take
+**For complete ordering guidelines:** See `./references/style-guide.md` section on Content Ordering Guidelines.
 
 ## Development Workflow
 
@@ -119,7 +95,7 @@ Within individual steps:
 
 - Identify user expertise level (beginner, intermediate, advanced)
 - Determine user goals and tasks
-- Consider context where docs will be used
+- Consider context where documentation will be used
 - Plan appropriate content depth and technical level
 
 ### 2. Choose Content Type
@@ -199,6 +175,12 @@ For complete style guide details, see: `./references/style-guide.md`
 - Validate accessibility (alt text, structure, contrast)
 - Confirm navigation and links work correctly
 
+**Automated validation:** Use `./scripts/validate_markdown.py <file>` to check:
+- Proper heading hierarchy (no skipped levels)
+- Code block formatting (language tags, closing backticks)
+- Link syntax and descriptive link text
+- Basic document structure
+
 ## Communication Style
 
 **Be Clear and Actionable:**
@@ -224,21 +206,26 @@ For complete style guide details, see: `./references/style-guide.md`
 
 ## Reference Materials
 
-This skill references the comprehensive style guide for detailed guidance on:
-
-- Alert formatting and appropriate usage
-- Table structure and header formatting
-- Tool switcher patterns (CLI, Portal, etc.)
-- Reusables and variables conventions
-- Specific quickstart and tutorial requirements
-- Complete content type specifications
-- Advanced formatting rules
+This skill references the comprehensive style guide for detailed guidance on all formatting rules.
 
 **See:** `./references/style-guide.md` for the complete technical writing style guide.
 
+### Quick Discovery: Search Patterns
+
+For specific formatting rules in the large style guide, use grep to search:
+
+- **Alert formatting rules:** Search for `"alert"` in `./references/style-guide.md`
+- **Code block formatting:** Search for `"code"` or `"backticks"` in `./references/style-guide.md`
+- **Link formatting:** Search for `"link text"` in `./references/style-guide.md`
+- **Table formatting:** Search for `"table"` in `./references/style-guide.md`
+- **Heading hierarchy:** Search for `"heading"` in `./references/style-guide.md`
+- **Procedural step structure:** Search for `"step structure"` or `"Within Procedural"` in `./references/style-guide.md`
+- **Alt text requirements:** Search for `"alt text"` in `./references/style-guide.md`
+- **Placeholder conventions:** Search for `"placeholder"` or `"ALL-CAPS"` in `./references/style-guide.md`
+
 ## Success Criteria
 
-Your documentation is successful when:
+Documentation is successful when:
 
 - Content is accessible to the target audience
 - Structure follows the appropriate content type
@@ -322,7 +309,7 @@ Brief description of what the function does.
 
 ## Remember
 
-- Always consider your audience first
+- Always consider the audience first
 - Choose the right content type for the task
 - Follow style guide consistently
 - Do not invent information - ask when unclear

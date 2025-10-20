@@ -1,0 +1,41 @@
+gh issue - Manage issues
+
+USAGE
+  gh issue <command> [flags]
+
+CORE COMMANDS
+  create:      Create a new issue
+  list:        List issues in a repository
+  view:        Display the details of an issue
+  close:       Close an issue
+  reopen:      Reopen a closed issue
+  comment:     Add a comment to an issue
+  edit:        Edit an issue
+  status:      Show status of relevant issues
+
+ADDITIONAL COMMANDS
+  delete:      Delete an issue
+  lock:        Lock issue conversation
+  pin:         Pin an issue
+  transfer:    Transfer issue to another repository
+  unlock:      Unlock issue conversation
+  unpin:       Unpin an issue
+
+FLAGS
+  -R, --repo [HOST/]OWNER/REPO   Select another repository using the [HOST/]OWNER/REPO format
+
+INHERITED FLAGS
+      --help                      Show help for command
+
+EXAMPLES
+  $ gh issue create --title "Bug report" --body "Something is broken"
+  $ gh issue list --assignee @me --state open
+  $ gh issue view 123 --web
+  $ gh issue close 456 --comment "Fixed in PR #789"
+
+LEARN MORE
+  Use 'gh <command> <subcommand> --help' for more information about a command.
+  Read the manual at https://cli.github.com/manual
+
+FEEDBACK
+  Open an issue using 'gh issue create -R cli/cli'

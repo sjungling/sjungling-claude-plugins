@@ -1,0 +1,45 @@
+Creating a new issue in cli/cli
+
+? Title: Fix color rendering in Windows Terminal
+
+? Body: <Received>
+  What's the issue?
+
+  When running `gh issue list` in Windows Terminal, the ANSI color codes
+  are not rendering correctly. Text appears with escape sequences visible
+  instead of colored output.
+
+  Steps to reproduce:
+  1. Open Windows Terminal
+  2. Run `gh issue list`
+  3. Observe raw ANSI codes in output
+
+  Expected: Colored, formatted output
+  Actual: Raw escape sequences visible
+
+? What labels should be added? (Press <space> to select, <enter> to submit)
+  ◯ bug
+  ◉ enhancement
+  ◯ documentation
+  ◯ help wanted
+  ◉ windows
+  ◯ good first issue
+
+? What's the next action?
+  → Create issue
+    Create issue and open in browser
+    Save as draft
+    Cancel
+
+✓ Created issue #4524: Fix color rendering in Windows Terminal
+  https://github.com/cli/cli/issues/4524
+
+───────────────────────────────────────────────────────────────────
+
+Note: This example demonstrates:
+- Clear question prompts with context
+- Multi-line text input (indicated by <Received>)
+- Multi-select checkboxes (◯ unchecked, ◉ checked)
+- Radio selection menu (→ indicates current selection)
+- Success confirmation with symbol and link
+- Visual separator for command completion

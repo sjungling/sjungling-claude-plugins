@@ -1,6 +1,6 @@
 ---
 name: rewrite-yaml
-description: Test-first development of production-quality OpenRewrite recipes for YAML manipulation using LST structure, visitor patterns, and JsonPath matching
+description: Expert in test-first development of production-quality OpenRewrite recipes for YAML manipulation using LST structure, visitor patterns, and JsonPath matching. Automatically activates when working with OpenRewrite recipe files or Java files in `src/main/java/**/rewrite/**` directories.
 ---
 
 # Writing OpenRewrite YAML Recipes
@@ -10,8 +10,6 @@ description: Test-first development of production-quality OpenRewrite recipes fo
 Create production-quality OpenRewrite recipes for YAML manipulation using test-first development.
 
 **Core principle:** Write tests first (RED), implement minimally (GREEN), apply OpenRewrite idioms (REFACTOR).
-
-**Announce at start:** "I've read the Writing OpenRewrite YAML Recipes skill and I'm using it to create a recipe for [purpose]."
 
 ## When to Use
 
@@ -60,26 +58,7 @@ Add displayName, description (with markdown), and usage examples.
 
 ### Test Structure
 
-Use OpenRewrite's testing framework with before/after YAML:
-
-```java
-@Test
-void testRecipeName() {
-    rewriteRun(
-      spec -> spec.recipe(new YourRecipe()),
-      yaml(
-        """
-        # before YAML
-        key: old-value
-        """,
-        """
-        # after YAML
-        key: new-value
-        """
-      )
-    );
-}
-```
+Use OpenRewrite's testing framework with before/after YAML. For detailed test patterns and examples, see `./references/testing-patterns.md`.
 
 ### Checklist
 
@@ -91,10 +70,7 @@ void testRecipeName() {
 
 ### Verification
 
-**Run tests to confirm RED state:**
-
-- Tests must fail initially
-- Verify failure reason matches expectations (e.g., "recipe not implemented")
+Run tests to confirm RED state - tests must fail initially.
 
 **Key principle:** Start with simplest possible before/after. Add complexity incrementally.
 
@@ -157,47 +133,19 @@ recipeList:
 2. Compose existing `org.openrewrite.yaml.*` recipes
 3. Run tests to verify GREEN state
 
+For common recipe patterns, see `./references/recipe-patterns.md`.
+
 ### For Imperative Recipes (Java Visitor)
 
-**Extend the appropriate visitor:**
+Extend `YamlIsoVisitor<ExecutionContext>` (when not changing tree structure) or `YamlVisitor<ExecutionContext>` (when structure may change).
 
-- `YamlIsoVisitor<ExecutionContext>` - when not changing tree structure
-- `YamlVisitor<ExecutionContext>` - when structure may change
+For complete recipe templates and examples, see `./references/recipe-template.java`.
 
-**Override visit methods for YAML LST elements:**
-
-```java
-public class YourRecipe extends Recipe {
-    @Override
-    public String getDisplayName() {
-        return "Your recipe name";
-    }
-
-    @Override
-    public String getDescription() {
-        return "Your recipe description (supports **markdown**)";
-    }
-
-    @Override
-    public TreeVisitor<?, ExecutionContext> getVisitor() {
-        return new YamlIsoVisitor<ExecutionContext>() {
-            @Override
-            public Yaml.Mapping.Entry visitMappingEntry(Yaml.Mapping.Entry entry, ExecutionContext ctx) {
-                // Your transformation logic
-                return super.visitMappingEntry(entry, ctx);
-            }
-        };
-    }
-}
-```
+**Automation:** Use `./scripts/init_recipe.py <RecipeName>` to generate recipe boilerplate (class, test file, YAML declarative option).
 
 ### Verification
 
-Run tests to achieve GREEN state:
-
-- All tests must pass
-- No changes to unrelated YAML structures
-- Formatting preserved
+Run tests to achieve GREEN state - all tests must pass with formatting preserved.
 
 ## Phase 4: REFACTOR - Apply OpenRewrite Idioms
 
@@ -219,7 +167,7 @@ Run tests to achieve GREEN state:
 
 - [ ] Recipe has clear `displayName` and `description` (both support **markdown**)
 - [ ] Parameters use `@Option` annotations with descriptions
-- [ ] Recipe class is Java 8 compatible (no newer language features)
+- [ ] Recipe class is Java 8 compatible (run `./scripts/validate_java8.py src/` to check)
 - [ ] Properly handles `null` values and missing elements
 - [ ] Preserves formatting and comments where possible
 
@@ -267,218 +215,59 @@ public String getDescription() {
 - Show before/after transformations
 - Document parameter effects
 
-## YAML LST Structure
+## Technical Reference
 
-Understanding the YAML LST hierarchy is essential:
+### YAML LST Structure
 
+Understanding the YAML LST hierarchy is essential. For detailed structure documentation, see `./references/yaml-lst-reference.md`.
+
+Key concepts:
 - **Yaml.Documents** → **Yaml.Document** → **Yaml.Mapping** → **Yaml.Mapping.Entry**
 - **Yaml.Sequence** → **Yaml.Sequence.Entry**
 - **Yaml.Scalar** (primitive values)
-- **YamlKey.getValue()** - always safe, no casting needed
-
-## Technical Reference
-
-### Recipe Template
-
-Every OpenRewrite recipe follows this structure:
-
-```java
-@Value @EqualsAndHashCode(callSuper = false)
-public class MyYamlRecipe extends Recipe {
-    @Option(displayName = "...", description = "...", example = "...")
-    String parameter;
-
-    @Override public String getDisplayName() { return "..."; }
-    @Override public String getDescription() { return "..."; }
-
-    @Override
-    public TreeVisitor<?, ExecutionContext> getVisitor() {
-        return new YamlIsoVisitor<ExecutionContext>() {
-            @Override
-            public Yaml.Mapping.Entry visitMappingEntry(Yaml.Mapping.Entry entry, ExecutionContext ctx) {
-                // Core logic here
-                return super.visitMappingEntry(entry, ctx);
-            }
-        };
-    }
-}
-```
 
 ### Essential Patterns
 
-#### Key Matching
+For complete recipe templates and patterns, see:
+- `./references/recipe-template.java` - Complete recipe structure with annotations
+- `./references/recipe-patterns.md` - Search, replacement, and modification patterns
+- `./references/jsonpath-patterns.md` - Common JsonPath patterns for GitHub Actions, K8s, and generic YAML
 
-To match a specific YAML key:
+### Quick Reference
 
+**Key matching:**
 ```java
 if ("targetKey".equals(entry.getKey().getValue())) { /* match */ }
 ```
 
-#### Safe Value Access
-
-Always check the type before casting:
-
+**Safe value access:**
 ```java
 String value = entry.getValue() instanceof Yaml.Scalar ?
     ((Yaml.Scalar) entry.getValue()).getValue() : null;
 ```
 
-#### JsonPath Matching
-
-For complex path matching in YAML structures:
-
+**JsonPath matching:**
 ```java
 JsonPathMatcher matcher = new JsonPathMatcher("$.jobs.*.steps[*].uses");
-if (matcher.matches(getCursor()) && "uses".equals(entry.getKey().getValue())) {
-    // Process matching element
-}
+if (matcher.matches(getCursor())) { /* process */ }
 ```
 
-Common JsonPath patterns:
-
-- `$.jobs.*.steps[*].uses` - Match "uses" field in any step of any job
-- `$.on.push.branches[*]` - Match branch entries in push triggers
-- `$.env.*` - Match any environment variable
-
-#### Modification
-
-To modify a YAML element, use `withX()` methods:
-
-```java
-return entry.withValue(scalar.withValue("newValue"));
-```
-
-Important: Always return modified copies, never mutate in place.
-
-#### Search Results
-
-To mark elements as search results without modifying:
-
-```java
-return SearchResult.found(entry, "Reason for marking this element");
-```
-
-### Core Visitor Methods
-
-Override these methods in your YamlIsoVisitor:
-
-- `visitMappingEntry()` - Process key-value pairs
-- `visitScalar()` - Process primitive values
-- `visitSequence()` - Process arrays/lists
-- `visitSequenceEntry()` - Process individual array items
-
-### Key Utilities
-
-**SearchResult**: Mark elements in search recipes
-
-```java
-SearchResult.found(element, "description")
-```
-
-**ListUtils**: Transform collections safely
-
-```java
-ListUtils.map(list, item -> transformedItem)
-```
-
-**StringUtils**: Pattern matching
-
-```java
-StringUtils.matchesGlob(value, "actions/*@v2")
-```
-
-**Preconditions**: File filtering
-
-```java
-new Preconditions.Not(new FindSourceFiles("**/test/**"))
-```
+For more JsonPath patterns, search `./references/jsonpath-patterns.md` for your use case.
 
 ### Recipe Development Rules
 
-1. **Always call super methods**: `return super.visitMappingEntry(entry, ctx);`
-2. **Return modified copies**: Never mutate LST elements directly
-3. **Use withX() methods**: All modifications via `withValue()`, `withKey()`, etc.
-4. **Handle null cases**: Use conditional expressions for safe null handling
-5. **Preserve formatting**: LST methods automatically maintain formatting
-6. **Java 8 only**: No modern Java features
-
-### Common Recipe Patterns
-
-#### Search Recipe
-
-Find all occurrences of a specific pattern:
-
-```java
-@Override
-public Yaml.Mapping.Entry visitMappingEntry(Yaml.Mapping.Entry entry, ExecutionContext ctx) {
-    JsonPathMatcher matcher = new JsonPathMatcher("$.jobs.*.steps[*].uses");
-    if (matcher.matches(getCursor()) && "uses".equals(entry.getKey().getValue())) {
-        if (entry.getValue() instanceof Yaml.Scalar) {
-            Yaml.Scalar scalar = (Yaml.Scalar) entry.getValue();
-            if (StringUtils.matchesGlob(scalar.getValue(), "actions/checkout@v2")) {
-                return SearchResult.found(entry, "Found deprecated checkout action");
-            }
-        }
-    }
-    return super.visitMappingEntry(entry, ctx);
-}
-```
-
-#### Replacement Recipe
-
-Replace values matching a pattern:
-
-```java
-@Override
-public Yaml.Mapping.Entry visitMappingEntry(Yaml.Mapping.Entry entry, ExecutionContext ctx) {
-    JsonPathMatcher matcher = new JsonPathMatcher("$.jobs.*.steps[*].uses");
-    if (matcher.matches(getCursor()) && "uses".equals(entry.getKey().getValue())) {
-        if (entry.getValue() instanceof Yaml.Scalar) {
-            Yaml.Scalar scalar = (Yaml.Scalar) entry.getValue();
-            if ("actions/checkout@v2".equals(scalar.getValue())) {
-                return entry.withValue(scalar.withValue("actions/checkout@v3"));
-            }
-        }
-    }
-    return super.visitMappingEntry(entry, ctx);
-}
-```
-
-#### Add Missing Key Recipe
-
-Add a key if it doesn't exist:
-
-```java
-@Override
-public Yaml.Mapping visitMapping(Yaml.Mapping mapping, ExecutionContext ctx) {
-    JsonPathMatcher matcher = new JsonPathMatcher("$.jobs.*");
-    if (matcher.matches(getCursor())) {
-        boolean hasTimeout = false;
-        for (Yaml.Mapping.Entry entry : mapping.getEntries()) {
-            if ("timeout-minutes".equals(entry.getKey().getValue())) {
-                hasTimeout = true;
-                break;
-            }
-        }
-        if (!hasTimeout) {
-            // Add timeout-minutes: 30
-            Yaml.Mapping.Entry newEntry = new Yaml.Mapping.Entry(
-                /* construct new entry */
-            );
-            return mapping.withEntries(
-                ListUtils.concat(mapping.getEntries(), newEntry)
-            );
-        }
-    }
-    return super.visitMapping(mapping, ctx);
-}
-```
+1. Always call super methods: `return super.visitMappingEntry(entry, ctx);`
+2. Return modified copies - never mutate LST elements directly
+3. Use `withX()` methods for all modifications
+4. Handle null cases with conditional expressions
+5. Preserve formatting - LST methods maintain it automatically
+6. Java 8 only - no modern Java features
 
 ### OpenRewrite Traits (Advanced)
 
-For complex recipes that benefit from higher-level semantic abstractions, you can use OpenRewrite Traits. Traits wrap LST elements with domain-specific logic.
+For complex recipes that benefit from higher-level semantic abstractions, OpenRewrite Traits provide domain-specific logic by wrapping LST elements.
 
-**When you need detailed information about Traits**, refer to the companion guide: `./references/openrewrite-traits-guide.md`.
+**For detailed information about Traits**, refer to the companion guide: `./references/openrewrite-traits-guide.md`.
 
 **Quick Traits Overview:**
 
@@ -512,11 +301,11 @@ For complete trait implementation patterns, matcher API details, and advanced ex
 - [ ] Recipe follows OpenRewrite naming conventions (`com.yourorg.RecipeName`)
 - [ ] No hardcoded values that should be parameters
 - [ ] Recipe handles edge cases gracefully (no NPEs)
-- [ ] Code is Java 8 compatible
+- [ ] Code is Java 8 compatible (verify with `./scripts/validate_java8.py`)
 - [ ] Formatting/comments preserved in YAML output
 - [ ] Documentation is clear and includes examples
 - [ ] Recipe could be contributed to OpenRewrite or org recipe library
-- [ ] License header included if `gradle/licenseHeader.txt` exists
+- [ ] License header included if `gradle/licenseHeader.txt` exists (use `./scripts/add_license_header.sh`)
 
 ### Success Criteria
 
@@ -527,9 +316,9 @@ Recipe is production-ready when:
 - Documentation enables users to understand and use the recipe
 - Code quality meets standards for upstream contribution
 
-## Your Approach
+## Recommended Approach
 
-When helping create OpenRewrite recipes:
+Follow this workflow when creating OpenRewrite recipes:
 
 1. **Phase 1 (RED)** - Write failing tests with before/after YAML
 2. **Phase 2 (DECIDE)** - Choose declarative vs imperative approach

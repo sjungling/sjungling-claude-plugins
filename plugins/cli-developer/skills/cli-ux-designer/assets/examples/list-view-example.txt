@@ -1,0 +1,25 @@
+Showing 15 of 127 issues in cli/cli
+
+#4523  Fix help text formatting for nested commands            (enhancement)       20h
+#4521  Add support for GitHub Enterprise Server 3.8            (feature)           1d
+#4518  Bug: color output in piped commands                     (bug)               2d
+#4510  Documentation improvements for auth commands            (documentation)     4d
+#4507  Performance: speed up repository clone operations       (enhancement)       5d
+#4498  Add interactive mode for issue creation                 (feature)           1w
+#4492  Fix crash when using --web flag without browser         (bug)               1w
+#4485  Improve error messages for network failures             (enhancement)       2w
+#4478  Support custom templates for pull requests              (feature)           2w
+#4471  Update dependencies to latest versions                  (maintenance)       2w
+#4465  Add bash completion for subcommands                     (enhancement)       3w
+#4459  Fix regression in release list command                  (bug)               3w
+#4451  Support for organization-level configurations           (feature)           1mo
+#4447  Improve accessibility of table output                   (accessibility)     1mo
+#4440  Add support for draft pull requests in list view        (enhancement)       1mo
+
+Legend:
+  • Green = open
+  • Red = closed
+  • Yellow = draft
+  • Gray = secondary information
+
+Note: Times shown are relative to current date

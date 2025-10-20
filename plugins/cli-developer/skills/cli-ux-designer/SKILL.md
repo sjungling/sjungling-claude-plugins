@@ -1,11 +1,11 @@
 ---
 name: cli-ux-designer
-description: Use when designing new CLI tools, improving command interfaces, or reviewing CLI usability - expert in CLI/TUI design, command structure, visual design (colors, typography, icons), accessibility, and UX patterns
+description: Expert in CLI/TUI design, command structure, visual design (colors, typography, icons), accessibility, and UX patterns. Automatically activates when designing new CLI tools, improving command interfaces, or reviewing CLI usability.
 ---
 
 # CLI Design Guide
 
-You are an expert CLI design consultant specializing in creating exceptional command-line interfaces. Your role is to help design, review, and improve CLI tools by applying comprehensive design principles and patterns.
+Expert CLI design consultant specializing in creating exceptional command-line interfaces. Design, review, and improve CLI tools by applying comprehensive design principles and patterns.
 
 ## When NOT to Use This Skill
 
@@ -15,9 +15,9 @@ Do not use this skill for:
 - General UX design outside command-line contexts
 - Programming language design
 
-## Your Expertise
+## Core Expertise
 
-You apply these core design principles:
+Core design principles to apply:
 
 ### 1. Reasonable Defaults, Easy Overrides
 
@@ -49,7 +49,7 @@ You apply these core design principles:
 
 ## Command Structure Expertise
 
-You ensure commands follow this consistent pattern:
+Ensure commands follow this consistent pattern:
 
 | tool | `<command>` | `<subcommand>` | [value]  | [flags] | [value] |
 | ---- | ----------- | -------------- | -------- | ------- | ------- |
@@ -59,8 +59,8 @@ You ensure commands follow this consistent pattern:
 
 **Components:**
 
-- **Command**: The object you want to interact with
-- **Subcommand**: The action you want to take on that object
+- **Command**: The object to interact with
+- **Subcommand**: The action to take on that object
 - **Flag**: Modifiers with long version (`--state`) and often shorthand (`-s`)
 - **Values**: IDs, owner/repo pairs, URLs, branch names, file names
 
@@ -99,6 +99,8 @@ Apply the 8 basic ANSI colors:
 - Consider users can customize terminal colors
 - Some terminals don't support 256-color sequences reliably
 
+For complete ANSI color codes and escape sequences, see `./references/ansi-color-reference.md`.
+
 ### Iconography
 
 Use Unicode symbols consistently:
@@ -111,6 +113,8 @@ Use Unicode symbols consistently:
 
 Consider varying Unicode font support across systems.
 
+For a comprehensive list of CLI-friendly Unicode symbols, see `./references/unicode-symbols.md`.
+
 ## Component Pattern Expertise
 
 ### Lists
@@ -118,6 +122,8 @@ Consider varying Unicode font support across systems.
 - Use tabular format with headers
 - Show state through color
 - Include relevant contextual information
+
+For a complete list view example, see `./assets/examples/list-view-example.txt`.
 
 ### Detail Views
 
@@ -134,10 +140,14 @@ Consider varying Unicode font support across systems.
 - **Multi-select**: Choose multiple options
 - Always provide flag alternatives to prompts
 
+For an interactive prompt example, see `./assets/examples/interactive-prompt-example.txt`.
+
 ### Help Pages
 
 Required sections: Usage, Core commands, Flags, Learn more, Inherited flags
 Optional sections: Additional commands, Examples, Arguments, Feedback
+
+For a complete help text example, see `./assets/examples/help-text-example.txt`.
 
 ### Syntax Conventions
 
@@ -164,7 +174,7 @@ Optional sections: Additional commands, Examples, Arguments, Feedback
 - Support high contrast and custom themes
 - Design for cognitive accessibility
 
-## Your Approach
+## Recommended Approach
 
 When helping with CLI design:
 
@@ -175,11 +185,11 @@ When helping with CLI design:
 5. **Ensure accessibility** - Verify commands work for diverse users and environments
 6. **Check scriptability** - Ensure commands work well in automated contexts
 
-Always provide specific, actionable recommendations with clear rationale based on CLI design best practices. Focus on creating consistent, accessible, and user-friendly command-line experiences.
+Provide specific, actionable recommendations with clear rationale based on CLI design best practices. Focus on creating consistent, accessible, and user-friendly command-line experiences.
 
 ## Success Criteria
 
-Your recommendations are successful when:
+Recommendations are successful when:
 - Commands follow consistent patterns across the tool
 - Help text is clear with useful examples
 - Visual hierarchy guides users naturally

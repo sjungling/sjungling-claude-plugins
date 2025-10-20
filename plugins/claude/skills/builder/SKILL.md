@@ -1,6 +1,6 @@
 ---
 name: builder
-description: Use when creating or modifying Claude Code components including subagents, skills, slash commands, plugins, or plugin marketplaces. Activates when working with .md files in .claude/ directories, agent/command/skill frontmatter, marketplace.json, or when discussing Claude Code extensibility.
+description: Expert in creating Claude Code components including subagents, skills, slash commands, plugins, or plugin marketplaces. Automatically activates when working with .md files in .claude/ directories, agent/command/skill frontmatter, marketplace.json, or when discussing Claude Code extensibility.
 ---
 
 # Claude Code Builder
@@ -9,7 +9,7 @@ Expert guidance for creating Claude Code subagents, skills, slash commands, plug
 
 ## When to Use This Skill
 
-This skill activates when you're:
+This skill activates when:
 - Creating or editing agent markdown files with YAML frontmatter
 - Writing slash command definitions
 - Developing skills with SKILL.md files
@@ -51,7 +51,7 @@ Skills provide automatic, context-aware guidance.
 5. Bundle reference materials in subdirectories
 6. Test activation contexts
 
-**See**: `references/skills-guide.md` for complete best practices
+**See**: `./references/skills-guide.md` for complete best practices
 
 ### 2. Creating a Slash Command
 
@@ -64,7 +64,7 @@ Commands provide quick shortcuts for common tasks.
 4. Preapprove necessary tools
 5. Test command execution
 
-**See**: `references/slash-commands-guide.md` for complete best practices
+**See**: `./references/slash-commands-guide.md` for complete best practices
 
 ### 3. Creating a Subagent
 
@@ -77,75 +77,71 @@ Subagents provide specialized expertise and delegatable workflows.
 4. Define workflows and success criteria
 5. Test with Task tool
 
-**See**: `references/subagents-guide.md` for complete best practices
+**See**: `./references/subagents-guide.md` for complete best practices
 
 ### 4. Creating a Plugin
 
 Plugins package components for distribution.
 
+**Quick Start**: Use the plugin scaffold generator:
+```bash
+python ./scripts/init_plugin.py --name my-plugin --description "Description" --author "Your Name"
+```
+
 **Steps**:
-1. Create plugin directory structure
+1. Create plugin directory structure (or use `./scripts/init_plugin.py`)
 2. Create `.claude-plugin/plugin.json` with metadata
 3. Add components (agents, commands, skills)
 4. Create README.md and SKILLS.md
 5. Register in marketplace.json
-6. Test installation
+6. Validate marketplace configuration (use `./scripts/validate_marketplace.py`)
+7. Test installation
 
-**See**: `references/plugins-guide.md` for complete best practices
+**See**: `./references/plugins-guide.md` for complete best practices
 
 ## YAML Frontmatter Quick Reference
+
+**Note**: This is a quick reference. See individual reference guides for complete schema details.
 
 ### Skills (SKILL.md)
 
 ```yaml
 ---
 name: skill-name
-description: Use when [triggers]. Detailed description with keywords.
+description: Use when [triggers]...
 ---
 ```
 
-**Key points**:
-- Description must include "Use when..." with specific triggers
-- Max 64 chars for name, 1024 for description
-- Only name and description supported
+See `./references/skills-guide.md` for complete frontmatter specification.
 
 ### Subagents (agents/*.md)
 
 ```yaml
 ---
 name: agent-name
-description: Agent purpose with usage examples
+description: Agent purpose...
 model: inherit
 color: blue
-tools: Read, Write, Edit, Bash
+tools: Read, Write, Edit
 ---
 ```
 
-**Key points**:
-- Use kebab-case for names
-- Include usage examples in description
-- Colors: blue, green, yellow, red, purple, cyan, magenta
-- List specific tools to restrict agent capabilities
+See `./references/subagents-guide.md` for complete frontmatter specification.
 
 ### Slash Commands (commands/*.md)
 
 ```yaml
 ---
-description: One-line command description
+description: Command description
 allowed-tools:
   - Bash(npm:*)
-  - Bash(git:*)
 args:
-  - name: argument-name
-    description: What this argument is
+  - name: arg-name
+    description: What it does
 ---
 ```
 
-**Key points**:
-- Frontmatter is optional
-- Preapprove tools to reduce user friction
-- Use glob patterns for flexible tool matching
-- Document args for user reference
+See `./references/slash-commands-guide.md` for complete frontmatter specification.
 
 ## Best Practices
 
@@ -209,6 +205,12 @@ args:
 - Forget to document all components
 
 ## Common Patterns
+
+**Component Templates**: Use provided templates as starting points:
+- `./assets/templates/plugin.json` - Plugin metadata template
+- `./assets/templates/agent-template.md` - Subagent structure template
+- `./assets/templates/skill-template.md` - Skill structure template
+- `./assets/templates/command-template.md` - Slash command template
 
 ### Skill with References
 
@@ -307,25 +309,25 @@ Expected deliverables:
 
 This skill includes comprehensive guides for each component type:
 
-- **Subagents Guide**: `references/subagents-guide.md`
+- **Subagents Guide**: `./references/subagents-guide.md`
   - Complete frontmatter reference
   - System prompt best practices
   - Testing and integration patterns
   - Common agent patterns
 
-- **Skills Guide**: `references/skills-guide.md`
+- **Skills Guide**: `./references/skills-guide.md`
   - Description writing for activation
   - Content structure recommendations
   - Bundling reference materials
   - Discovery and testing
 
-- **Slash Commands Guide**: `references/slash-commands-guide.md`
+- **Slash Commands Guide**: `./references/slash-commands-guide.md`
   - Tool preapproval syntax
   - Argument handling
   - Workflow patterns
   - Security considerations
 
-- **Plugins Guide**: `references/plugins-guide.md`
+- **Plugins Guide**: `./references/plugins-guide.md`
   - Plugin structure and metadata
   - Marketplace configuration
   - Installation and distribution
@@ -421,7 +423,7 @@ You are an expert code reviewer specializing in code quality, security, and main
 
 ## Success Criteria
 
-Your Claude Code components are successful when:
+Claude Code components are successful when:
 
 **Skills**:
 - Activate automatically in appropriate contexts
