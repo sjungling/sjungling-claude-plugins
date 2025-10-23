@@ -36,6 +36,7 @@ This skill activates when:
 | Keyboard shortcut | Command | `/format-code`, `/run-tests` |
 | Delegatable workflow | Subagent | Code reviews, complex migrations |
 | Package for distribution | Plugin | Collection of related components |
+| Validate prerequisites | Hook | Check dependencies, verify API keys |
 
 ## Core Workflows
 
@@ -99,6 +100,20 @@ python ./scripts/init_plugin.py --name my-plugin --description "Description" --a
 
 **See**: `./references/plugins-guide.md` for complete best practices
 
+### 5. Creating Hooks
+
+Hooks validate prerequisites and control tool execution.
+
+**Steps**:
+1. Create `hooks/hooks.json` configuration
+2. Create hook script in `scripts/` directory
+3. Make script executable (`chmod +x`)
+4. Implement proper input/output contract
+5. Test with mock inputs
+6. Verify error messages are helpful
+
+**See**: `./references/hooks-guide.md` for complete best practices
+
 ## YAML Frontmatter Quick Reference
 
 **Note**: This is a quick reference. See individual reference guides for complete schema details.
@@ -108,9 +123,11 @@ python ./scripts/init_plugin.py --name my-plugin --description "Description" --a
 ```yaml
 ---
 name: skill-name
-description: Use when [triggers]...
+description: Expert in [domain]. Automatically activates when [triggers]...
 ---
 ```
+
+**CRITICAL**: Skills support ONLY `name` and `description` fields. Do not add `version`, `when_to_use`, or any other fields.
 
 See `./references/skills-guide.md` for complete frontmatter specification.
 
@@ -333,6 +350,12 @@ This skill includes comprehensive guides for each component type:
   - Installation and distribution
   - Testing and versioning
 
+- **Hooks Guide**: `./references/hooks-guide.md`
+  - Hook types and when to use them
+  - PreToolUse hook implementation
+  - Input/output contracts
+  - Validation patterns and best practices
+
 ## Examples
 
 ### Example: Creating a Testing Skill
@@ -340,7 +363,7 @@ This skill includes comprehensive guides for each component type:
 ```yaml
 ---
 name: api-testing-patterns
-description: Use when writing tests for REST APIs, GraphQL endpoints, or API integration tests - provides patterns for request mocking, response validation, authentication testing, and error scenario coverage
+description: Expert in API testing patterns. Automatically activates when writing tests for REST APIs, GraphQL endpoints, or API integration tests - provides patterns for request mocking, response validation, authentication testing, and error scenario coverage
 ---
 
 # API Testing Patterns

@@ -17,18 +17,20 @@ Create a skill when you need:
 
 ## Directory Structure
 
-Skills are directories containing a `SKILL.md` file and optional reference materials:
+Skills are directories containing a `SKILL.md` file and optional bundled resources:
 
 ```
 skill-name/
 ├── SKILL.md           # Required: main skill definition
-├── references/        # Optional: supporting documentation
+├── references/        # Optional: docs loaded into context as needed
 │   ├── guide.md
 │   └── examples.md
-├── templates/         # Optional: code templates
-│   └── template.txt
-└── scripts/           # Optional: helper scripts
-    └── helper.sh
+├── assets/            # Optional: files used in output (not loaded into context)
+│   ├── templates/
+│   │   └── component.tsx
+│   └── logo.png
+└── scripts/           # Optional: executable utilities
+    └── helper.py
 ```
 
 ### Location
@@ -51,6 +53,8 @@ description: Detailed description including when to use this skill and specific 
 
 ## YAML Frontmatter Fields
 
+**CRITICAL**: Skills support ONLY two frontmatter fields. Do not add any other fields.
+
 ### Required Fields
 
 **`name`** (string, max 64 characters)
@@ -69,15 +73,29 @@ description: Detailed description including when to use this skill and specific 
   description: Use when working with iOS or macOS development projects, including Swift code, SwiftUI interfaces, Xcode project configuration, iOS frameworks, app architecture, debugging iOS apps, or any Apple platform development tasks.
   ```
 
-### No Other Fields
+### No Other Fields Are Supported
 
 Unlike subagents, skills only support `name` and `description` in frontmatter. Configuration is done through the skill content itself.
+
+**INVALID - Do Not Use:**
+```yaml
+---
+name: my-skill
+description: Valid description
+version: 1.0.0        # ❌ NOT SUPPORTED
+when_to_use: ...      # ❌ NOT SUPPORTED
+author: ...           # ❌ NOT SUPPORTED
+tags: ...             # ❌ NOT SUPPORTED
+---
+```
+
+**Note**: You may encounter skills from other repositories (e.g., superpowers) that use additional fields like `version` or `when_to_use`. These are custom conventions specific to those repositories and are NOT part of the official Claude Code skill specification. Do not copy these fields into Claude Code skills.
 
 ## Description Best Practices
 
 The description is **critical** for skill activation. It should:
 
-1. **Start with "Use when..."**: Clearly state activation triggers
+1. **Use third-person voice**: Write "Expert in X. Automatically activates when..." rather than "Use when..."
 2. **List specific technologies**: Mention frameworks, languages, tools
 3. **Include task types**: Design, debugging, testing, refactoring, etc.
 4. **Reference file patterns**: File extensions, naming patterns
@@ -86,28 +104,167 @@ The description is **critical** for skill activation. It should:
 **Good Examples:**
 
 ```yaml
-description: Use when creating or developing anything, before writing code or implementation plans - refines rough ideas into fully-formed designs through structured Socratic questioning, alternative exploration, and incremental validation
+description: Expert in iterative design refinement. Automatically activates when creating or developing anything before writing code or implementation plans - refines rough ideas into fully-formed designs through structured Socratic questioning, alternative exploration, and incremental validation
 ```
 
 ```yaml
-description: Use when encountering any bug, test failure, or unexpected behavior, before proposing fixes - four-phase framework (root cause investigation, pattern analysis, hypothesis testing, implementation) that ensures understanding before attempting solutions
+description: Expert in systematic debugging. Automatically activates when encountering any bug, test failure, or unexpected behavior before proposing fixes - four-phase framework (root cause investigation, pattern analysis, hypothesis testing, implementation) that ensures understanding before attempting solutions
 ```
 
 ```yaml
-description: Use when working with iOS or macOS development projects, including Swift code, SwiftUI interfaces, Xcode project configuration, iOS frameworks, app architecture, debugging iOS apps, or any Apple platform development tasks
+description: Expert in iOS and macOS development. Automatically activates when working with Swift code, SwiftUI interfaces, Xcode project configuration, iOS frameworks, app architecture, debugging iOS apps, or any Apple platform development tasks
 ```
 
 **Poor Examples:**
 
 ```yaml
 description: Helps with Swift development
-# Too vague - no trigger contexts
+# Too vague - no trigger contexts, not third-person
+```
+
+```yaml
+description: Use when building microservices
+# Second-person voice instead of third-person
 ```
 
 ```yaml
 description: A comprehensive guide to building scalable microservices architectures using cloud-native patterns
-# Doesn't say "when to use"
+# Doesn't clearly state when to activate
 ```
+
+## Writing Style
+
+Write the entire skill using **imperative/infinitive form** (verb-first instructions), not second person. Use objective, instructional language that Claude can follow directly.
+
+**Do** (Imperative/Infinitive):
+- "To accomplish X, do Y"
+- "Start with step 1"
+- "Analyze the code for patterns"
+- "Create a test file"
+- "Avoid using global state"
+
+**Don't** (Second Person):
+- "You should do X"
+- "If you need to do X"
+- "You can analyze the code"
+- "You will create a test file"
+- "You shouldn't use global state"
+
+This style maintains consistency and clarity for AI consumption while keeping the skill content focused on actionable instructions rather than conversational guidance.
+
+## Skill Creation Workflow
+
+Follow this structured process to create effective skills:
+
+### Step 1: Understand the Skill with Concrete Examples
+
+Skip this step only when the skill's usage patterns are already clearly understood.
+
+Clearly understand concrete examples of how the skill will be used. Gather these through:
+- Direct user examples of tasks they perform repeatedly
+- Generated examples that are validated with user feedback
+- Real-world scenarios from past work
+
+**Key questions to answer**:
+- What functionality should the skill support?
+- What specific tasks would trigger this skill?
+- What would a user say or do that should activate it?
+- What file types, technologies, or contexts are involved?
+
+Avoid overwhelming with too many questions at once. Start with the most important and follow up as needed.
+
+**Conclude when**: There is a clear sense of the functionality the skill should support.
+
+### Step 2: Plan the Reusable Skill Contents
+
+Analyze each concrete example to identify what bundled resources would help:
+
+For each example, consider:
+1. How to execute the task from scratch
+2. What gets rewritten repeatedly (→ candidate for `scripts/`)
+3. What documentation would help (→ candidate for `references/`)
+4. What templates or assets would help (→ candidate for `assets/`)
+
+**Example analysis**:
+- "Help me rotate this PDF" → `scripts/rotate_pdf.py` (same code rewritten each time)
+- "Build me a todo app" → `assets/frontend-template/` (same boilerplate each time)
+- "Query user data from BigQuery" → `references/schema.md` (need to rediscover schemas each time)
+
+**Output**: A list of scripts, references, and assets to include in the skill.
+
+### Step 3: Initialize the Skill
+
+Create the skill structure using the initialization script from the Anthropic skills repository:
+
+```bash
+uvx --from git+https://github.com/anthropics/skills init_skill.py <skill-name> --path <output-directory>
+```
+
+This script:
+- Creates the skill directory at the specified path
+- Generates a SKILL.md template with proper frontmatter and placeholders
+- Creates example resource directories: `scripts/`, `references/`, and `assets/`
+- Adds example files in each directory that can be customized or deleted
+
+**Alternative**: Manually create the directory structure if the script is not available, but the script ensures proper formatting and structure.
+
+### Step 4: Implement the Skill
+
+**Start with bundled resources**:
+1. Create the scripts, references, and assets identified in Step 2
+2. This may require user input (e.g., brand assets, company documentation)
+3. Delete any example files/directories not needed for the skill
+
+**Update SKILL.md**:
+
+Answer these questions in the skill content:
+1. What is the purpose of the skill? (brief overview)
+2. When should the skill be used? (activation contexts)
+3. How should Claude use the skill in practice?
+
+**Remember**:
+- Use third-person voice in description
+- Use imperative/infinitive form in skill content
+- Reference all bundled resources so Claude knows how to use them
+- Keep SKILL.md lean; move detailed content to references files
+- Include concrete examples where helpful
+
+### Step 5: Package and Validate the Skill
+
+Package the skill into a distributable format using the packaging script:
+
+```bash
+uvx --from git+https://github.com/anthropics/skills package_skill.py <path/to/skill-folder> [output-directory]
+```
+
+The script will:
+1. **Validate** the skill automatically:
+   - YAML frontmatter format and required fields
+   - Skill naming conventions and directory structure
+   - Description completeness and quality
+   - File organization and resource references
+
+2. **Package** the skill if validation passes:
+   - Creates a zip file named after the skill (e.g., `my-skill.zip`)
+   - Includes all files with proper directory structure
+   - Ready for distribution or installation
+
+If validation fails, fix the reported errors and run again.
+
+### Step 6: Test and Iterate
+
+After testing the skill in real usage:
+
+1. Use the skill on real tasks
+2. Notice struggles or inefficiencies
+3. Identify how SKILL.md or bundled resources should be updated
+4. Implement changes and test again
+
+**Common iterations**:
+- Refining description to improve activation triggers
+- Moving content between SKILL.md and references files
+- Adding missing examples or patterns
+- Creating additional scripts for repeated tasks
 
 ## Skill Content Structure
 
@@ -166,40 +323,106 @@ description: A comprehensive guide to building scalable microservices architectu
 
 6. **References** - Links to bundled materials
    ```markdown
-   ## References
+   ## Bundled Resources
 
    See `references/guide.md` for detailed patterns.
-   See `templates/template.txt` for starter code.
+   See `assets/templates/template.txt` for starter code.
    ```
 
 ## Bundling Reference Materials
 
-Skills can include supporting files in the skill directory:
+Skills can include supporting files in the skill directory. Understanding when and how to use each type is critical for effective skill design.
 
-### Reference Documents (`references/`)
-- Detailed guides
-- API documentation
-- Design patterns
-- Best practices
-- Examples and case studies
+### Progressive Disclosure: 3-Level Loading System
 
-### Templates (`templates/`)
-- Code scaffolding
-- Configuration files
-- Boilerplate code
-- Directory structures
+Skills use a three-level loading system to manage context efficiently:
 
-### Scripts (`scripts/`)
-- Helper utilities
-- Validation scripts
-- Code generators
-- Setup automation
+1. **Metadata (name + description)** - Always loaded into context (~100 words)
+2. **SKILL.md body** - Loaded when skill triggers (<5k words recommended)
+3. **Bundled resources** - Loaded as needed by Claude (varies by type)
+
+This design keeps the context window lean while making specialized knowledge available when needed.
+
+### Resource Types and Context Loading
+
+**Critical distinction**: Different resource types have different relationships with the context window.
+
+#### Scripts (`scripts/`)
+
+**Purpose**: Executable code (Python, Bash, etc.) for tasks requiring deterministic reliability or repeatedly rewritten code.
+
+**Context loading**: May be executed **without loading into context window**
+
+**When to include**:
+- Same code is being rewritten repeatedly
+- Deterministic reliability is needed
+- Task is procedural and automatable
+
+**Examples**:
+- `scripts/rotate_pdf.py` - PDF rotation utility
+- `scripts/validate_schema.sh` - Schema validation
+- `scripts/generate_boilerplate.py` - Code generation
+
+**Benefits**: Token efficient, deterministic, can execute without reading into context
+
+**Note**: Scripts may still need to be read by Claude for patching or environment-specific adjustments
+
+#### References (`references/`)
+
+**Purpose**: Documentation and reference material **loaded INTO context as needed** to inform Claude's process and thinking.
+
+**Context loading**: **YES** - Loaded into context when Claude determines it's needed
+
+**When to include**:
+- Documentation that Claude should reference while working
+- Detailed information too extensive for SKILL.md
+- Domain knowledge, schemas, or specifications
+- Detailed workflow guides or examples
+
+**Examples**:
+- `references/database_schema.md` - Database table structures
+- `references/api_docs.md` - API specifications
+- `references/company_policies.md` - Company-specific guidelines
+- `references/advanced_patterns.md` - Detailed implementation patterns
+
+**Benefits**: Keeps SKILL.md lean while making detailed information discoverable and loadable on demand
+
+**Best practice for large files**: If reference files exceed 10k words, include grep search patterns in SKILL.md to help Claude find relevant sections efficiently.
+
+#### Assets (`assets/`)
+
+**Purpose**: Files **NOT intended to be loaded into context**, but rather **used within the output** Claude produces.
+
+**Context loading**: **NO** - Not loaded into context; copied, modified, or used in final output
+
+**When to include**:
+- Files that will be used in the final output
+- Templates that get copied or modified
+- Images, fonts, or other binary resources
+- Boilerplate code or project scaffolding
+
+**Examples**:
+- `assets/templates/component-template.tsx` - React component boilerplate
+- `assets/logo.png` - Brand assets
+- `assets/slides-template.pptx` - PowerPoint template
+- `assets/frontend-skeleton/` - Complete project starter
+
+**Benefits**: Separates output resources from documentation, enables Claude to use files without loading them into context
+
+### Avoid Duplication
+
+**Important principle**: Information should live in either SKILL.md or references files, **not both**.
+
+Prefer references files for detailed information unless it's truly core to the skill—this keeps SKILL.md lean while making information discoverable without hogging the context window. Keep only essential procedural instructions and workflow guidance in SKILL.md; move detailed reference material, schemas, and examples to references files.
+
+### Runtime Environment Constraints
 
 **Important**: Skills run in Claude Code's runtime environment:
 - No network access during skill execution
-- No package installation
+- No package installation during execution
 - Must be self-contained
 - Can reference bundled materials
+- Scripts can execute if dependencies are available in the environment
 
 ## Naming Conventions
 
@@ -309,7 +532,7 @@ This plugin provides the following skills:
 ```markdown
 ---
 name: api-testing-patterns
-description: Use when writing tests for REST APIs, GraphQL endpoints, or API integration tests - provides patterns for request mocking, response validation, authentication testing, and error scenario coverage
+description: Expert in API testing patterns. Automatically activates when writing tests for REST APIs, GraphQL endpoints, or API integration tests - provides patterns for request mocking, response validation, authentication testing, and error scenario coverage
 ---
 
 # API Testing Patterns
@@ -477,8 +700,8 @@ tests/
 ## References
 
 - See `references/http-status-codes.md` for complete status code reference
-- See `templates/api-test-template.js` for test boilerplate
-- See `examples/complete-api-test-suite.js` for comprehensive examples
+- See `assets/templates/api-test-template.js` for test boilerplate
+- See `references/examples/complete-api-test-suite.js` for comprehensive examples
 ```
 
 ## Advanced Patterns

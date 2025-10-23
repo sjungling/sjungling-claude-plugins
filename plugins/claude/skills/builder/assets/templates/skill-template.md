@@ -9,21 +9,17 @@ description: Expert in [domain]. Automatically activates when [specific triggers
 
 Brief description of what this skill provides and its core principle.
 
-## When to Use
+## Automatic Activation
 
-Automatically activates when:
-- Specific file type or pattern
-- Working with specific technology/framework
-- Implementing specific feature type
-- Encountering specific problem domain
-
-Manual invocation when:
-- User explicitly asks for [domain] guidance
-- User needs help with [specific task]
+This skill automatically activates when:
+- Working with specific file types or patterns (e.g., .py, .tsx, Dockerfile)
+- Using specific technology/framework (e.g., React, Django, Kubernetes)
+- Implementing specific feature types (e.g., authentication, API endpoints)
+- Encountering specific problem domains (e.g., performance optimization, security)
 
 ## When NOT to Use This Skill
 
-Do not use this skill for:
+Do not activate this skill for:
 - Unrelated domain 1
 - Unrelated domain 2
 - General tasks outside scope
@@ -64,11 +60,21 @@ Steps to accomplish task:
 - Best practice 2
 - Best practice 3
 
-## Reference Materials
+## Bundled Resources
 
-For detailed information, see:
+This skill includes bundled resources to support its functionality:
+
+**References** (loaded into context as needed):
 - `./references/guide-name.md` - Detailed guide on specific topic
+- `./references/patterns.md` - Common patterns and examples
+
+**Scripts** (executable utilities):
 - `./scripts/utility-name.py` - Utility script for common tasks
+- `./scripts/validate.sh` - Validation helper
+
+**Assets** (used in output, not loaded into context):
+- `./assets/templates/template-name.tsx` - Code template for scaffolding
+- `./assets/boilerplate/` - Project starter structure
 
 ## Success Criteria
 
