@@ -76,26 +76,26 @@ EOF
 1. Push the branch to remote with tracking: `git push -u origin {branch-name}`
 2. Create PR using `gh pr create` with:
    - **PR Title**: Same format as commit title - `{type}({scope}): {short description}`
-   - **PR Description**: Use Problem & Solution format with heredoc:
+   - **PR Description**: Use Problem & Solution format with temp file:
+     - Write initial template to temp file using Write tool at `/tmp/claude/pr-body.md`:
+       ```markdown
+       ## Problem
+       [Describe the problem being solved, why this change is needed, or what gap this fills]
 
-```bash
-gh pr create --title "type(scope): description" --body "$(cat <<'EOF'
-## Problem
-[Describe the problem being solved, why this change is needed, or what gap this fills]
+       ## Solution
+       [Explain the approach taken to solve the problem]
+       [Include specific implementation details]
+       [Note any important technical decisions]
 
-## Solution
-[Explain the approach taken to solve the problem]
-[Include specific implementation details]
-[Note any important technical decisions]
+       ## Testing
+       [How to test these changes]
 
-## Testing
-[How to test these changes]
-
-## Related Issues
-[Link any related issues if applicable]
-EOF
-)"
-```
+       ## Related Issues
+       [Link any related issues if applicable]
+       ```
+     - Use Edit tool to replace placeholders with actual content based on git diff and commit analysis
+     - Use Read tool to verify the final content before creating PR
+     - Create PR: `gh pr create --title "type(scope): description" --body-file /tmp/claude/pr-body.md`
 
 3. Return the PR URL to the user
 

@@ -48,13 +48,22 @@ Each plugin can contain:
 - Agent: `technical-writer.md` - Legacy agent implementation (prefer skill for automatic activation)
 - Agent: `obsidian-vault-manager.md` - Obsidian vault management specialist using obsidian-cli
 
-**openrewrite-author** (`plugins/openrewrite-author/`):
-- Skill: `rewrite-yaml.md` - Expert in creating OpenRewrite recipes for YAML files using LST structure, visitor patterns, JsonPath matching (Java 8 compatible)
-- Reference: `openrewrite-traits-guide.md` - Comprehensive guide for implementing OpenRewrite Traits with matcher patterns
-- Agent (legacy): `yaml-recipe-expert.md` - Original agent implementation (prefer skills for better integration)
+**openrewrite** (`plugins/openrewrite/`):
+- Skill: `recipe-writer` - Expert in test-first development of production-quality OpenRewrite recipes for automated code refactoring. Covers all recipe types (declarative, Refaster, imperative) with deep expertise in Java and YAML transformations. Automatically activates when working with OpenRewrite recipes, RewriteTest, or asking about LST manipulation, JavaTemplate, visitor patterns, GitHub Actions, Kubernetes, or code migrations.
+- Templates: Complete boilerplate for imperative, declarative, Refaster recipes and tests
+- Examples: Working recipes demonstrating simple patterns, scanning recipes, and YAML transformations
+- References: Comprehensive guides for Java/YAML LST, JsonPath patterns, traits, testing, troubleshooting, and 200+ item production checklist
+- Scripts: `init_recipe.py` (generate boilerplate), `validate_recipe.py` (validate structure), `add_license_header.sh` (license management)
+
+**openrewrite-author** (`plugins/openrewrite-author/`) [DEPRECATED]:
+- **Note**: This plugin is deprecated. Please use `openrewrite` plugin instead.
+- The new `openrewrite` plugin combines all functionality from `openrewrite-author` plus Refaster templates, Java LST reference, comprehensive troubleshooting, and enhanced validation.
 
 **claude** (`plugins/claude/`):
 - Skill: `builder` - Expert in creating Claude Code subagents, skills, slash commands, plugins, and plugin marketplaces that automatically activates when working with .md files in .claude/ directories, agent/command/skill frontmatter, marketplace.json, or when discussing Claude Code extensibility
+- Command: `/list-skills` - List all available Claude Code skills in a formatted table grouped by plugin
+- Command: `/review-skill` - Review a Claude Code skill and recommend improvements based on best practices
+- Command: `/review-command` - Review a Claude Code slash command and recommend improvements based on official documentation
 
 ## Creating New Plugins
 
@@ -93,9 +102,20 @@ When adding a new plugin to the marketplace:
    ```
 
 5. **Command file format** (`commands/<name>.md`):
-   - No YAML frontmatter required
+   ```markdown
+   ---
+   description: Brief explanation shown in /help
+   argument-hint: [expected-arguments]
+   allowed-tools:
+     - Tool1
+     - Tool2
+   ---
+
+   [Command prompt content with $1, $2 for positional args or $ARGUMENTS for all args]
+   ```
+   - YAML frontmatter is optional but strongly recommended for best practices
+   - Use `description` for help text, `argument-hint` for auto-completion, `allowed-tools` for explicit permissions
    - Content is the command's prompt/workflow that executes when invoked
-   - Example: `swift-lint.md` contains instructions to run swift-format tools
 
 6. **Skill file format** (`skills/<name>.md`):
    ```markdown

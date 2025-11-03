@@ -23,8 +23,8 @@
       "source": "./plugins/technical-writer"
     },
     {
-      "name": "openrewrite-author",
-      "source": "./plugins/openrewrite-author"
+      "name": "openrewrite",
+      "source": "./plugins/openrewrite"
     },
     {
       "name": "claude",

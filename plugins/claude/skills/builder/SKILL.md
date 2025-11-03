@@ -1,27 +1,49 @@
 ---
 name: builder
-description: Expert in creating Claude Code components including subagents, skills, slash commands, plugins, or plugin marketplaces. Automatically activates when working with .md files in .claude/ directories, agent/command/skill frontmatter, marketplace.json, or when discussing Claude Code extensibility.
+description: Expert in creating Claude Code subagents, skills, slash commands, plugins, and plugin marketplaces. Automatically activates when working with .md files in .claude/ directories, agent/command/skill frontmatter, marketplace.json, or when discussing Claude Code extensibility and component creation.
 ---
 
 # Claude Code Builder
 
 Expert guidance for creating Claude Code subagents, skills, slash commands, plugins, and plugin marketplaces.
 
-## When to Use This Skill
+## Automatic Activation
 
-This skill activates when:
-- Creating or editing agent markdown files with YAML frontmatter
-- Writing slash command definitions
-- Developing skills with SKILL.md files
-- Configuring plugin.json or marketplace.json
+This skill automatically activates when:
+- Creating or editing `.claude/agents/*.md` files
+- Working with `.claude/commands/*.md` files
+- Developing `skills/*/SKILL.md` files
+- Configuring `.claude-plugin/plugin.json` or `marketplace.json`
 - Working with files in `.claude/` directories
+- Users ask "How do I create a Claude Code skill?"
+- Users ask "How do I make a slash command?"
+- Users mention "building a plugin" or "creating an agent"
 - Discussing Claude Code extensibility and customization
+
+## When NOT to Use This Skill
+
+Do not use this skill for:
+- General Claude Code usage questions (non-extensibility topics)
+- Debugging existing user code (unless related to plugin development)
+- Standard development tasks unrelated to Claude Code components
+- Basic Claude Code CLI operations (use `/help` instead)
+- Questions about using existing plugins (rather than creating them)
 
 ## Quick Start
 
+### Progressive Disclosure Design Principle
+
+Claude Code components use a three-level loading system to manage context efficiently:
+
+1. **Metadata (name + description)** - Always in context (~100 words)
+2. **Component body** - Loaded when component triggers (<5k words recommended)
+3. **Bundled resources** - Loaded as needed (unlimited)
+
+Design components to be lean in the body, delegating detailed information to bundled references. This approach keeps the context window efficient while making specialized knowledge available when needed.
+
 ### Creating a New Component
 
-**Before starting**, determine which component type fits your need:
+Before starting, determine which component type fits the requirements:
 
 - **Skill**: Automatic activation based on context (preferred for most use cases)
 - **Slash Command**: Quick keyboard shortcuts for common tasks
@@ -84,7 +106,7 @@ Subagents provide specialized expertise and delegatable workflows.
 
 Plugins package components for distribution.
 
-**Quick Start**: Use the plugin scaffold generator:
+**Quick Start**: Plugin scaffold generator usage:
 ```bash
 python ./scripts/init_plugin.py --name my-plugin --description "Description" --author "Your Name"
 ```
@@ -127,7 +149,7 @@ description: Expert in [domain]. Automatically activates when [triggers]...
 ---
 ```
 
-**CRITICAL**: Skills support ONLY `name` and `description` fields. Do not add `version`, `when_to_use`, or any other fields.
+**Note**: Skills support ONLY `name` and `description` in frontmatter. Unlike subagents, skills do not support `version`, `model`, `color`, `tools`, or any other fields. Additional fields will be ignored.
 
 See `./references/skills-guide.md` for complete frontmatter specification.
 
@@ -169,11 +191,11 @@ See `./references/slash-commands-guide.md` for complete frontmatter specificatio
 - Include technology names and file patterns
 - Bundle reference materials in skill directory
 - Test in multiple contexts to verify activation
-- Start with "Use when..." in description
+- Start description with third-person voice
 
 **Don't**:
-- Make descriptions too generic
-- Forget to mention specific technologies
+- Write descriptions too generic
+- Omit specific technologies from description
 - Include network-dependent resources
 - Use skills for simple linear workflows (use commands instead)
 
@@ -189,7 +211,7 @@ See `./references/slash-commands-guide.md` for complete frontmatter specificatio
 **Don't**:
 - Preapprove dangerous commands unnecessarily
 - Create commands for complex decision-making (use agents/skills)
-- Forget to test with different argument combinations
+- Skip testing with different argument combinations
 
 ### Subagent Development
 
@@ -201,7 +223,7 @@ See `./references/slash-commands-guide.md` for complete frontmatter specificatio
 - Restrict tools appropriately
 
 **Don't**:
-- Make agents too general-purpose
+- Create agents too general-purpose
 - Duplicate main Claude capabilities
 - Create overly complex nested workflows
 - Skip examples in description
@@ -219,7 +241,7 @@ See `./references/slash-commands-guide.md` for complete frontmatter specificatio
 - Create unfocused plugins
 - Use absolute paths in configuration
 - Skip testing installation process
-- Forget to document all components
+- Omit documentation for any components
 
 ## Common Patterns
 
@@ -288,8 +310,8 @@ Expected deliverables:
 - Add more specific keywords to description
 - Include technology/framework names
 - Mention file patterns (.swift, .tsx, etc.)
-- Start description with "Use when..."
-- Test with `description` variations
+- Start description with third-person voice
+- Test different `description` variations
 
 ### Invalid YAML Frontmatter
 
@@ -308,7 +330,7 @@ Expected deliverables:
 **Solutions**:
 - Add tools to `allowed-tools` array
 - Use glob patterns for flexibility: `Bash(npm:*)`
-- Include all commands the workflow needs
+- Include all commands the workflow requires
 - Test command to identify missing approvals
 
 ### Plugin Not Installing
@@ -322,39 +344,26 @@ Expected deliverables:
 - Ensure files exist at specified paths
 - Test with: `cat marketplace.json | python -m json.tool`
 
-## Reference Materials
+## Bundled Resources
 
-This skill includes comprehensive guides for each component type:
+This skill includes bundled resources to support component creation:
 
-- **Subagents Guide**: `./references/subagents-guide.md`
-  - Complete frontmatter reference
-  - System prompt best practices
-  - Testing and integration patterns
-  - Common agent patterns
+**References** (loaded into context as needed):
+- `./references/subagents-guide.md` - Complete frontmatter reference, system prompt best practices, testing and integration patterns, common agent patterns
+- `./references/skills-guide.md` - Description writing for activation, content structure recommendations, bundling reference materials, discovery and testing
+- `./references/slash-commands-guide.md` - Tool preapproval syntax, argument handling, workflow patterns, security considerations
+- `./references/plugins-guide.md` - Plugin structure and metadata, marketplace configuration, installation and distribution, testing and versioning
+- `./references/hooks-guide.md` - Hook types and when to use them, PreToolUse hook implementation, input/output contracts, validation patterns and best practices
 
-- **Skills Guide**: `./references/skills-guide.md`
-  - Description writing for activation
-  - Content structure recommendations
-  - Bundling reference materials
-  - Discovery and testing
+**Scripts** (executable utilities):
+- `./scripts/init_plugin.py` - Generate plugin scaffold with complete directory structure (agents/, commands/, skills/, .claude-plugin/)
+- `./scripts/validate_marketplace.py` - Validate marketplace.json configuration for correctness and best practices
 
-- **Slash Commands Guide**: `./references/slash-commands-guide.md`
-  - Tool preapproval syntax
-  - Argument handling
-  - Workflow patterns
-  - Security considerations
-
-- **Plugins Guide**: `./references/plugins-guide.md`
-  - Plugin structure and metadata
-  - Marketplace configuration
-  - Installation and distribution
-  - Testing and versioning
-
-- **Hooks Guide**: `./references/hooks-guide.md`
-  - Hook types and when to use them
-  - PreToolUse hook implementation
-  - Input/output contracts
-  - Validation patterns and best practices
+**Assets** (templates used in output):
+- `./assets/templates/plugin.json` - Plugin metadata template with standard fields
+- `./assets/templates/agent-template.md` - Subagent structure template with frontmatter and system prompt sections
+- `./assets/templates/skill-template.md` - Skill structure template with activation triggers and bundled resources
+- `./assets/templates/command-template.md` - Slash command template with argument handling and tool preapprovals
 
 ## Examples
 
@@ -435,15 +444,6 @@ You are an expert code reviewer specializing in code quality, security, and main
 [Additional review guidelines]
 ```
 
-## Documentation Links
-
-**Official Claude Code Documentation**:
-- Subagents: https://docs.claude.com/en/docs/claude-code/sub-agents.md
-- Skills: https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview.md
-- Slash Commands: https://docs.claude.com/en/docs/claude-code/slash-commands.md
-- Plugins: https://docs.claude.com/en/docs/claude-code/plugins.md
-- Plugin Marketplaces: https://docs.claude.com/en/docs/claude-code/plugin-marketplaces.md
-
 ## Success Criteria
 
 Claude Code components are successful when:
@@ -452,22 +452,36 @@ Claude Code components are successful when:
 - Activate automatically in appropriate contexts
 - Provide clear, actionable guidance
 - Include comprehensive examples
-- Bundle useful reference materials
+- Bundle useful reference materials efficiently
+- Use third-person voice in description
+- Use imperative/infinitive form consistently in content
 
 **Commands**:
-- Execute workflows efficiently
-- Handle arguments correctly
-- Have necessary tools preapproved
-- Provide clear feedback
+- Execute workflows efficiently without unnecessary approval prompts
+- Handle arguments correctly with proper substitution
+- Have necessary tools preapproved in frontmatter
+- Provide clear feedback on execution status
+- Follow security best practices for destructive operations
 
 **Subagents**:
-- Stay focused on their domain
-- Follow defined workflows
-- Have appropriate tool access
-- Deliver expected results
+- Stay focused on their domain expertise
+- Follow defined workflows consistently
+- Have appropriate tool access restrictions
+- Deliver expected results autonomously
+- Include usage examples in description
 
 **Plugins**:
-- Install without errors
+- Install without errors via marketplace
 - All components work as documented
-- Clear documentation provided
-- Properly versioned and maintained
+- Clear, comprehensive documentation provided
+- Properly versioned using semantic versioning
+- Use relative paths with `./` prefix in configurations
+
+## Documentation Links
+
+**Official Claude Code Documentation**:
+- Subagents: https://docs.claude.com/en/docs/claude-code/sub-agents.md
+- Skills: https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview.md
+- Slash Commands: https://docs.claude.com/en/docs/claude-code/slash-commands.md
+- Plugins: https://docs.claude.com/en/docs/claude-code/plugins.md
+- Plugin Marketplaces: https://docs.claude.com/en/docs/claude-code/plugin-marketplaces.md

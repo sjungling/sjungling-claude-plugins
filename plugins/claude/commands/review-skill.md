@@ -1,26 +1,39 @@
 ---
 description: Review a Claude Code skill and recommend improvements to conform to best practices
-args:
-  - name: skill-path
-    description: Path to the directory containing the skill to review
+argument-hint: [path/to/skill/directory or skill-name]
 allowed-tools:
   - Task
+  - Skill
+  - Read
+  - Glob
 ---
 
-Launch a subagent using the Task tool. The subagent should use the Skill tool to invoke the `claude:builder` skill.
+Review the Claude Code skill located at: **$1**
 
-Analyze the Claude Code skill located at: **$1**
+Use the Skill tool to invoke `example-skills:skill-creator` to access comprehensive skill creation guidance, validation scripts, and packaging tools.
 
-The subagent should read all files in the skill directory including SKILL.md, reference materials, templates, and scripts. Review the skill for conformance to best practices and provide actionable recommendations for improvements.
+Read all files in the skill directory including SKILL.md, reference materials, templates, and scripts. Review the skill for conformance to best practices and provide actionable recommendations for improvements.
 
 Focus on:
 
-- Frontmatter quality and completeness (name, description fields)
-- Description with clear activation triggers and technology keywords
-- Prompt clarity, structure, and effectiveness
-- Proper use of bundled resources and progressive disclosure
-- Examples and usage guidance (when to use and when NOT to use)
-- Tool specifications and usage patterns
-- Overall adherence to Claude Code skill conventions
+- **Metadata Quality**: Frontmatter completeness (name, description fields) with clear activation triggers and technology keywords
+- **Progressive Disclosure**: Proper use of bundled resources (scripts/, references/, assets/) and when to load them
+- **Writing Style**: Imperative/infinitive form (verb-first instructions), not second person
+- **Prompt Quality**: Clarity, structure, effectiveness, and adherence to skill creation process
+- **Examples and Usage**: Clear guidance on when to use and when NOT to use
+- **Tool Specifications**: Proper tool usage patterns and integrations
+- **Validation**: Run validation checks if available (mention `scripts/package_skill.py` for validation)
 
-Provide prioritized, specific recommendations (critical, important, nice-to-have) with concrete examples. Highlight what the skill does well and offer to implement improvements if requested.
+Provide prioritized, specific recommendations organized by:
+1. **Critical** - Must fix for proper functionality
+2. **Important** - Should fix for best practices alignment
+3. **Nice-to-have** - Optional improvements for enhanced quality
+
+For each recommendation:
+- Explain the issue clearly
+- Provide concrete examples of how to fix it
+- Reference specific files and line numbers when applicable
+
+Highlight what the skill does well and offer to implement improvements if requested. If the skill appears ready for distribution, mention that `scripts/package_skill.py` can validate and package it.
+
+If the skill directory path is not provided, search for skill directories in `.claude/skills/` or `plugins/*/skills/` in the current working directory and offer to review them.

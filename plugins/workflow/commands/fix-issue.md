@@ -36,17 +36,31 @@ Analyze and fix GitHub issue #$ARGUMENTS.
 
 ## Your task
 
-1. Analysis
+1. Analysis and Clarification (use subagent)
 
-   - Summarize the problem, acceptance criteria, scope, and risks from the issue details.
-   - If unclear, ask clarifying questions on edge cases or missing requirements.
+   - Launch a general-purpose subagent to analyze the issue and gather requirements
+   - The subagent should:
+     - Read and summarize the issue: problem, acceptance criteria, scope, and risks
+     - Identify any ambiguities or missing information
+     - **Use the AskUserQuestion tool** to ask structured clarifying questions about:
+       - Edge cases and error handling requirements
+       - Scope boundaries (what's in/out of scope)
+       - Implementation approach preferences
+       - Testing expectations and coverage requirements
+       - Any missing acceptance criteria
+       - Breaking changes or migration concerns
+     - Return a comprehensive summary including user responses
+   - Wait for the subagent to complete and review the analysis before proceeding
 
 2. Plan (propose and wait for confirmation)
 
-   - Propose a minimal, testable plan (files to change, tests to add, migration notes if any).
+   - Based on the analysis and clarification responses, propose a minimal, testable plan (files to change, tests to add, migration notes if any).
    - Post the proposed plan to the issue:
-     - Run: gh issue comment $ARGUMENTS --body "<concise plan summary>"
-   - Wait for user confirmation before making repo changes.
+     - Create temp file: `gh issue comment $ARGUMENTS --edit-last --body-file /dev/null 2>/dev/null || true` (to get template if available)
+     - Write plan to temp file: Use Write tool to create `/tmp/claude/issue-comment-$ARGUMENTS.md` with the concise plan summary
+     - Use Read tool to verify the content if needed
+     - Post comment: `gh issue comment $ARGUMENTS --body-file /tmp/claude/issue-comment-$ARGUMENTS.md`
+   - **Wait for user confirmation before making repo changes.**
 
 3. Branch management
 
@@ -85,12 +99,25 @@ Analyze and fix GitHub issue #$ARGUMENTS.
 8. PR (draft) with Problem/Solution format
 
    - Push branch and create a draft PR that links the issue:
-     - Body should include:
-       - Problem: what's broken or missing
-       - Solution: what changed and why
-       - Fixes #$ARGUMENTS
-     - Command:
-       - gh pr create --draft --fill --title "<type>: <scope>: <subject> (#$ARGUMENTS)" --body "Problem\n\n<text>\n\nSolution\n\n<text>\n\n<text>\n\nFixes #$ARGUMENTS"
+     - Write PR body to temp file using Write tool at `/tmp/claude/pr-body-issue-$ARGUMENTS.md`:
+       ```markdown
+       ## Problem
+
+       [Describe what's broken or missing]
+
+       ## Solution
+
+       [Explain what changed and why]
+
+       ## Testing
+
+       [How to test these changes]
+
+       Fixes #$ARGUMENTS
+       ```
+     - Use Edit tool to update the temp file with actual problem/solution descriptions
+     - Use Read tool to verify the content before creating PR
+     - Create PR: `gh pr create --draft --title "<type>(<scope>): <subject> (#$ARGUMENTS)" --body-file /tmp/claude/pr-body-issue-$ARGUMENTS.md`
 
 ## Notes
 
