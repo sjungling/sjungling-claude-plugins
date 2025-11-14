@@ -65,6 +65,16 @@ Each plugin can contain:
 - Command: `/review-skill` - Review a Claude Code skill and recommend improvements based on best practices
 - Command: `/review-command` - Review a Claude Code slash command and recommend improvements based on official documentation
 
+**workflow** (`plugins/workflow/`):
+- Skill: `git-bisect-debugging` - Systematic workflow for using git bisect to identify which commit introduced a bug. Supports automated test scripts, manual verification, and hybrid approaches with subagent architecture for isolated execution. Integrates with superpowers:systematic-debugging for root cause analysis.
+- Command: `/check-and-resolve` - Run npm run check:all if available and resolve all issues found
+- Command: `/clarify-issue [issue-url]` - Clarify ambiguities in a GitHub issue through structured questioning
+- Command: `/commit-and-push` - Create a commit with conventional commit format and optionally push to remote
+- Command: `/effective-workflow [skill-name or command-path]` - Analyze a skill or command to show what operations it would execute
+- Command: `/fix-issue [issue-number]` - Analyze and fix a GitHub issue end-to-end with plan, branch, tests, and draft PR
+- Command: `/pr` - Create a pull request with conventional commits formatting
+- Command: `/sidequest [task-description]` - Work on a side task in an isolated git worktree without interrupting your main branch. Creates a new worktree in `.worktrees/` directory and launches an autonomous subagent to complete the task.
+
 ## Creating New Plugins
 
 When adding a new plugin to the marketplace:
