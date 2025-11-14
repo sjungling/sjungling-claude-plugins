@@ -22,6 +22,56 @@ Systematically identify which commit introduced a bug or regression using git bi
 | **3. Execution** | Run bisect with subagents | First bad commit hash |
 | **4. Analysis & Handoff** | Show commit details, analyze root cause | Root cause understanding |
 
+## MANDATORY Requirements
+
+These are **non-negotiable**. No exceptions for time pressure, production incidents, or "simple" cases:
+
+1. **✅ ANNOUNCE skill usage** at start:
+   ```
+   "I'm using git-bisect-debugging to find which commit introduced this issue."
+   ```
+
+2. **✅ CREATE TodoWrite checklist** immediately (before Phase 1):
+   - Copy the exact checklist from "The Process" section below
+   - Update status as you progress through phases
+   - Mark phases complete ONLY when finished
+
+3. **✅ VERIFY safety checks** (Phase 1 - no skipping):
+   - Working directory MUST be clean (`git status`)
+   - Good commit MUST be verified (actually good)
+   - Bad commit MUST be verified (actually bad)
+   - If ANY check fails → abort and fix before proceeding
+
+4. **✅ USE AskUserQuestion** for strategy selection (Phase 2):
+   - Present all 3 approaches (automated, manual, hybrid)
+   - Don't default to automated without asking
+   - User must explicitly choose
+
+5. **✅ LAUNCH subagents** for verification (Phase 3):
+   - Main agent: orchestrates git bisect state
+   - Subagents: execute verification at each commit (via Task tool)
+   - NEVER run verification in main context
+   - Each commit tested in isolated subagent
+
+6. **✅ HANDOFF to systematic-debugging** (Phase 4):
+   - After finding bad commit, announce handoff
+   - Use superpowers:systematic-debugging skill
+   - Investigate root cause, not just WHAT changed
+
+## Red Flags - STOP and Follow the Skill
+
+If you catch yourself thinking ANY of these, you're about to violate the skill:
+
+- "User is in a hurry, I'll skip safety checks" → NO. Run all safety checks.
+- "This is simple, no need for TodoWrite" → NO. Create the checklist.
+- "I'll just use automated approach" → NO. Use AskUserQuestion.
+- "I'll run the test in my context" → NO. Launch subagent.
+- "Found the commit, that's enough" → NO. Handoff to systematic-debugging.
+- "Working directory looks clean" → NO. Run `git status` to verify.
+- "I'll verify good/bad commits later" → NO. Verify BEFORE starting bisect.
+
+**All of these mean: STOP. Follow the 4-phase workflow exactly.**
+
 ## The Process
 
 Copy this checklist to track progress:
@@ -72,7 +122,33 @@ Git Bisect Progress:
 
 **Assessment:** Can we write an automated test script that deterministically identifies good vs bad?
 
-Use AskUserQuestion to present these three approaches:
+**MANDATORY: Use AskUserQuestion tool** to present these three approaches (do NOT default to automated):
+
+```javascript
+AskUserQuestion({
+  questions: [{
+    question: "Which git bisect approach should we use?",
+    header: "Strategy",
+    multiSelect: false,
+    options: [
+      {
+        label: "Automated - test script runs automatically",
+        description: "Fast, no manual intervention. Best for: test failures, crashes, deterministic behavior. Requires: working test script."
+      },
+      {
+        label: "Manual - you verify each commit",
+        description: "Handles subjective issues. Best for: UI/UX changes, complex scenarios. Requires: you can manually check each commit."
+      },
+      {
+        label: "Hybrid - script + manual confirmation",
+        description: "Efficient with reliability. Best for: mostly automated but needs judgment. Requires: script for most cases, manual for edge cases."
+      }
+    ]
+  }]
+})
+```
+
+**Three approaches to present:**
 
 **Approach 1: Automated Bisect**
 - **When to use:** Test failure, crash, deterministic behavior
@@ -331,6 +407,22 @@ See if the login works
 - Show bisect log periodically: `git bisect log`
 - Estimate remaining steps: log2(commits in range)
 - Example: 100 commits → ~7 steps, 1000 commits → ~10 steps
+
+## Common Rationalizations (Resist These!)
+
+| Rationalization | Reality | What to Do Instead |
+|----------------|---------|-------------------|
+| "User is in a hurry, skip safety checks" | Broken bisect from dirty state wastes MORE time | Run all Phase 1 checks. Always. |
+| "This is simple, no need for TodoWrite" | You'll skip phases without tracking | Create checklist immediately |
+| "I'll just use automated approach" | User might prefer manual for vague issues | Use AskUserQuestion tool |
+| "I'll run the test in my context" | Context bleeding between commits breaks bisect | Launch subagent for each verification |
+| "Working directory looks clean" | Assumptions cause failures | Run `git status` to verify |
+| "I'll verify good/bad commits later" | Starting with wrong good/bad wastes all steps | Verify BEFORE `git bisect start` |
+| "Found the commit, user knows why" | User asked to FIND it, not debug it | Hand off to systematic-debugging |
+| "Production incident, no time for process" | Skipping process in incidents causes MORE incidents | Follow workflow. It's faster. |
+| "I remember from baseline, no need to test" | Skills evolve, baseline was different session | Test at each commit with subagent |
+
+**If you catch yourself rationalizing, STOP. Go back to MANDATORY Requirements section.**
 
 ## Integration with Other Skills
 
