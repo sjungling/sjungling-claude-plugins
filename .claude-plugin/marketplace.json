@@ -1,5 +1,5 @@
 {
-  "name": "claude-plugins",
+  "name": "sjungling-plugins",
   "metadata": {
     "description": "Personal collection of Claude Code plugins",
     "version": "1.0.0",
@@ -27,12 +27,16 @@
       "source": "./plugins/openrewrite"
     },
     {
-      "name": "claude",
-      "source": "./plugins/claude"
+      "name": "builder",
+      "source": "./plugins/builder"
     },
     {
       "name": "workflow",
       "source": "./plugins/workflow"
+    },
+    {
+      "name": "data-tools",
+      "source": "./plugins/data-tools"
     }
   ]
 }

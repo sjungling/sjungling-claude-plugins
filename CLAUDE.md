@@ -12,7 +12,7 @@ This repository doesn't require a build step - it's a collection of markdown-bas
 
 - **Validate marketplace structure**: Ensure `.claude-plugin/marketplace.json` is valid JSON
 - **Test plugin locally**: Use `/plugin marketplace add /Users/scott.jungling/Work/claude-plugins` to add this marketplace
-- **Install plugin**: Use `/plugin install <plugin-name>@claude-plugins` to test installation
+- **Install plugin**: Use `/plugin install <plugin-name>@sjungling-plugins` to test installation
 - **Validate agent/command syntax**: Check YAML frontmatter in markdown files is properly formatted
 
 ## Architecture
@@ -23,7 +23,7 @@ The repository uses a marketplace configuration (`.claude-plugin/marketplace.jso
 - Defines the plugin root location (`plugins/` directory at repository root)
 - Lists all available plugins with metadata (version, description, keywords, category)
 - Maps plugin components (agents, commands) to their file locations
-- Enables plugin installation via `/plugin install <name>@claude-plugins`
+- Enables plugin installation via `/plugin install <name>@sjungling-plugins`
 
 ### Plugin Component Types
 
@@ -59,9 +59,8 @@ Each plugin can contain:
 - **Note**: This plugin is deprecated. Please use `openrewrite` plugin instead.
 - The new `openrewrite` plugin combines all functionality from `openrewrite-author` plus Refaster templates, Java LST reference, comprehensive troubleshooting, and enhanced validation.
 
-**claude** (`plugins/claude/`):
+**builder** (`plugins/builder/`):
 - Skill: `builder` - Expert in creating Claude Code subagents, skills, slash commands, plugins, and plugin marketplaces that automatically activates when working with .md files in .claude/ directories, agent/command/skill frontmatter, marketplace.json, or when discussing Claude Code extensibility
-- Command: `/list-skills` - List all available Claude Code skills in a formatted table grouped by plugin
 - Command: `/review-skill` - Review a Claude Code skill and recommend improvements based on best practices
 - Command: `/review-command` - Review a Claude Code slash command and recommend improvements based on official documentation
 
@@ -74,6 +73,9 @@ Each plugin can contain:
 - Command: `/fix-issue [issue-number]` - Analyze and fix a GitHub issue end-to-end with plan, branch, tests, and draft PR
 - Command: `/pr` - Create a pull request with conventional commits formatting
 - Command: `/sidequest [task-description]` - Work on a side task in an isolated git worktree without interrupting your main branch. Creates a new worktree in `.worktrees/` directory and launches an autonomous subagent to complete the task.
+
+**data-tools** (`plugins/data-tools/`):
+- Skill: `structured-logging` - Use SQLite for structured data during complex workflows, debugging, and data analysis instead of temp files or stdout parsing. Automatically activates when parsing large output (>100 lines), tracking state across operations, correlating events, or analyzing structured data. Databases stored in `~/.claude-logs/<project-name>.db` persist across sessions.
 
 ## Creating New Plugins
 
@@ -151,7 +153,7 @@ Add this marketplace to Claude Code:
 
 Install a plugin:
 ```
-/plugin install <plugin-name>@claude-plugins
+/plugin install <plugin-name>@sjungling-plugins
 ```
 
 ## Documentation Reference
