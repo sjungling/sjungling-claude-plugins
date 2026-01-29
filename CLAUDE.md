@@ -11,7 +11,7 @@ This is a personal collection of Claude Code plugins. Plugins extend Claude Code
 This repository doesn't require a build step - it's a collection of markdown-based plugin definitions. Key operations:
 
 - **Validate marketplace structure**: Ensure `.claude-plugin/marketplace.json` is valid JSON
-- **Test plugin locally**: Use `/plugin marketplace add /Users/scott.jungling/Work/claude-plugins` to add this marketplace
+- **Test plugin locally**: Use `/plugin marketplace add /Users/scott.jungling/Work/sjungling-claude-plugins` to add this marketplace
 - **Install plugin**: Use `/plugin install <plugin-name>@sjungling-plugins` to test installation
 - **Validate agent/command syntax**: Check YAML frontmatter in markdown files is properly formatted
 
@@ -48,34 +48,18 @@ Each plugin can contain:
 - Agent: `technical-writer.md` - Legacy agent implementation (prefer skill for automatic activation)
 - Agent: `obsidian-vault-manager.md` - Obsidian vault management specialist using obsidian-cli
 
-**openrewrite** (`plugins/openrewrite/`):
-- Skill: `recipe-writer` - Expert in test-first development of production-quality OpenRewrite recipes for automated code refactoring. Covers all recipe types (declarative, Refaster, imperative) with deep expertise in Java and YAML transformations. Automatically activates when working with OpenRewrite recipes, RewriteTest, or asking about LST manipulation, JavaTemplate, visitor patterns, GitHub Actions, Kubernetes, or code migrations.
-- Templates: Complete boilerplate for imperative, declarative, Refaster recipes and tests
-- Examples: Working recipes demonstrating simple patterns, scanning recipes, and YAML transformations
-- References: Comprehensive guides for Java/YAML LST, JsonPath patterns, traits, testing, troubleshooting, and 200+ item production checklist
-- Scripts: `init_recipe.py` (generate boilerplate), `validate_recipe.py` (validate structure), `add_license_header.sh` (license management)
-
-**openrewrite-author** (`plugins/openrewrite-author/`) [DEPRECATED]:
-- **Note**: This plugin is deprecated. Please use `openrewrite` plugin instead.
-- The new `openrewrite` plugin combines all functionality from `openrewrite-author` plus Refaster templates, Java LST reference, comprehensive troubleshooting, and enhanced validation.
-
-**builder** (`plugins/builder/`):
-- Skill: `builder` - Expert in creating Claude Code subagents, skills, slash commands, plugins, and plugin marketplaces that automatically activates when working with .md files in .claude/ directories, agent/command/skill frontmatter, marketplace.json, or when discussing Claude Code extensibility
-- Command: `/review-skill` - Review a Claude Code skill and recommend improvements based on best practices
-- Command: `/review-command` - Review a Claude Code slash command and recommend improvements based on official documentation
+**git-tools** (`plugins/git-tools/`):
+- Skill: `git-bisect-debugging` - Systematic workflow for using git bisect to identify which commit introduced a bug. Supports automated test scripts, manual verification, and hybrid approaches with subagent architecture for isolated execution. Integrates with superpowers:systematic-debugging for root cause analysis.
 
 **workflow** (`plugins/workflow/`):
-- Skill: `git-bisect-debugging` - Systematic workflow for using git bisect to identify which commit introduced a bug. Supports automated test scripts, manual verification, and hybrid approaches with subagent architecture for isolated execution. Integrates with superpowers:systematic-debugging for root cause analysis.
-- Command: `/check-and-resolve` - Run npm run check:all if available and resolve all issues found
-- Command: `/clarify-issue [issue-url]` - Clarify ambiguities in a GitHub issue through structured questioning
-- Command: `/commit-and-push` - Create a commit with conventional commit format and optionally push to remote
-- Command: `/effective-workflow [skill-name or command-path]` - Analyze a skill or command to show what operations it would execute
-- Command: `/fix-issue [issue-number]` - Analyze and fix a GitHub issue end-to-end with plan, branch, tests, and draft PR
-- Command: `/pr` - Create a pull request with conventional commits formatting
-- Command: `/sidequest [task-description]` - Work on a side task in an isolated git worktree without interrupting your main branch. Creates a new worktree in `.worktrees/` directory and launches an autonomous subagent to complete the task.
+- Command: `/review-unstaged` - Review unstaged changes for code quality, style, and potential issues
 
 **data-tools** (`plugins/data-tools/`):
 - Skill: `structured-logging` - Use SQLite for structured data during complex workflows, debugging, and data analysis instead of temp files or stdout parsing. Automatically activates when parsing large output (>100 lines), tracking state across operations, correlating events, or analyzing structured data. Databases stored in `~/.claude-logs/<project-name>.db` persist across sessions.
+
+**tmux-tools** (`plugins/tmux-tools/`):
+- Skill: `tmux-aware` - TMUX session awareness and process management. Automatically activates when running in a TMUX session (detected by SessionStart hook). Manages services in dedicated panes within a `claude-controlled` window, captures pane output, detects errors, and finds panes by name.
+- Hook: SessionStart - Detects TMUX environment and provides session context
 
 ## Creating New Plugins
 

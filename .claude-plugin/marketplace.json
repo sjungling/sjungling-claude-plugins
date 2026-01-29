@@ -2,7 +2,7 @@
   "name": "sjungling-plugins",
   "metadata": {
     "description": "Personal collection of Claude Code plugins",
-    "version": "1.0.0",
+    "version": "2.0.0",
     "pluginRoot": "./plugins"
   },
   "owner": {
@@ -23,12 +23,8 @@
       "source": "./plugins/technical-writer"
     },
     {
-      "name": "openrewrite",
-      "source": "./plugins/openrewrite"
-    },
-    {
-      "name": "builder",
-      "source": "./plugins/builder"
+      "name": "git-tools",
+      "source": "./plugins/git-tools"
     },
     {
       "name": "workflow",
@@ -37,6 +33,10 @@
     {
       "name": "data-tools",
       "source": "./plugins/data-tools"
+    },
+    {
+      "name": "tmux-tools",
+      "source": "./plugins/tmux-tools"
     }
   ]
 }

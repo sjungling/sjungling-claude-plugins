@@ -1,0 +1,11 @@
+{
+  "name": "git-tools",
+  "description": "Git utilities and debugging workflows",
+  "version": "2.0.0",
+  "author": {
+    "name": "Scott",
+    "email": "scott.jungling@gmail.com"
+  },
+  "license": "MIT",
+  "keywords": ["git", "bisect", "debugging", "workflow"]
+}

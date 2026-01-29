@@ -1,7 +1,7 @@
 {
   "name": "data-tools",
   "description": "Skills for working with structured data using SQLite and other data tools during complex workflows and debugging",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "author": {
     "name": "Scott",
     "email": "scott.jungling@gmail.com"
