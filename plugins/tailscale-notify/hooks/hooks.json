@@ -1,0 +1,17 @@
+{
+  "description": "Relay notifications to Tailscale endpoint",
+  "hooks": {
+    "Notification": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.message' | curl -s --max-time 5 -X POST \"${TAILSCALE_NOTIFY_URL:-https://YOUR-DEVICE.YOUR-TAILNET.ts.net:7080/claude-mbp}\" -H 'Content-Type: text/plain' -d @- || true",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

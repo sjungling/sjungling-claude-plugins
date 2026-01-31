@@ -1,0 +1,8 @@
+{
+  "name": "tailscale-notify",
+  "version": "1.0.0",
+  "description": "Sends Claude Code notifications to a Tailscale endpoint",
+  "author": {
+    "name": "Scott Jungling"
+  }
+}

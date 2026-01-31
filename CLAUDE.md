@@ -61,6 +61,9 @@ Each plugin can contain:
 - Skill: `tmux-aware` - TMUX session awareness and process management. Automatically activates when running in a TMUX session (detected by SessionStart hook). Manages services in dedicated panes within a `claude-controlled` window, captures pane output, detects errors, and finds panes by name.
 - Hook: SessionStart - Detects TMUX environment and provides session context
 
+**tailscale-notify** (`plugins/tailscale-notify/`):
+- Hook: Notification - Sends Claude Code notifications to a Tailscale endpoint via HTTP POST. Configurable via `TAILSCALE_NOTIFY_URL` environment variable.
+
 ## Creating New Plugins
 
 When adding a new plugin to the marketplace:

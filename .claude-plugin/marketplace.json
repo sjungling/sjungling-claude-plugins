@@ -37,6 +37,10 @@
     {
       "name": "tmux-tools",
       "source": "./plugins/tmux-tools"
+    },
+    {
+      "name": "tailscale-notify",
+      "source": "./plugins/tailscale-notify"
     }
   ]
 }
