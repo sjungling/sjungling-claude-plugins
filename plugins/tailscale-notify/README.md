@@ -16,7 +16,7 @@ The notification endpoint can be configured via environment variable:
 export TAILSCALE_NOTIFY_URL="https://your-device.your-tailnet.ts.net:7080/endpoint"
 ```
 
-If not set, defaults to `https://YOUR-DEVICE.YOUR-TAILNET.ts.net:7080/claude-mbp`.
+If not set, defaults to `https://YOUR-DEVICE.YOUR-TAILNET.ts.net:7080/<hostname>` where `<hostname>` is your machine's hostname (lowercase).
 
 ## How It Works
 
