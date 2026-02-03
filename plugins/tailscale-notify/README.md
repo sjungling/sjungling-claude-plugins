@@ -21,8 +21,11 @@ If not set, defaults to `https://YOUR-DEVICE.YOUR-TAILNET.ts.net:7080/<hostname>
 ## How It Works
 
 When Claude Code sends a notification, this plugin:
-1. Extracts the message content
-2. POSTs it to your Tailscale endpoint
-3. Silently handles failures (best-effort delivery)
+1. Checks if the macOS screen is locked (using `ioreg` to query `CGSSessionScreenIsLocked`)
+2. If locked, extracts the message content and POSTs it to your Tailscale endpoint
+3. If unlocked, skips the notification (user is assumed to be actively watching)
+4. Silently handles failures (best-effort delivery)
 
 The curl request has a 5-second timeout to avoid blocking.
+
+**Note:** This plugin only sends notifications when the screen is locked, assuming an active user doesn't need remote notifications.

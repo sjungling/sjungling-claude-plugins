@@ -1,5 +1,5 @@
 {
-  "description": "Relay notifications to Tailscale endpoint",
+  "description": "Relay notifications to Tailscale endpoint when screen is locked",
   "hooks": {
     "Notification": [
       {
@@ -7,7 +7,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "jq -r '.message' | curl -s --max-time 5 -X POST \"${TAILSCALE_NOTIFY_URL:-https://YOUR-DEVICE.YOUR-TAILNET.ts.net:7080}/$(hostname -s | tr '[:upper:]' '[:lower:]')\" -H 'Content-Type: text/plain' -d @- || true",
+            "command": "input=$(cat); if ioreg -n Root -d1 | grep -q '\"CGSSessionScreenIsLocked\" = Yes'; then echo \"$input\" | jq -r '.message' | curl -s --max-time 5 -X POST \"${TAILSCALE_NOTIFY_URL:-https://YOUR-DEVICE.YOUR-TAILNET.ts.net:7080}/$(hostname -s | tr '[:upper:]' '[:lower:]')\" -H 'Content-Type: text/plain' -d @-; fi || true",
             "timeout": 10
           }
         ]
