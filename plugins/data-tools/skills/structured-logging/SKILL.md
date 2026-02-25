@@ -1,6 +1,6 @@
 ---
 name: structured-logging
-description: Use when parsing large output (>100 lines), correlating data from multiple sources, tracking state across operations, or needing to query the same dataset multiple times. Triggers when thinking "I wish I could query this" or when writing custom JSON/CSV parsing code for analysis.
+description: Use SQLite for structured data analysis when parsing large output (>100 lines), correlating data from multiple sources, tracking state across operations, aggregating results (counts, averages, grouping), or needing to query the same dataset multiple times. Triggers when thinking "I wish I could query this," when about to write custom JSON/CSV/jq parsing code, or when running similar grep/jq commands with slight variations. Not for tiny datasets (<50 records) with a single simple query.
 ---
 
 # SQLite for Structured Data
@@ -16,25 +16,17 @@ description: Use when parsing large output (>100 lines), correlating data from m
 
 If you answered YES to any question above, use SQLite. Don't write custom parsing code.
 
-## Core Principle
-
-**SQLite is just a file** - no server, no setup, zero dependencies. Use it when you'd otherwise write custom parsing code or re-process data for each query.
-
-## Common Misconception
-
-❌ **"Databases are too complex for small datasets"**
-
-Reality: SQLite = simpler than writing JSON parsing code.
-
 ```bash
-# This is "complex" (custom code for every query):
+# Custom code for every query:
 cat data.json | jq '.[] | select(.status=="failed")' | jq -r '.error_type' | sort | uniq -c
 
-# This is "simple" (SQL does the work):
+# SQL does the work:
 sqlite3 data.db "SELECT error_type, COUNT(*) FROM errors WHERE status='failed' GROUP BY error_type"
 ```
 
-**Setup cost:** `sqlite3 file.db` - that's it. It's just a file like JSON.
+## Core Principle
+
+**SQLite is just a file** - no server, no setup, zero dependencies. Use it when you'd otherwise write custom parsing code or re-process data for each query.
 
 ## When to Use SQLite
 
@@ -69,22 +61,6 @@ STOP and use SQLite if you're about to:
 - Process same data multiple times for different questions
 
 **All of these mean: Load into SQLite once, query with SQL.**
-
-## Decision Flow
-
-```dot
-digraph when_sqlite {
-    "Structured data to analyze?" [shape=diamond];
-    "Multiple queries or aggregations?" [shape=diamond];
-    "Use SQLite" [shape=box, style=filled, fillcolor=lightgreen];
-    "Python/jq/grep fine" [shape=box];
-
-    "Structured data to analyze?" -> "Multiple queries or aggregations?" [label="yes"];
-    "Structured data to analyze?" -> "Python/jq/grep fine" [label="no"];
-    "Multiple queries or aggregations?" -> "Use SQLite" [label="yes (>1 query)\nor data >100 records"];
-    "Multiple queries or aggregations?" -> "Python/jq/grep fine" [label="no (<50 records,\n1 simple query)"];
-}
-```
 
 ## The Threshold
 
@@ -169,8 +145,6 @@ for error_type, count in sorted_errors:
     print(f"{error_type}: {count}")
 ```
 
-**Lines of code:** 15+ lines of custom logic
-
 ### SQLite Approach (Simpler):
 ```bash
 # Load once
@@ -190,9 +164,7 @@ sqlite3 data.db "
 "
 ```
 
-**Lines of code:** 3 lines (load once, query many times)
-
-**Key difference:** With Python, you write parsing/aggregation logic. With SQL, you write what you want and SQL does it.
+With Python you write parsing/aggregation logic. With SQL you declare what you want and query the same data repeatedly.
 
 ## Real Examples from Baseline
 
@@ -269,20 +241,3 @@ Benefits:
 - State persists across sessions
 - SQL handles complexity → you write less code
 
-## Common Mistakes
-
-| Mistake | Fix |
-|---------|-----|
-| "Too complex for my small dataset" | SQLite = just a file. Try it. |
-| Writing JSON parsing code | Use SQL SELECT instead |
-| Re-running jq/grep for each query | Load once with INSERT, query with SELECT |
-| Assuming "database" = "server" | SQLite has no server, it's a local file |
-
-## Red Flags - Consider SQLite
-
-- Writing custom aggregation code
-- Running same grep/jq command with slight variations
-- Manually correlating data from multiple files
-- Thinking "I wish I could just query this"
-
-**All of these mean: Use SQLite instead.**

@@ -1,6 +1,6 @@
 ---
 name: obsidian-vault-manager
-description: Expert in managing Obsidian vaults using obsidian-cli workflows for reading, writing, searching, moving, and organizing notes while preserving wiki-link integrity and vault structure. Automatically activates when working with Obsidian vaults, markdown notes with wiki-links, or when internal link integrity needs to be preserved during file operations.
+description: Expert in managing Obsidian vaults using obsidian-cli for reading, writing, searching, moving, and organizing notes while preserving wiki-link integrity and vault structure. Automatically activates when working with Obsidian vaults, markdown notes with [[wiki-links]], daily notes, templates, tags, or when internal link integrity needs to be preserved during file operations. Not for general markdown editing outside Obsidian vaults.
 ---
 
 # Obsidian Vault Manager
@@ -73,6 +73,8 @@ VAULT_PATH=$(obsidian-cli print-default --path-only)
 ```
 
 **Why:** Paths are vault-relative, not repository-relative. Creating files in wrong location breaks vault structure.
+
+**If obsidian-cli is not installed:** Warn the user that move/rename operations will break wiki-links. Offer to install (`npm install -g @johnlindquist/obsidian-cli`). Read and search operations are safe with standard tools.
 
 ### Moving/Reorganizing Notes
 
@@ -163,6 +165,6 @@ obsidian-cli print "Found Note"
 Vault operations succeed when:
 - All `[[wiki-links]]` remain valid after moves
 - Notes created in correct vault location
-- Markdown and frontmatter preserved
+- Markdown and YAML frontmatter preserved intact during all operations
 - Search returns accurate results
 - No broken links or orphaned notes

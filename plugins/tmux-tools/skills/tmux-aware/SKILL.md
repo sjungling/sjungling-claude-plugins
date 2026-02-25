@@ -1,6 +1,6 @@
 ---
 name: tmux-aware
-description: Automatically activates when running in a TMUX session (detected by SessionStart hook). Use when starting/stopping/restarting services, checking process status or logs, or when user references panes or windows by name.
+description: TMUX session awareness and process management. Automatically activates when running in a TMUX session (detected by SessionStart hook). Use when starting/stopping/restarting services in dedicated tmux panes, checking process status or logs, capturing pane output, managing the claude-controlled window, or when user references tmux panes, windows, or sessions by name. Not for one-off commands that don't need a persistent pane.
 ---
 
 # TMUX-Aware Process Management
@@ -138,6 +138,14 @@ sleep 1
 tmux capture-pane -t "pane-target" -p -S -10
 ```
 
+## Multiple Services
+
+When running multiple services:
+- Split panes vertically (`-v`) for side-by-side logs
+- Name each pane after its service for easy targeting
+- Use `tmux select-layout -t claude-controlled even-vertical` to rebalance
+- If more than 3 services, consider separate windows instead of more pane splits
+
 ## Command Reference
 
 ```bash
@@ -193,3 +201,19 @@ User: "Check if Redis is still running"
 1. List panes, find "redis"
 2. Capture output: `tmux capture-pane -t "claude-controlled:redis" -p -S -30`
 3. Report status based on output
+
+## When NOT to Use
+
+- **One-off commands** that don't need a persistent pane (e.g., `git status`, `ls`)
+- **User's existing layout** - don't create panes in the user's current window
+- **Non-tmux environments** - if tmux detection fails, fall back to standard Bash
+- **Quick checks** where capturing output with Bash tool is sufficient
+
+## Cleanup
+
+When the user's task is complete:
+
+- **Don't auto-kill panes** - the user may want to keep services running
+- **Offer cleanup** if asked: `tmux kill-window -t claude-controlled`
+- **Report what's running**: List active panes so the user can decide
+- If you started a service and the task failed, mention the pane is still running

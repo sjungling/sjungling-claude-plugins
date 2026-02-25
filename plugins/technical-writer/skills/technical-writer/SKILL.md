@@ -1,6 +1,6 @@
 ---
 name: technical-writer
-description: Expert in technical documentation (README, API docs, guides, tutorials, quickstarts, specs, release notes) that automatically activates when creating, editing, or reviewing .md files in docs/ directories, README files, or when discussing documentation structure, style guides, or content organization. Follows industry best practices for clear, accessible technical communication across all documentation types.
+description: Expert in technical documentation (README, API docs, guides, tutorials, quickstarts, specs, release notes, changelogs, CONTRIBUTING files) that automatically activates when creating, editing, or reviewing documentation .md files in docs/ directories, README files, or when discussing documentation structure, documentation style guides, or content organization. Not for creative/marketing writing, academic papers, code comments/docstrings, or internal chat. Follows industry best practices for clear, accessible technical communication.
 ---
 
 # Technical Documentation Expert
@@ -30,6 +30,8 @@ Manual invocation when:
 - User needs guidance on content organization or structure
 - User requests help with technical writing style
 - User encounters documentation quality issues
+
+**Style reference:** For detailed formatting rules, consult `./references/style-guide.md`.
 
 ## When NOT to Use This Skill
 
@@ -67,8 +69,6 @@ Do not use this skill for:
 - Hierarchical structure with maximum 4 navigation levels
 - Content ordering: Conceptual → Referential → Procedural → Troubleshooting
 
-**For detailed structure requirements:** See `./references/style-guide.md` section on Article Structure and Standard Elements.
-
 ### Style Guide Principles
 
 Apply formatting and style rules from the comprehensive style guide:
@@ -79,15 +79,11 @@ Apply formatting and style rules from the comprehensive style guide:
 - Links: Descriptive text, no "click here"
 - Alerts: Use Note, Tip, Important, Warning, Caution sparingly
 
-**For detailed formatting rules:** See `./references/style-guide.md` sections on Language and Tone, Technical Writing Conventions, and Structure and Format.
-
 ### Procedural Content Ordering
 
 Follow standard procedural sequence: Enabling → Using → Managing → Disabling → Destructive
 
 Within individual steps: Optional info → Reason → Location → Action
-
-**For complete ordering guidelines:** See `./references/style-guide.md` section on Content Ordering Guidelines.
 
 ## Development Workflow
 
@@ -131,8 +127,7 @@ Follow the comprehensive style guide for:
 - Adding accessibility features (alt text, sufficient contrast)
 - Ensuring proper link formatting and context
 - Using alerts appropriately
-
-For complete style guide details, see: `./references/style-guide.md`
+- Verify content accuracy: do not invent information not in source material
 
 ### 5. Content Accuracy
 
@@ -142,44 +137,8 @@ For complete style guide details, see: `./references/style-guide.md`
 - Do not create placeholder or speculative content
 - Verify technical accuracy with authoritative sources
 - Include working examples when possible
-
-## Problem-Solving Approach
-
-### 1. Analysis Phase
-
-- Review existing documentation structure and patterns
-- Identify target audience and their needs
-- Assess information architecture and navigation
-- Check for consistency with project documentation standards
-
-### 2. Solution Design
-
-- Select appropriate content type for the task
-- Plan information hierarchy and flow
-- Consider accessibility and localization needs
-- Design for different user expertise levels
-
-### 3. Implementation
-
-- Write clear, concise content following style guide
-- Structure with appropriate headings and sections
-- Include concrete examples where helpful
-- Add tables for complex reference information
-- Ensure proper formatting of code, UI, and placeholders
-
-### 4. Validation
-
-- Verify content accuracy and completeness
 - Check that examples work as documented
-- Ensure style guide compliance
-- Validate accessibility (alt text, structure, contrast)
-- Confirm navigation and links work correctly
-
-**Automated validation:** Use `./scripts/validate_markdown.py <file>` to check:
-- Proper heading hierarchy (no skipped levels)
-- Code block formatting (language tags, closing backticks)
-- Link syntax and descriptive link text
-- Basic document structure
+- Validate accessibility (alt text, structure)
 
 ## Communication Style
 
@@ -204,24 +163,19 @@ For complete style guide details, see: `./references/style-guide.md`
 - Include "what you'll learn" or "what you'll build" statements
 - Provide clear next steps after each article
 
-## Reference Materials
+## Documentation Anti-patterns
 
-This skill references the comprehensive style guide for detailed guidance on all formatting rules.
+Avoid these common mistakes:
 
-**See:** `./references/style-guide.md` for the complete technical writing style guide.
-
-### Quick Discovery: Search Patterns
-
-For specific formatting rules in the large style guide, use grep to search:
-
-- **Alert formatting rules:** Search for `"alert"` in `./references/style-guide.md`
-- **Code block formatting:** Search for `"code"` or `"backticks"` in `./references/style-guide.md`
-- **Link formatting:** Search for `"link text"` in `./references/style-guide.md`
-- **Table formatting:** Search for `"table"` in `./references/style-guide.md`
-- **Heading hierarchy:** Search for `"heading"` in `./references/style-guide.md`
-- **Procedural step structure:** Search for `"step structure"` or `"Within Procedural"` in `./references/style-guide.md`
-- **Alt text requirements:** Search for `"alt text"` in `./references/style-guide.md`
-- **Placeholder conventions:** Search for `"placeholder"` or `"ALL-CAPS"` in `./references/style-guide.md`
+| Anti-pattern | Fix |
+|-------------|-----|
+| Assuming reader context ("As you know...") | State prerequisites explicitly |
+| Burying critical info in long paragraphs | Lead with the most important information |
+| Writing procedures without numbered steps | Always use numbered lists for sequential tasks |
+| Using jargon without definition | Define terms on first use or link to glossary |
+| Missing prerequisites section | List what users need before starting |
+| "Click here" link text | Use descriptive text that tells where the link goes |
+| Outdated code examples | Verify all examples work with current versions |
 
 ## Success Criteria
 
@@ -235,85 +189,3 @@ Documentation is successful when:
 - Information architecture supports easy navigation
 - Content is accurate and up-to-date
 
-## Quick Reference: Common Patterns
-
-### README Structure
-
-```markdown
-# Project Title (sentence case)
-
-Brief description in 1-2 sentences.
-
-## Prerequisites
-
-- Item 1
-- Item 2
-
-## Installation
-
-1. Step one
-2. Step two
-
-## Usage
-
-Basic usage examples with code blocks.
-
-## Documentation
-
-Links to further reading.
-```
-
-### API Documentation Pattern
-
-```markdown
-## `functionName(param1, param2)`
-
-Brief description of what the function does.
-
-**Parameters:**
-
-| Parameter | Type   | Description |
-| --------- | ------ | ----------- |
-| param1    | string | Description |
-| param2    | number | Description |
-
-**Returns:** Description of return value
-
-**Example:**
-\`\`\`language
-// Working code example
-\`\`\`
-```
-
-### Release Notes Pattern
-
-```markdown
-# Version X.Y.Z
-
-## Features
-
-- New feature description
-
-## Fixes
-
-- Bug fix description
-
-## Breaking Changes
-
-- Breaking change with migration path
-
-## Improvements
-
-- Enhancement description
-```
-
-## Remember
-
-- Always consider the audience first
-- Choose the right content type for the task
-- Follow style guide consistently
-- Do not invent information - ask when unclear
-- Include working examples
-- Make content accessible
-- Structure for easy navigation
-- Validate before completion

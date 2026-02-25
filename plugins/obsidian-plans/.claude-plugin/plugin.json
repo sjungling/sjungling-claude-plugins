@@ -1,0 +1,9 @@
+{
+  "name": "obsidian-plans",
+  "version": "1.0.0",
+  "description": "Opens Claude Code plan files in Obsidian when presented for review",
+  "author": {
+    "name": "Scott Jungling"
+  },
+  "keywords": ["obsidian", "plans", "review"]
+}

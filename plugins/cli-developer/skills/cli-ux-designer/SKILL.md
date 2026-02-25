@@ -1,6 +1,6 @@
 ---
 name: cli-ux-designer
-description: Expert in CLI/TUI design, command structure, visual design (colors, typography, icons), accessibility, and UX patterns. Automatically activates when designing new CLI tools, improving command interfaces, or reviewing CLI usability.
+description: Expert in CLI/TUI design, command structure, help text, flag/argument design, visual design (colors, typography, icons, progress indicators), accessibility, and UX patterns. Automatically activates when designing new CLI tools, improving command interfaces, formatting terminal output, or reviewing CLI usability. Not for GUI/web design, backend APIs, or shell scripting.
 ---
 
 # CLI Design Guide
@@ -70,6 +70,31 @@ Ensure commands follow this consistent pattern:
 - Use shorter phrases when possible and appropriate
 - Use flags for modifiers of actions, avoid making modifiers their own commands
 - Use understood shorthands to save characters
+
+## Decision Frameworks
+
+Use these when making CLI design choices:
+
+**Flag vs. Subcommand:**
+- Flag: modifies HOW a command runs (`--verbose`, `--format json`, `--dry-run`)
+- Subcommand: defines WHAT action to take (`issue create`, `pr merge`)
+- Rule: if it changes the action, it's a subcommand. If it changes the behavior, it's a flag.
+
+**Interactive vs. Non-interactive:**
+- Default to interactive when: user is exploring, multiple choices needed, destructive action requires confirmation
+- Default to non-interactive when: command is commonly scripted, output is piped, CI/CD context
+- Always: provide `--yes`/`-y` to skip confirmations, `--no-input` to disable all prompts
+
+**Output Format:**
+- Human-readable (default): colors, tables, summaries when stdout is a TTY
+- Machine-readable (piped): no colors, tab-delimited or JSON when stdout is not a TTY
+- Explicit: `--format json|table|csv` flag to override detection
+
+**Error Handling:**
+- Exit code 0: success
+- Exit code 1: general error
+- Exit code 2: usage error (wrong flags/args)
+- Always: error message to stderr, suggested fix when possible
 
 ## Visual Design System Knowledge
 
@@ -157,6 +182,20 @@ For a complete help text example, see `./assets/examples/help-text-example.txt`.
 - `repeatable...` with ellipsis
 - Use dash-case for multi-word variables
 
+## Anti-patterns
+
+Avoid these common CLI design mistakes:
+
+| Anti-pattern | Better Approach |
+|-------------|-----------------|
+| Deeply nested subcommands (`tool group sub action`) | Max 2 levels: `tool command [flags]` |
+| Inconsistent flag naming (`--no-color` vs `--disable-colors`) | Pick one convention and apply everywhere |
+| Interactive prompts with no flag alternatives | Every prompt must have a `--flag` equivalent |
+| Cryptic error messages ("Error: 1") | Include what went wrong, why, and how to fix |
+| Silent failures (exit 0 on error) | Non-zero exit codes for failures, stderr for errors |
+| Missing `--help` on subcommands | Every command level should have help |
+| Mixing stdout data with status messages | Data to stdout, progress/status to stderr |
+
 ## Technical Considerations
 
 ### Script Automation Support
@@ -173,19 +212,6 @@ For a complete help text example, see `./assets/examples/help-text-example.txt`.
 - Don't rely solely on color for meaning
 - Support high contrast and custom themes
 - Design for cognitive accessibility
-
-## Recommended Approach
-
-When helping with CLI design:
-
-1. **Analyze existing patterns** - Look at current command structure and identify inconsistencies
-2. **Apply design principles** - Ensure commands follow the four core principles
-3. **Review visual design** - Check color usage, typography, spacing, and iconography
-4. **Evaluate user experience** - Consider cognitive load, error handling, and empty states
-5. **Ensure accessibility** - Verify commands work for diverse users and environments
-6. **Check scriptability** - Ensure commands work well in automated contexts
-
-Provide specific, actionable recommendations with clear rationale based on CLI design best practices. Focus on creating consistent, accessible, and user-friendly command-line experiences.
 
 ## Success Criteria
 

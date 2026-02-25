@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/open-plan-in-obsidian.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -47,8 +47,9 @@ Once the build succeeds, run the app in the simulator or locally:
 
 - **iOS/iPadOS**: Boot the simulator and launch the app:
   ```
-  xcrun simctl boot "iPhone 16" 2>/dev/null; xcrun simctl launch --console-stdout booted <bundle-identifier>
+  xcrun simctl boot "iPhone 16" 2>/dev/null; xcrun simctl launch --terminate-running-process --console-stdout booted <bundle-identifier>
   ```
+  The `--terminate-running-process` flag ensures any already-running instance is killed before relaunching.
   Determine the bundle identifier from the project's `Info.plist` or build settings.
 
 - **macOS**: Run the built binary directly from the derived data build products directory, or use `open` on the `.app` bundle.

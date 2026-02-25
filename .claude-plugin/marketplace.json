@@ -41,6 +41,10 @@
     {
       "name": "tailscale-notify",
       "source": "./plugins/tailscale-notify"
+    },
+    {
+      "name": "obsidian-plans",
+      "source": "./plugins/obsidian-plans"
     }
   ]
 }

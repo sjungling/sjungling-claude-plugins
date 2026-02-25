@@ -1,6 +1,6 @@
 ---
 name: ios-swift-expert
-description: Elite iOS and macOS development expertise for Swift, SwiftUI, UIKit, Xcode, and the entire Apple development ecosystem. Automatically activates when working with .swift files, Xcode projects (.xcodeproj, .xcworkspace), SwiftUI interfaces, iOS frameworks (UIKit, Core Data, Combine, etc.), app architecture, or Apple platform development.
+description: Elite iOS, macOS, watchOS, tvOS, and visionOS development expertise for Swift, SwiftUI, UIKit, Xcode, and the Apple development ecosystem. Automatically activates when working with .swift files, Xcode projects (.xcodeproj, .xcworkspace), SwiftUI interfaces, Apple platform frameworks (UIKit, Core Data, Combine, WidgetKit, App Intents, etc.), app architecture for Apple platforms, or Apple platform development. Not for cross-platform frameworks (React Native, Flutter) or non-Apple platforms.
 ---
 
 # iOS and macOS Development Expert
@@ -40,59 +40,40 @@ Do not use this skill for:
 - Android development
 - Desktop development on non-Apple platforms
 
-## Core Expertise Areas
+## Core Expertise
 
-### Swift Language Mastery
+Broad expertise across the Apple development ecosystem: Swift language, SwiftUI, UIKit, all major Apple frameworks (Core Data, Combine, CloudKit, StoreKit, HealthKit, ARKit, etc.), Xcode build system, and app architecture patterns (MVVM, MVI, Clean Architecture, Coordinator).
 
-- **Modern Swift Features**: Value types, protocol-oriented programming, generics, result builders, property wrappers, async/await, actors
-- **Memory Management**: ARC, weak/unowned references, retain cycles, memory graph debugging
-- **Concurrency**: Structured concurrency with async/await, actors, task groups, continuation, legacy GCD patterns
-- **Error Handling**: Proper use of throws, Result type, error propagation, custom error types
-- **Type Safety**: Leveraging Swift's type system for safer code, phantom types, type erasure
+### Decision Frameworks
 
-### SwiftUI Development
+**SwiftUI vs UIKit:**
+- Prefer SwiftUI for new views unless targeting iOS <15 or needing UIKit-specific features (complex gesture recognizers, MapKit annotations pre-iOS 17, advanced collection view layouts)
+- Use UIViewRepresentable to bridge UIKit into SwiftUI, not the reverse
 
-- **Declarative UI**: Views, modifiers, composition, custom view builders
-- **State Management**: @State, @Binding, @ObservedObject, @StateObject, @EnvironmentObject, @Observable (iOS 17+)
-- **Layout System**: VStack, HStack, ZStack, GeometryReader, Layout protocol (iOS 16+), safe areas
-- **Animations**: Implicit animations, explicit animations, transitions, matched geometry effect
-- **Navigation**: NavigationStack (iOS 16+), NavigationPath, programmatic navigation, deep linking
-- **Advanced Patterns**: ViewModifiers, PreferenceKeys, custom environments, coordinators
+**State Management:**
+- @State: view-local value types
+- @StateObject: view-owned reference types (create here)
+- @ObservedObject: passed-in reference types (created elsewhere)
+- @EnvironmentObject: dependency injection across view hierarchy
+- @Observable (iOS 17+): preferred over ObservableObject for new code
 
-### UIKit (Legacy & Hybrid Apps)
+**Concurrency:**
+- Prefer async/await over completion handlers for new code
+- Use actors for mutable shared state, not DispatchQueue
+- Use TaskGroup for parallel async work, not DispatchGroup
+- MainActor for UI updates, not DispatchQueue.main
 
-- **View Controllers**: Lifecycle, containment, custom transitions, adaptive layouts
-- **Auto Layout**: Constraints, stack views, size classes, intrinsic content size
-- **Table/Collection Views**: Data sources, delegates, diffable data sources, compositional layout
-- **Gestures**: Tap, swipe, pan, long press, custom gesture recognizers
-- **Core Animation**: Layer animations, keyframe animations, CADisplayLink
-- **Integration**: Bridging UIKit and SwiftUI with UIViewRepresentable/UIViewControllerRepresentable
+**Data Persistence:**
+- SwiftData (iOS 17+): preferred for new projects
+- Core Data: existing projects or pre-iOS 17 targets
+- UserDefaults: small preferences only, never large data
+- Keychain: credentials and sensitive data
 
-### iOS Frameworks & APIs
-
-- **Core Data**: Managed object context, fetch requests, predicates, migrations, relationships
-- **Combine**: Publishers, subscribers, operators, cancellables, error handling, backpressure
-- **Core Location**: Location services, geofencing, heading, privacy best practices
-- **CloudKit**: Public/private databases, records, subscriptions, sharing
-- **StoreKit**: In-app purchases, subscriptions, transaction handling, receipt validation
-- **HealthKit, HomeKit, ARKit, RealityKit**: Domain-specific framework expertise
-
-### Xcode & Build System
-
-- **Project Structure**: Targets, schemes, configurations, build phases, script phases
-- **Build Settings**: Optimization levels, code signing, provisioning profiles, entitlements
-- **Debugging Tools**: LLDB, breakpoints, view debugging, Instruments, memory graph debugger
-- **Testing**: XCTest, UI testing, performance testing, test plans, code coverage
-- **Swift Package Manager**: Package manifests, dependencies, versioning, local packages
-
-### App Architecture
-
-- **MVVM**: Model-View-ViewModel with SwiftUI or UIKit
-- **MVI**: Model-View-Intent unidirectional data flow
-- **Clean Architecture**: Layered separation, dependency injection, testability
-- **Coordinator Pattern**: Navigation flow management
-- **Repository Pattern**: Data layer abstraction
-- **Design Patterns**: Factory, observer, strategy, dependency injection containers
+**Architecture Patterns:**
+- MVVM: default choice for SwiftUI apps, ViewModel as @Observable
+- MVI: when unidirectional data flow is critical (complex state machines)
+- Clean Architecture: large teams, multiple data sources, heavy testing requirements
+- Coordinator: complex navigation flows that span multiple screens
 
 ## Development Workflow
 
@@ -111,31 +92,11 @@ xcodebuild -project YourProject.xcodeproj -scheme YourScheme -quiet build
 
 ### 2. Code Standards
 
-Follow these standards for all Swift code:
-
-**Naming Conventions:**
-- Types: UpperCamelCase (e.g., `UserProfileViewController`)
-- Functions/variables: lowerCamelCase (e.g., `fetchUserData()`)
-- Constants: lowerCamelCase (e.g., `let maxRetryCount = 3`)
-- Protocols: UpperCamelCase, often ending in -able, -ible, or -ing (e.g., `Codable`, `Drawable`)
-
-**Access Control:**
-- Default to `private` or `fileprivate` for implementation details
-- Use `internal` (default) for module-internal APIs
-- Mark `public` or `open` only for exported APIs
-- Consider `@testable import` for testing instead of making everything public
-
-**Code Organization:**
-- Group related code with `// MARK: - Section Name`
-- Order: properties, initializers, lifecycle methods, public methods, private methods
-- One type per file (exceptions for small helper types)
-- Use extensions for protocol conformance
-
-**Memory Safety:**
-- Use `[weak self]` in closures that may outlive the caller
-- Use `[unowned self]` only when certain closure won't outlive the reference
-- Break retain cycles between parent/child view controllers
-- Monitor retain cycles in Instruments
+Follow Swift API Design Guidelines. Key conventions:
+- `UpperCamelCase` for types, `lowerCamelCase` for functions/variables
+- Default to `private`; only expose what's needed
+- Use `// MARK: -` to organize: properties, init, lifecycle, public, private
+- Use `[weak self]` in escaping closures; break retain cycles between parent/child
 
 ### 3. Testing Requirements
 
@@ -183,6 +144,18 @@ Follow Apple's official guidelines for:
 - Localization (NSLocalizedString, RTL languages, formatting)
 
 See `./references/apple-guidelines.md` for detailed requirements and best practices.
+
+## Common Mistakes
+
+| Mistake | Fix |
+|---------|-----|
+| Using @ObservedObject when @StateObject is needed | @StateObject for objects created by the view; @ObservedObject for objects passed in |
+| Force-unwrapping optionals (`!`) | Use `guard let`, `if let`, or nil-coalescing (`??`) |
+| Expensive work in SwiftUI `body` | Move to `.task {}` modifier or ViewModel |
+| Missing `[weak self]` in escaping closures | Always use `[weak self]` unless closure is non-escaping |
+| Using `ObservableObject` on iOS 17+ | Prefer `@Observable` macro for cleaner code |
+| Synchronous network calls on main thread | Use async/await with URLSession |
+| Hard-coded strings for localization | Use String(localized:) or NSLocalizedString |
 
 ## Problem-Solving Approach
 
@@ -262,13 +235,3 @@ For complete reference materials, see:
 - `./references/patterns.md` - Dependency injection, result builders, coordinator pattern
 - `./references/debugging-strategies.md` - Xcode, runtime, and SwiftUI debugging techniques
 - `./references/apple-guidelines.md` - Official Apple documentation and guidelines
-
-## Remember
-
-- Always verify builds with `xcodebuild -quiet`
-- Follow project-specific standards from CLAUDE.md
-- Write memory-safe code with proper ARC usage
-- Consider accessibility, localization, and privacy
-- Reference Apple documentation and WWDC best practices
-- Explain trade-offs in architectural decisions
-- Provide clear, actionable code examples

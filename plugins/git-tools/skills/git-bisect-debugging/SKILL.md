@@ -1,6 +1,6 @@
 ---
 name: git-bisect-debugging
-description: Use when debugging regressions or identifying which commit introduced a bug - provides systematic workflow for git bisect with automated test scripts, manual verification, or hybrid approaches. Can be invoked from systematic-debugging as a debugging technique, or used standalone when you know the issue is historical.
+description: Use when debugging regressions, finding which commit introduced a bug, or answering "when did this break" / "this used to work" questions. Provides systematic git bisect workflow with automated test scripts, manual verification, or hybrid approaches. Activates for performance regressions, test failures that appeared recently, or any issue known to have worked at a previous commit. Can be invoked from systematic-debugging or used standalone. Not for general debugging without a known-good commit or regression history.
 ---
 
 # Git Bisect Debugging
@@ -21,6 +21,16 @@ Systematically identify which commit introduced a bug or regression using git bi
 | **2. Strategy Selection** | Choose automated/manual/hybrid approach | Test script or verification steps |
 | **3. Execution** | Run bisect with subagents | First bad commit hash |
 | **4. Analysis & Handoff** | Show commit details, analyze root cause | Root cause understanding |
+
+## Limitations (By Design)
+
+This skill focuses on straightforward scenarios. It does NOT handle:
+
+- Complex merge commit issues (would need `--first-parent`)
+- Flaky/intermittent test failures (would need statistical approaches)
+- Build system failures across many commits (would need advanced skip strategies)
+
+For these scenarios, manual git bisect with user guidance is recommended.
 
 ## MANDATORY Requirements
 
@@ -122,51 +132,10 @@ Git Bisect Progress:
 
 **Assessment:** Can we write an automated test script that deterministically identifies good vs bad?
 
-**MANDATORY: Use AskUserQuestion tool** to present these three approaches (do NOT default to automated):
-
-```javascript
-AskUserQuestion({
-  questions: [{
-    question: "Which git bisect approach should we use?",
-    header: "Strategy",
-    multiSelect: false,
-    options: [
-      {
-        label: "Automated - test script runs automatically",
-        description: "Fast, no manual intervention. Best for: test failures, crashes, deterministic behavior. Requires: working test script."
-      },
-      {
-        label: "Manual - you verify each commit",
-        description: "Handles subjective issues. Best for: UI/UX changes, complex scenarios. Requires: you can manually check each commit."
-      },
-      {
-        label: "Hybrid - script + manual confirmation",
-        description: "Efficient with reliability. Best for: mostly automated but needs judgment. Requires: script for most cases, manual for edge cases."
-      }
-    ]
-  }]
-})
-```
-
-**Three approaches to present:**
-
-**Approach 1: Automated Bisect**
-- **When to use:** Test failure, crash, deterministic behavior
-- **How it works:** Script returns exit 0 (good) or 1 (bad), fully automatic
-- **Benefits:** Fast, no manual intervention, reproducible
-- **Requirements:** Can write a script that runs the test/check
-
-**Approach 2: Manual Bisect**
-- **When to use:** UI/UX changes, subjective behavior, complex scenarios
-- **How it works:** User verifies at each commit, Claude guides
-- **Benefits:** Handles non-deterministic or subjective issues
-- **Requirements:** User can manually verify each commit
-
-**Approach 3: Hybrid Bisect**
-- **When to use:** Mostly automatable but needs human judgment
-- **How it works:** Script narrows range, manual verification for final confirmation
-- **Benefits:** Efficiency of automation with reliability of manual check
-- **Requirements:** Can automate most checks, manual for edge cases
+**MANDATORY: Use AskUserQuestion** to present three approaches:
+1. **Automated** - test script runs automatically (best for: test failures, crashes, deterministic behavior)
+2. **Manual** - user verifies each commit (best for: UI/UX changes, subjective issues)
+3. **Hybrid** - script + manual confirmation (best for: mostly automated with judgment calls)
 
 **If automated or hybrid selected:**
 
@@ -292,6 +261,9 @@ See if the login works
 - **Build failures:** Use `git bisect skip`
 - **Too many skips (>5):** Suggest manual investigation, show untestable commits
 - **Bisect interrupted:** Ensure `git bisect reset` runs in cleanup
+- **Good/bad reversed:** If all results seem opposite, offer to restart with swapped inputs
+- **No bad commit found:** Verify bad commit is actually bad, check if issue is environmental
+- **Cleanup (always):** Run `git bisect reset` on success or failure, return to original branch
 
 **Output:** First bad commit hash, bisect log showing the path taken
 
@@ -329,34 +301,6 @@ See if the login works
 
 **Output:** Root cause understanding of why the commit broke functionality
 
-## Safety & Error Handling
-
-### Pre-flight Checks (Phase 1)
-- Working directory is clean
-- In a git repository
-- Good/bad commits exist and are valid
-- Good commit is actually good (issue doesn't exist)
-- Bad commit is actually bad (issue exists)
-- Good is ancestor of bad
-- Warn if >1000 commits in range
-
-### During Execution (Phase 3)
-- **Subagent fails:** Log error, allow skip or abort
-- **Build fails:** Use `git bisect skip`, continue
-- **Ambiguous result:** Use `git bisect skip`, max 5 skips
-- **Can't determine good/bad:** Ask user for guidance
-
-### Cleanup & Recovery
-- **Always** run `git bisect reset` when done (success or failure)
-- If interrupted, prompt user to run `git bisect reset`
-- Return to original branch/commit
-- If bisect is running and skill exits, warn user to cleanup
-
-### Failure Modes
-- **Too many skips:** Report untestable commits, suggest narrower range or manual review
-- **Good/bad reversed:** Detect pattern (all results opposite), offer to restart with swapped inputs
-- **No bad commit found:** Verify bad commit is actually bad, check if issue is environmental
-
 ## Best Practices
 
 ### Optimizing Commit Range
@@ -364,33 +308,6 @@ See if the login works
   - Issue appeared last week? Start from last week, not 6 months ago
   - Use `git log --since="2 weeks ago"` to find starting point
   - Use tags/releases as good commits when possible
-
-### Writing Good Test Scripts
-**Do:**
-- Test ONE specific thing
-- Make it deterministic (fixed seeds, no random data)
-- Make it fast (runs log2(N) times)
-- Include setup/build in script
-- Use proper exit codes (0=good, 1=bad, 125=skip)
-
-**Don't:**
-- Run entire test suite (too slow)
-- Depend on external state (databases, APIs)
-- Use random data or timestamps
-- Modify production data
-
-### Manual Verification
-**Be specific:**
-- "API returns 200 for GET /health"
-- "Login button redirects to /dashboard"
-- NOT "See if it works"
-- NOT "Check if login is broken"
-
-**Give exact steps:**
-1. Run server with `npm start`
-2. Open browser to http://localhost:3000
-3. Click element with id="login-btn"
-4. Verify URL changes to /dashboard
 
 ### Common Patterns
 
@@ -402,63 +319,10 @@ See if the login works
 | UI/UX change | Manual | "Click X, verify Y appears" |
 | Behavior change | Manual or Hybrid | Script to check, manual to confirm subjective aspects |
 
-### Progress Communication
-- After each step: "Tested commit abc123 (<result>). ~X steps remaining."
-- Show bisect log periodically: `git bisect log`
-- Estimate remaining steps: log2(commits in range)
-- Example: 100 commits -> ~7 steps, 1000 commits -> ~10 steps
-
-## Common Rationalizations (Resist These!)
-
-| Rationalization | Reality | What to Do Instead |
-|----------------|---------|-------------------|
-| "User is in a hurry, skip safety checks" | Broken bisect from dirty state wastes MORE time | Run all Phase 1 checks. Always. |
-| "This is simple, no need for TodoWrite" | You'll skip phases without tracking | Create checklist immediately |
-| "I'll just use automated approach" | User might prefer manual for vague issues | Use AskUserQuestion tool |
-| "I'll run the test in my context" | Context bleeding between commits breaks bisect | Launch subagent for each verification |
-| "Working directory looks clean" | Assumptions cause failures | Run `git status` to verify |
-| "I'll verify good/bad commits later" | Starting with wrong good/bad wastes all steps | Verify BEFORE `git bisect start` |
-| "Found the commit, user knows why" | User asked to FIND it, not debug it | Hand off to systematic-debugging |
-| "Production incident, no time for process" | Skipping process in incidents causes MORE incidents | Follow workflow. It's faster. |
-| "I remember from baseline, no need to test" | Skills evolve, baseline was different session | Test at each commit with subagent |
-
-**If you catch yourself rationalizing, STOP. Go back to MANDATORY Requirements section.**
-
 ## Integration with Other Skills
 
-### Called BY systematic-debugging
-When systematic-debugging determines an issue is historical:
-
-```
-systematic-debugging detects:
-- Issue doesn't exist in commit from 2 weeks ago
-- Issue exists now
--> Suggests: "This appears to be a regression. I'm using git-bisect-debugging to find when it was introduced."
--> Invokes: git-bisect-debugging skill
--> Returns: First bad commit for analysis
--> Resumes: systematic-debugging analyzes the breaking change
-```
-
-### Calls systematic-debugging
-In Phase 4, after finding the bad commit:
-
-```
-git-bisect-debugging completes:
--> Announces: "Found commit abc123. Using systematic-debugging to analyze root cause."
--> Invokes: superpowers:systematic-debugging
--> Context: "Focus on changes in commit abc123"
--> Goal: Understand WHY the change broke functionality
-```
-
-## Limitations (By Design)
-
-This skill focuses on straightforward scenarios. It does NOT handle:
-
-- Complex merge commit issues (would need `--first-parent`)
-- Flaky/intermittent test failures (would need statistical approaches)
-- Build system failures across many commits (would need advanced skip strategies)
-
-For these scenarios, manual git bisect with user guidance is recommended.
+- **Called BY systematic-debugging:** When systematic-debugging detects a regression (issue absent in older commit, present now), it invokes git-bisect-debugging to find the first bad commit, then resumes its own analysis on the breaking change.
+- **Calls systematic-debugging:** In Phase 4, after finding the bad commit, this skill hands off to superpowers:systematic-debugging with context focused on the identified commit to understand WHY the change broke functionality.
 
 ## Example Workflows
 
@@ -467,59 +331,14 @@ For these scenarios, manual git bisect with user guidance is recommended.
 ```
 User: "The login test started failing sometime in the last 50 commits."
 
-Claude: "I'm using git-bisect-debugging to find which commit introduced this issue."
-
-[Phase 1: Setup]
-- git status -> clean
-- Good commit: v1.2.0 tag (last release)
-- Bad commit: HEAD
-- Verify: checkout v1.2.0, run test -> passes
-- Verify: checkout HEAD, run test -> fails
-- Range: 47 commits, ~6 steps estimated
-
-[Phase 2: Strategy Selection]
-AskUserQuestion: Which approach?
-User selects: Automated
-
-Script created:
-#!/bin/bash
-npm install --silent 2>/dev/null || exit 125
-npm test -- tests/login.spec.js
-exit $?
-
-[Phase 3: Execution]
-Step 1: Launch subagent for commit abc123
-  Subagent: "Test failed. Exit code 1. bad"
-  Main: git bisect bad -> ~3 steps remaining
-
-Step 2: Launch subagent for commit def456
-  Subagent: "Test passed. Exit code 0. good"
-  Main: git bisect good -> ~2 steps remaining
-
-Step 3: Launch subagent for commit ghi789
-  Subagent: "Test failed. Exit code 1. bad"
-  Main: git bisect bad -> ~1 step remaining
-
-Step 4: Launch subagent for commit jkl012
-  Subagent: "Test passed. Exit code 0. good"
-  Main: git bisect good
-
-Git bisect identifies: ghi789 is first bad commit
-
-[Phase 4: Analysis]
-Found first bad commit: ghi789
-
-Author: John Doe
-Date: 2025-11-10
-
-feat: update authentication middleware
-
-Files changed:
-  src/auth/middleware.js | 12 ++++---
-  tests/login.spec.js    |  3 +-
-
-Using systematic-debugging to analyze why this change broke the test...
-[Hands off to systematic-debugging skill]
+[Phase 1] git status -> clean. Good: v1.2.0 tag, Bad: HEAD. Verified both. 47 commits, ~6 steps.
+[Phase 2] AskUserQuestion -> User selects Automated.
+  Script: npm install --silent 2>/dev/null || exit 125 && npm test -- tests/login.spec.js
+[Phase 3] Subagent tests at each bisect step:
+  abc123 -> bad (~3 left), def456 -> good (~2 left), ghi789 -> bad (~1 left), jkl012 -> good
+  Result: ghi789 is first bad commit
+[Phase 4] ghi789: "feat: update authentication middleware" (src/auth/middleware.js)
+  -> Handoff to systematic-debugging for root cause analysis
 ```
 
 ### Example 2: Manual UI Regression
@@ -527,138 +346,22 @@ Using systematic-debugging to analyze why this change broke the test...
 ```
 User: "The dashboard layout looks wrong, but I'm not sure when it broke."
 
-Claude: "I'm using git-bisect-debugging to find which commit introduced this issue."
-
-[Phase 1: Setup]
-- git status -> clean
-- Good commit: 2 weeks ago (user remembers it working)
-- Bad commit: HEAD
-- Range: 89 commits, ~7 steps estimated
-
-[Phase 2: Strategy Selection]
-AskUserQuestion: Which approach?
-User selects: Manual
-
-Verification steps created:
-1. Run `npm run dev`
-2. Open browser to http://localhost:3000/dashboard
-3. Check if the sidebar and main content are side-by-side
-4. Respond 'good' if layout is correct, 'bad' if sidebar overlaps content
-
-[Phase 3: Execution]
-Step 1: Checkout commit abc123
-  Launch subagent with verification steps
-  User verifies: "Layout is correct. good"
-  Main: git bisect good -> ~3 steps remaining
-
-Step 2: Checkout commit def456
-  Launch subagent with verification steps
-  User verifies: "Sidebar overlaps content. bad"
-  Main: git bisect bad -> ~2 steps remaining
-
-... continues until first bad commit found
-
-[Phase 4: Analysis]
-Found first bad commit: mno345
-
-Author: Jane Smith
-Date: 2025-11-08
-
-refactor: migrate to CSS Grid layout
-
-Files changed:
-  src/components/Dashboard.css | 25 +++++++++++----------
-
-Using systematic-debugging to analyze the CSS changes...
-[Hands off to systematic-debugging skill]
-```
-
-### Example 3: Hybrid Performance Regression
-
-```
-User: "API response times got slower recently."
-
-Claude: "I'm using git-bisect-debugging to find which commit introduced this issue."
-
-[Phase 1: Setup]
-- git status -> clean
-- Good commit: last release tag v2.1.0
-- Bad commit: HEAD
-- Range: 120 commits, ~7 steps estimated
-
-[Phase 2: Strategy Selection]
-AskUserQuestion: Which approach?
-User selects: Hybrid
-
-Script created:
-#!/bin/bash
-npm install --silent 2>/dev/null || exit 125
-
-# Run benchmark 3 times, take average
-total=0
-for i in 1 2 3; do
-  time=$(npm run benchmark:api 2>/dev/null | grep "response_time" | awk '{print $2}')
-  [ -z "$time" ] && exit 125  # Can't test
-  total=$(echo "$total + $time" | bc)
-done
-avg=$(echo "scale=2; $total / 3" | bc)
-
-# Threshold: 500ms is acceptable
-if (( $(echo "$avg > 500" | bc -l) )); then
-  exit 1  # bad (too slow)
-else
-  exit 0  # good (fast enough)
-fi
-
-Manual fallback steps:
-"If script is ambiguous, manually test API and verify response time is <500ms"
-
-[Phase 3: Execution]
-Steps proceed with script automation...
-If script returns 125 (can't test), subagent asks user to manually verify
-
-[Phase 4: Analysis]
-Found first bad commit: pqr678
-
-Author: Bob Johnson
-Date: 2025-11-11
-
-feat: add caching layer for user preferences
-
-Files changed:
-  src/api/middleware/cache.js | 45 ++++++++++++++++++++++++++++++++
-
-Using systematic-debugging to analyze the caching implementation...
-[Reveals: Cache lookup is synchronous and blocking, causing slowdown]
+[Phase 1] git status -> clean. Good: 2 weeks ago, Bad: HEAD. 89 commits, ~7 steps.
+[Phase 2] AskUserQuestion -> User selects Manual.
+  Steps: Run `npm run dev`, check sidebar/content layout at localhost:3000/dashboard
+[Phase 3] Subagent presents verification steps at each commit, user reports good/bad:
+  abc123 -> good, def456 -> bad, ... narrows to mno345
+  Result: mno345 is first bad commit
+[Phase 4] mno345: "refactor: migrate to CSS Grid layout" (Dashboard.css)
+  -> Handoff to systematic-debugging for root cause analysis
 ```
 
 ## Troubleshooting
 
-### "Good and bad are reversed"
-If early results suggest good/bad are swapped:
-- Stop bisect
-- Verify issue description is correct
-- Swap good/bad commits and restart
-
-### "Too many skips, can't narrow down"
-If >5 commits skipped:
-- Review skipped commits manually
-- Check if builds are broken in that range
-- Consider narrowing the range or manual investigation
-
-### "Bisect is stuck/interrupted"
-If bisect state is corrupted or interrupted:
-```bash
-git bisect reset  # Clean up bisect state
-git checkout main  # Return to main branch
-# Restart bisect with better range/script
-```
-
-### "Subagent is taking too long"
-- Set reasonable timeout for verification
-- If automated: optimize test script
-- If manual: simplify verification steps
-- Consider marking commit as 'skip'
+- **Good and bad are reversed:** Stop bisect, verify issue description, swap good/bad commits and restart.
+- **Too many skips:** Review skipped commits manually. Consider narrowing the range or switching to manual investigation.
+- **Bisect is stuck/interrupted:** Run `git bisect reset`, then `git checkout main`. Restart with better range/script.
+- **Subagent is taking too long:** Optimize test script or simplify verification steps. Mark commit as 'skip' if needed.
 
 ## Summary
 
