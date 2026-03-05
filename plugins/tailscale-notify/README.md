@@ -10,13 +10,13 @@ Sends Claude Code notifications to a Tailscale endpoint via HTTP POST.
 
 ## Configuration
 
-The notification endpoint can be configured via environment variable:
+Set the `TAILSCALE_NOTIFY_URL` environment variable to the base URL of your notification endpoint:
 
 ```bash
-export TAILSCALE_NOTIFY_URL="https://your-device.your-tailnet.ts.net:7080/endpoint"
+export TAILSCALE_NOTIFY_URL="https://your-device.your-tailnet.ts.net:7080"
 ```
 
-If not set, defaults to `https://YOUR-DEVICE.YOUR-TAILNET.ts.net:7080/<hostname>` where `<hostname>` is your machine's hostname (lowercase).
+The hook appends your machine's hostname (lowercase) as the path, so notifications go to `$TAILSCALE_NOTIFY_URL/<hostname>`. If `TAILSCALE_NOTIFY_URL` is not set, the hook silently does nothing.
 
 ## How It Works
 
