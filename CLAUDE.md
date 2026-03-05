@@ -86,11 +86,15 @@ When adding a new plugin to the marketplace:
    - The `source` path must use relative prefix `./` (e.g., `"./plugins/swift-engineer"`)
    - Plugin metadata is stored in individual plugin directories, not in marketplace.json
 
-3. **Update CLAUDE.md:**
+3. **Bump plugin version:**
+   - Increment `version` in `plugins/<plugin-name>/.claude-plugin/plugin.json`
+   - Required for Claude Code to detect new components on reinstall
+
+4. **Update CLAUDE.md:**
    - Add plugin description to "Current Plugins" section
    - Document any special usage instructions
 
-4. **Agent file format** (`agents/<name>.md`):
+5. **Agent file format** (`agents/<name>.md`):
    ```markdown
    ---
    name: agent-name
@@ -102,7 +106,7 @@ When adding a new plugin to the marketplace:
    [Agent system prompt content]
    ```
 
-5. **Command file format** (`commands/<name>.md`):
+6. **Command file format** (`commands/<name>.md`):
    ```markdown
    ---
    description: Brief explanation shown in /help
@@ -118,7 +122,7 @@ When adding a new plugin to the marketplace:
    - Use `description` for help text, `argument-hint` for auto-completion, `allowed-tools` for explicit permissions
    - Content is the command's prompt/workflow that executes when invoked
 
-6. **Skill file format** (`skills/<name>.md`):
+7. **Skill file format** (`skills/<name>.md`):
    ```markdown
    ---
    name: skill-name
@@ -128,7 +132,7 @@ When adding a new plugin to the marketplace:
    [Skill prompt content]
    ```
 
-7. **Skills index format** (`SKILL.md`):
+8. **Skills index format** (`SKILL.md`):
    - Required if plugin contains skills
    - Documents all skills in the plugin
    - Includes usage examples and reference materials
