@@ -45,7 +45,8 @@ Each plugin can contain:
 
 **technical-writer** (`plugins/technical-writer/`):
 - Skill: `technical-writer` - Expert in technical documentation (README, API docs, guides, tutorials, quickstarts, specs, release notes) that automatically activates when working with .md files in docs/ directories or README files
-- Command: `/technical-overview [output-dir]` - Create or update a comprehensive Beej's-Guide-style technical manual with parallel chapter writing via teammates
+- Skill: `pdf-generation` - Generate a PDF book from a directory of ordered markdown chapters using pandoc and weasyprint. Includes print-optimized CSS, table of contents, and inter-chapter link resolution.
+- Command: `/technical-overview [output-dir]` - Create or update a comprehensive Beej's-Guide-style technical manual with parallel chapter writing via teammates, then generate a PDF
 - Command: `/walkthrough [path-to-source]` - Generate a code walkthrough using showboat
 - Agent: `technical-writer.md` - Legacy agent implementation (prefer skill for automatic activation)
 - Agent: `obsidian-vault-manager.md` - Obsidian vault management specialist using obsidian-cli

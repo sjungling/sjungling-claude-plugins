@@ -13,7 +13,9 @@ allowed-tools:
 
 Create or update a comprehensive technical manual for this project. The output directory is `$ARGUMENTS` (default: `doc/technical-overview` if no path given).
 
-## Writing Style
+**Before writing any content**, invoke the `technical-writer` skill to load the full technical writing style guide. All chapters must follow those conventions — in particular: sentence case for all headings (never title case), descriptive link text (never "click here"), and the standard content structure rules.
+
+## Writing style
 
 Write like **Beej's Guide to Network Programming** — colloquial, approachable, educational. The reader is a competent programmer but may not be an expert in this project's language or frameworks. Explain concepts as you go. Use code examples but keep them concise. Avoid dry reference-manual tone.
 
@@ -61,11 +63,15 @@ Give each agent the full context: project name, language, the table of contents 
 
 After all chapters are written, read through the output directory and:
 
-- Ensure cross-references between chapters are correct
+- Ensure cross-references between chapters are correct and use relative markdown links
 - Verify the README table of contents matches actual files
 - Check that code examples reference real files/lines in the project
 
-## Important Rules
+### 5. Generate PDF
+
+Invoke the `pdf-generation` skill and run the generation script to produce a PDF book from the completed chapters. This gives the user a single shareable/printable artifact.
+
+## Important rules
 
 - If chapters already exist, UPDATE them rather than rewriting from scratch. Preserve good content, fix outdated content.
 - Use filenames like `01-architecture.md`, `02-navigation.md`, etc. for ordering.
@@ -74,3 +80,4 @@ After all chapters are written, read through the output directory and:
 - End each chapter with "Where to go next" pointing to related chapters.
 - Do NOT invent code examples. Pull real snippets from the actual source files.
 - Create the output directory if it doesn't exist.
+- **Inter-document linking must be complete.** Every cross-reference between chapters must use relative markdown links (e.g., `[architecture overview](01-architecture.md)` or `[the store layer](03-data-layer.md#store)`). The final set of markdown files should be self-contained so they can be collated and converted to a single PDF without broken links.
