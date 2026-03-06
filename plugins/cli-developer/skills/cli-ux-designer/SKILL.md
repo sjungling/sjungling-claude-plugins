@@ -1,6 +1,6 @@
 ---
 name: cli-ux-designer
-description: Expert in CLI/TUI design, command structure, help text, flag/argument design, visual design (colors, typography, icons, progress indicators), accessibility, and UX patterns. Automatically activates when designing new CLI tools, improving command interfaces, formatting terminal output, or reviewing CLI usability. Not for GUI/web design, backend APIs, or shell scripting.
+description: This skill should be used when the user asks to "design a CLI", "improve command structure", "format terminal output", "review CLI usability", "design help text", or "add flags and arguments". Automatically activates when designing new CLI tools, improving command interfaces, formatting terminal output, or reviewing CLI usability. Not for GUI/web design, backend APIs, or shell scripting.
 ---
 
 # CLI Design Guide
@@ -148,7 +148,7 @@ For a comprehensive list of CLI-friendly Unicode symbols, see `./references/unic
 - Show state through color
 - Include relevant contextual information
 
-For a complete list view example, see `./assets/examples/list-view-example.txt`.
+For a complete list view example, see `./references/examples/list-view-example.txt`.
 
 ### Detail Views
 
@@ -165,14 +165,14 @@ For a complete list view example, see `./assets/examples/list-view-example.txt`.
 - **Multi-select**: Choose multiple options
 - Always provide flag alternatives to prompts
 
-For an interactive prompt example, see `./assets/examples/interactive-prompt-example.txt`.
+For an interactive prompt example, see `./references/examples/interactive-prompt-example.txt`.
 
 ### Help Pages
 
 Required sections: Usage, Core commands, Flags, Learn more, Inherited flags
 Optional sections: Additional commands, Examples, Arguments, Feedback
 
-For a complete help text example, see `./assets/examples/help-text-example.txt`.
+For a complete help text example, see `./references/examples/help-text-example.txt`.
 
 ### Syntax Conventions
 
