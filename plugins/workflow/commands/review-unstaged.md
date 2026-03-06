@@ -10,26 +10,22 @@ allowed-tools:
 
 Review the unstaged changes in this repository.
 
-## Steps
+## Diff Context
 
-1. **Get unstaged diff**:
-   ```bash
-   git diff
-   ```
+Current unstaged diff:
 
-2. **Analyze the changes** for:
-   - Code quality issues
-   - Style inconsistencies
-   - Potential bugs or logic errors
-   - Missing error handling
-   - Opportunities for simplification
+!`git diff`
 
-3. **Read full context** of modified files if needed to understand the changes better
+## Analysis
 
-4. **Provide feedback** organized by:
-   - **Issues**: Problems that should be fixed before committing
-   - **Suggestions**: Improvements that would be nice to have
-   - **Simplifications**: Code that could be cleaner or more concise
+Analyze the changes above for:
+- Code quality issues
+- Style inconsistencies
+- Potential bugs or logic errors
+- Missing error handling
+- Opportunities for simplification
+
+Read full context of modified files if needed to understand the changes better.
 
 ## Code Simplification
 
@@ -37,4 +33,9 @@ If the `code-simplifier:code-simplifier` agent is available, consider using it v
 
 ## Output Format
 
-Provide a concise review with actionable feedback. Reference specific line numbers and file paths when possible.
+Provide feedback organized by:
+- **Issues**: Problems that should be fixed before committing
+- **Suggestions**: Improvements that would be nice to have
+- **Simplifications**: Code that could be cleaner or more concise
+
+Reference specific line numbers and file paths when possible. Keep the review concise and actionable.
