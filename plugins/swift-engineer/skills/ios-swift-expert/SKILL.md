@@ -1,6 +1,6 @@
 ---
 name: ios-swift-expert
-description: Elite iOS, macOS, watchOS, tvOS, and visionOS development expertise for Swift, SwiftUI, UIKit, Xcode, and the Apple development ecosystem. Automatically activates when working with .swift files, Xcode projects (.xcodeproj, .xcworkspace), SwiftUI interfaces, Apple platform frameworks (UIKit, Core Data, Combine, WidgetKit, App Intents, etc.), app architecture for Apple platforms, or Apple platform development. Not for cross-platform frameworks (React Native, Flutter) or non-Apple platforms.
+description: This skill should be used when the user asks to "build an iOS app", "create a SwiftUI view", "fix Xcode build errors", "implement Core Data", "design app architecture", or "optimize Swift performance". Automatically activates when working with .swift files, Xcode projects (.xcodeproj, .xcworkspace), SwiftUI interfaces, or Apple platform frameworks (UIKit, Core Data, Combine, WidgetKit, App Intents). Not for cross-platform frameworks (React Native, Flutter), non-Apple platforms, or backend server development.
 ---
 
 # iOS and macOS Development Expert

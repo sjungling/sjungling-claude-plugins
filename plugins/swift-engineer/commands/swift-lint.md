@@ -1,5 +1,6 @@
 ---
 description: Format and lint Swift code using swift-format
+argument-hint: "[path]"
 allowed-tools:
   - Task
   - Bash
@@ -7,7 +8,7 @@ allowed-tools:
   - AskUserQuestion
 ---
 
-To keep the codebase clean, execute the following workflow:
+To keep the codebase clean, execute the following workflow. If a path is provided as `$ARGUMENTS`, scope all formatting and linting to that path; otherwise, operate on the entire project.
 
 ## Step 1: Check for Periphery
 

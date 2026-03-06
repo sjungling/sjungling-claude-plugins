@@ -1,5 +1,6 @@
 ---
 description: Build the Xcode project, fix any errors, then run the application
+argument-hint: "[scheme]"
 allowed-tools:
   - Bash
   - Read
@@ -10,7 +11,7 @@ allowed-tools:
   - ToolSearch
 ---
 
-Build and run the current Xcode project. Follow this workflow:
+Build and run the current Xcode project. If a scheme is provided as `$1`, use that scheme; otherwise, discover available schemes and prompt if multiple exist. Follow this workflow:
 
 ## Step 0: Check for Xcode MCP
 
@@ -48,9 +49,10 @@ Prioritize errors over warnings. If warnings remain after a clean build, briefly
 
 Once the build succeeds, run the app using Bash:
 
-- **iOS/iPadOS**: Boot the simulator and launch the app:
+- **iOS/iPadOS**: Determine the best available simulator dynamically, then boot and launch:
   ```
-  xcrun simctl boot "iPhone 16" 2>/dev/null; xcrun simctl launch --terminate-running-process --console-stdout booted <bundle-identifier>
+  SIMULATOR=$(xcrun simctl list devices available -j | python3 -c "import sys,json; devs=[d for r in json.load(sys.stdin)['devices'].values() for d in r if d['isAvailable']]; iphones=[d for d in devs if 'iPhone' in d['name']]; print(iphones[-1]['name'] if iphones else devs[0]['name'] if devs else '')")
+  xcrun simctl boot "$SIMULATOR" 2>/dev/null; xcrun simctl launch --terminate-running-process --console-stdout booted <bundle-identifier>
   ```
   Determine the bundle identifier from the project's build settings or `Info.plist`.
 
@@ -74,7 +76,8 @@ Report the result to the user.
 Run the build using `xcodebuild`:
 
 ```
-xcodebuild -workspace <workspace> -scheme <scheme> -destination 'platform=iOS Simulator,name=iPhone 16' build 2>&1 | tail -50
+SIMULATOR=$(xcrun simctl list devices available -j | python3 -c "import sys,json; devs=[d for r in json.load(sys.stdin)['devices'].values() for d in r if d['isAvailable']]; iphones=[d for d in devs if 'iPhone' in d['name']]; print(iphones[-1]['name'] if iphones else devs[0]['name'] if devs else '')")
+xcodebuild -workspace <workspace> -scheme <scheme> -destination "platform=iOS Simulator,name=$SIMULATOR" build 2>&1 | tail -50
 ```
 
 Adjust the destination as appropriate for the project type (iOS, macOS, etc.). For macOS apps, omit the `-destination` flag.
@@ -96,9 +99,10 @@ Prioritize errors over warnings. If warnings remain after a clean build, briefly
 
 Once the build succeeds, run the app in the simulator or locally:
 
-- **iOS/iPadOS**: Boot the simulator and launch the app:
+- **iOS/iPadOS**: Determine the best available simulator dynamically, then boot and launch:
   ```
-  xcrun simctl boot "iPhone 16" 2>/dev/null; xcrun simctl launch --terminate-running-process --console-stdout booted <bundle-identifier>
+  SIMULATOR=$(xcrun simctl list devices available -j | python3 -c "import sys,json; devs=[d for r in json.load(sys.stdin)['devices'].values() for d in r if d['isAvailable']]; iphones=[d for d in devs if 'iPhone' in d['name']]; print(iphones[-1]['name'] if iphones else devs[0]['name'] if devs else '')")
+  xcrun simctl boot "$SIMULATOR" 2>/dev/null; xcrun simctl launch --terminate-running-process --console-stdout booted <bundle-identifier>
   ```
   Determine the bundle identifier from the project's `Info.plist` or build settings.
 
