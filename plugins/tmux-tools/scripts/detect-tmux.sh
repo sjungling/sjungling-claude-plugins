@@ -1,6 +1,9 @@
 #!/bin/bash
 # Detect TMUX session and output context for Claude
 
+# Guard: ensure tmux binary is available
+command -v tmux >/dev/null 2>&1 || exit 0
+
 # Check if running in TMUX
 if [ -z "$TMUX" ]; then
     echo "Not running in TMUX session."
@@ -19,13 +22,13 @@ ALL_WINDOWS=$(tmux list-windows -F '[#{window_index}:#{window_name}]' 2>/dev/nul
 
 # Output context
 echo "TMUX Session Detected:"
-echo "- Current: window \"$(echo $CURRENT_WINDOW | cut -d: -f2)\" (#$(echo $CURRENT_WINDOW | cut -d: -f1)), pane $CURRENT_PANE"
+echo "- Current: window \"$(echo "$CURRENT_WINDOW" | cut -d: -f2)\" (#$(echo "$CURRENT_WINDOW" | cut -d: -f1)), pane $CURRENT_PANE"
 
 if [ -n "$CLAUDE_WINDOW" ]; then
     CLAUDE_WINDOW_IDX=$(echo "$CLAUDE_WINDOW" | cut -d: -f1)
-    echo "- Claude-controlled window: exists (#$CLAUDE_WINDOW_IDX)"
+    echo "- Claude-controlled window: exists (#${CLAUDE_WINDOW_IDX})"
 else
     echo "- Claude-controlled window: not found"
 fi
 
-echo "- Windows: $ALL_WINDOWS"
+echo "- Windows: ${ALL_WINDOWS}"

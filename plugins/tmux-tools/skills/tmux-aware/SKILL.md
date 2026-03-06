@@ -1,13 +1,13 @@
 ---
 name: tmux-aware
-description: TMUX session awareness and process management. Automatically activates when running in a TMUX session (detected by SessionStart hook). Use when starting/stopping/restarting services in dedicated tmux panes, checking process status or logs, capturing pane output, managing the claude-controlled window, or when user references tmux panes, windows, or sessions by name. Not for one-off commands that don't need a persistent pane.
+description: This skill should be used when the user asks to "start a service in tmux", "check tmux pane output", "manage background processes", or "run a server in a pane". Automatically activates when running in a TMUX session (detected by SessionStart hook). Not for one-off commands that do not need a persistent pane.
 ---
 
 # TMUX-Aware Process Management
 
 ## Overview
 
-When running inside a TMUX session, you can manage services in dedicated panes without cluttering the user's current view. All Claude-created panes go in a dedicated "claude-controlled" window.
+When running inside a TMUX session, manage services in dedicated panes without cluttering the current view. All Claude-created panes go in a dedicated "claude-controlled" window.
 
 ## Key Principles
 
@@ -146,44 +146,7 @@ When running multiple services:
 - Use `tmux select-layout -t claude-controlled even-vertical` to rebalance
 - If more than 3 services, consider separate windows instead of more pane splits
 
-## Command Reference
-
-```bash
-# Detection (already done by SessionStart hook)
-echo $TMUX
-
-# List windows
-tmux list-windows -F "#{window_index}:#{window_name}"
-
-# List all panes with titles
-tmux list-panes -a -F "#{window_name}:#{pane_index}:#{pane_title}"
-
-# Create claude-controlled window
-tmux new-window -n "claude-controlled"
-
-# Split pane (vertical)
-tmux split-window -t claude-controlled -v
-
-# Name a pane
-tmux select-pane -t "target" -T "pane-name"
-
-# Send command
-tmux send-keys -t "target" "command here" Enter
-
-# Send Ctrl+C
-tmux send-keys -t "target" C-c
-
-# Capture output
-tmux capture-pane -t "target" -p -S -50
-```
-
-## Target Syntax
-
-TMUX targets use the format: `session:window.pane`
-
-- `claude-controlled:0` - First pane in claude-controlled window
-- `claude-controlled:0.api-server` - Pane titled "api-server" in claude-controlled
-- Just the pane title works if unique: `api-server`
+For the full command reference (window/pane management, sending commands, capturing output, target syntax), see `./references/commands.md`.
 
 ## Example Workflow
 
