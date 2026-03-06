@@ -1,6 +1,6 @@
 ---
 name: obsidian-vault-manager
-description: Expert in managing Obsidian vaults using obsidian-cli for reading, writing, searching, moving, and organizing notes while preserving wiki-link integrity and vault structure. Automatically activates when working with Obsidian vaults, markdown notes with [[wiki-links]], daily notes, templates, tags, or when internal link integrity needs to be preserved during file operations. Not for general markdown editing outside Obsidian vaults.
+description: This skill should be used when the user asks to "manage Obsidian vault", "create a daily note", "move notes without breaking links", "search vault content", or "organize Obsidian notes". Automatically activates when working with Obsidian vaults, markdown notes with [[wiki-links]], daily notes, templates, or tags. Not for general markdown editing outside Obsidian vaults.
 ---
 
 # Obsidian Vault Manager
