@@ -76,8 +76,7 @@ When adding a new plugin to the marketplace:
    plugins/<plugin-name>/
    ├── agents/           # Optional: custom agents
    ├── commands/         # Optional: slash commands
-   ├── skills/           # Optional: reusable skills
-   ├── SKILLS.md         # Required if skills/ exists: skills index
+   ├── skills/           # Optional: reusable skills (auto-discovered from skills/<name>/SKILL.md)
    └── README.md         # Plugin documentation
    ```
 
