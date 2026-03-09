@@ -1,0 +1,11 @@
+{
+  "name": "token-tracker",
+  "description": "PostToolUse hook that reports estimated token usage and cost per tool call",
+  "version": "1.3.0",
+  "author": {
+    "name": "Scott",
+    "email": "scott.jungling@gmail.com"
+  },
+  "license": "MIT",
+  "keywords": ["tokens", "cost", "usage", "tracking", "hooks"]
+}

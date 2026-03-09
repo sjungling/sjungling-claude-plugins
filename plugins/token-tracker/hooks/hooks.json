@@ -1,0 +1,29 @@
+{
+  "description": "Captures active model at session start and reports estimated token usage/cost after each tool call",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/capture-model.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/token-report.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

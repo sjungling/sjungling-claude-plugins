@@ -45,6 +45,10 @@
     {
       "name": "obsidian-plans",
       "source": "./plugins/obsidian-plans"
+    },
+    {
+      "name": "token-tracker",
+      "source": "./plugins/token-tracker"
     }
   ]
 }
