@@ -1,6 +1,7 @@
 ---
 description: Generate a code walkthrough using showboat
 argument-hint: [path-to-source]
+model: haiku
 allowed-tools:
   - Bash
   - Read

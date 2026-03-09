@@ -1,5 +1,6 @@
 ---
 description: Review unstaged changes for code quality, style, and potential issues
+model: haiku
 allowed-tools:
   - Bash(git:*)
   - Read

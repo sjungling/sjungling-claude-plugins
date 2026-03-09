@@ -1,6 +1,7 @@
 ---
 description: Format and lint Swift code using swift-format
 argument-hint: "[path]"
+model: haiku
 allowed-tools:
   - Task
   - Bash

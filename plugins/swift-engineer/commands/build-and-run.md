@@ -1,6 +1,7 @@
 ---
 description: Build the Xcode project, fix any errors, then run the application
 argument-hint: "[scheme]"
+model: haiku
 allowed-tools:
   - Bash
   - Read
