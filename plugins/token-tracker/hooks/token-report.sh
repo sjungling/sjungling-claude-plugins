@@ -25,8 +25,16 @@ input_tokens=$(( input_chars / 4 ))
 output_tokens=$(( result_chars / 4 ))
 total_tokens=$(( input_tokens + output_tokens ))
 
-# Resolve model: env var set by SessionStart hook, or fall back to pricing.json default
+# Resolve model: check env var, then extract from transcript, then fall back to pricing.json default
 model="${TOKEN_TRACKER_MODEL:-}"
+
+if [ -z "$model" ]; then
+  # Extract model from the transcript using grep (fast) instead of jq (slow on large JSONL)
+  transcript_path=$(jq -r '.transcript_path // empty' "$tmpfile")
+  if [ -n "$transcript_path" ] && [ -f "$transcript_path" ]; then
+    model=$(grep -o '"model":"claude-[^"]*"' "$transcript_path" | tail -1 | cut -d'"' -f4)
+  fi
+fi
 
 if [ -z "$model" ] && [ -f "$PRICING_FILE" ]; then
   model=$(jq -r '.default' "$PRICING_FILE")
