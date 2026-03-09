@@ -10,6 +10,8 @@ model: haiku
 
 When running inside a TMUX session, manage services in dedicated panes without cluttering the current view. All Claude-created panes go in a dedicated "claude-controlled" window.
 
+For the visual workflow diagram, see `./references/workflow.mmd`.
+
 ## Key Principles
 
 1. **Never clutter the current window** - Always create panes in the "claude-controlled" window

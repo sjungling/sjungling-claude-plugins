@@ -1,0 +1,32 @@
+graph TD
+    start([User request])
+    classify{Start service<br/>or interact?}
+
+    %% Start service path
+    check_window[Check for<br/>claude-controlled window]
+    window_exists{Window exists?}
+    create_window[Create claude-controlled window]
+    create_pane[Split window,<br/>name pane after service]
+    send_cmd[Send start command]
+    verify[Sleep + capture output]
+    check_errors{Errors detected?}
+    report_ok([Report success])
+    report_err([Report error])
+
+    %% Interact path
+    list_panes[List panes with names]
+    find_match{Match found?}
+    interact[Capture output /<br/>send command]
+    ask_user[List panes,<br/>ask user which one]
+
+    start --> classify
+    classify -->|start| check_window --> window_exists
+    window_exists -->|yes| create_pane
+    window_exists -->|no| create_window --> create_pane
+    create_pane --> send_cmd --> verify --> check_errors
+    check_errors -->|no| report_ok
+    check_errors -->|yes| report_err
+
+    classify -->|interact| list_panes --> find_match
+    find_match -->|yes| interact --> report_ok
+    find_match -->|no| ask_user

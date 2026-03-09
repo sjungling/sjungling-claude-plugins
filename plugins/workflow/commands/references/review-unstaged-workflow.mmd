@@ -1,0 +1,12 @@
+graph TD
+    start([Start])
+    run_diff[Run git diff]
+    analyze[Analyze changes:<br/>quality, style, bugs,<br/>error handling]
+    read_context[Read full file context<br/>if needed]
+    check_simplifier{code-simplifier<br/>agent available?}
+    run_simplifier[Launch code-simplifier<br/>subagent]
+    output([Output feedback:<br/>Issues / Suggestions /<br/>Simplifications])
+
+    start --> run_diff --> analyze --> read_context --> check_simplifier
+    check_simplifier -->|yes| run_simplifier --> output
+    check_simplifier -->|no| output

@@ -11,6 +11,8 @@ allowed-tools:
 
 Review the unstaged changes in this repository.
 
+For the visual workflow diagram, see `./references/review-unstaged-workflow.mmd`.
+
 ## Diff Context
 
 Current unstaged diff:

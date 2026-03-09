@@ -14,6 +14,8 @@ allowed-tools:
 
 Build and run the current Xcode project. If a scheme is provided as `$1`, use that scheme; otherwise, discover available schemes and prompt if multiple exist. Follow this workflow:
 
+For the visual workflow diagram, see `./references/build-and-run-workflow.mmd`.
+
 ## Step 0: Check for Xcode MCP
 
 Use ToolSearch with query "xcode build" to check if Xcode MCP tools are available (e.g., `BuildProject`, `GetBuildLog`, `XcodeListWindows`). If found, follow the **MCP Path**. Otherwise, follow the **CLI Fallback Path**.

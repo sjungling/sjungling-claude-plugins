@@ -1,0 +1,13 @@
+graph TD
+    start([Start])
+    read_source[Read source at path]
+    plan[Plan linear walkthrough]
+    check_showboat[Check showboat availability]
+    showboat_available{Showboat available?}
+    create_via_showboat[Create walkthrough.md<br/>via showboat note/exec]
+    create_via_write[Write walkthrough.md<br/>directly via Write tool]
+    done([Done])
+
+    start --> read_source --> plan --> check_showboat --> showboat_available
+    showboat_available -->|yes| create_via_showboat --> done
+    showboat_available -->|no| create_via_write --> done

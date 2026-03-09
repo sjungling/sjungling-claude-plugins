@@ -1,7 +1,7 @@
 {
   "name": "tmux-tools",
   "description": "TMUX session awareness and process management for running services in dedicated panes",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "author": {
     "name": "Scott",
     "email": "scott.jungling@gmail.com"

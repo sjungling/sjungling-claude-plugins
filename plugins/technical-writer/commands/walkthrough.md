@@ -20,6 +20,8 @@ Showboat is a CLI tool for creating structured, readable code walkthroughs as ma
 
 Install via `uvx showboat --help` to verify availability. If showboat is not installed, fall back to writing the walkthrough directly using the Write tool in standard markdown format.
 
+For the visual workflow diagram, see `./references/walkthrough-workflow.mmd`.
+
 ## Walkthrough Structure
 
 Produce a walkthrough that follows this structure:

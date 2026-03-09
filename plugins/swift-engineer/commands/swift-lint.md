@@ -11,6 +11,8 @@ allowed-tools:
 
 To keep the codebase clean, execute the following workflow. If a path is provided as `$ARGUMENTS`, scope all formatting and linting to that path; otherwise, operate on the entire project.
 
+For the visual workflow diagram, see `./references/swift-lint-workflow.mmd`.
+
 ## Step 1: Check for Periphery
 
 Before formatting and linting, check if Periphery (unused code detector) is available:

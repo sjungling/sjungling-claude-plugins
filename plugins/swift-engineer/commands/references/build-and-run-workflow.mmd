@@ -1,0 +1,33 @@
+graph TD
+    start([Start])
+    check_mcp[ToolSearch: check<br/>for Xcode MCP]
+    has_mcp{Xcode MCP<br/>available?}
+
+    %% MCP path
+    mcp_list[XcodeListWindows<br/>get tabIdentifier]
+    mcp_build[BuildProject]
+    mcp_log[GetBuildLog]
+    mcp_ok{Build succeeded?}
+    mcp_fix[ListNavigatorIssues<br/>→ XcodeRead → XcodeUpdate]
+
+    %% CLI path
+    cli_find[Find .xcworkspace<br/>or .xcodeproj]
+    cli_schemes[xcodebuild -list<br/>discover schemes]
+    cli_build[xcodebuild build]
+    cli_ok{Build succeeded?}
+    cli_fix[Read errors<br/>→ Edit source files]
+
+    %% Shared
+    run_app[Run app<br/>simulator or macOS]
+    done([Report result])
+
+    start --> check_mcp --> has_mcp
+    has_mcp -->|yes| mcp_list --> mcp_build --> mcp_log --> mcp_ok
+    mcp_ok -->|yes| run_app
+    mcp_ok -->|no| mcp_fix --> mcp_build
+
+    has_mcp -->|no| cli_find --> cli_schemes --> cli_build --> cli_ok
+    cli_ok -->|yes| run_app
+    cli_ok -->|no| cli_fix --> cli_build
+
+    run_app --> done
