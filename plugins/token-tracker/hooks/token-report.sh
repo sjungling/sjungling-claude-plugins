@@ -28,6 +28,13 @@ total_tokens=$(( input_tokens + output_tokens ))
 # Resolve model: check env var, then extract from transcript, then fall back to pricing.json default
 model="${TOKEN_TRACKER_MODEL:-}"
 
+# Verify env var model exists in pricing.json; clear it if not recognized
+if [ -n "$model" ] && [ -f "$PRICING_FILE" ]; then
+  if ! jq -e --arg m "$model" '.models[$m]' "$PRICING_FILE" >/dev/null 2>&1; then
+    model=""
+  fi
+fi
+
 if [ -z "$model" ]; then
   # Extract model from the transcript using grep (fast) instead of jq (slow on large JSONL)
   transcript_path=$(jq -r '.transcript_path // empty' "$tmpfile")
@@ -40,29 +47,25 @@ if [ -z "$model" ] && [ -f "$PRICING_FILE" ]; then
   model=$(jq -r '.default' "$PRICING_FILE")
 fi
 
-# Look up pricing from pricing.json
-if [ -f "$PRICING_FILE" ] && jq -e ".models[\"$model\"]" "$PRICING_FILE" > /dev/null 2>&1; then
-  model_label=$(jq -r ".models[\"$model\"].label" "$PRICING_FILE")
-  input_cost_per_m=$(jq -r ".models[\"$model\"].input_per_mtok" "$PRICING_FILE")
-  output_cost_per_m=$(jq -r ".models[\"$model\"].output_per_mtok" "$PRICING_FILE")
+# Look up pricing from pricing.json (single jq call)
+pricing_data=""
+if [ -f "$PRICING_FILE" ]; then
+  pricing_data=$(jq -r --arg m "$model" '.models[$m] // empty | "\(.label)\t\(.input_per_mtok)\t\(.output_per_mtok)"' "$PRICING_FILE")
+fi
+
+if [ -n "$pricing_data" ]; then
+  model_label=$(echo "$pricing_data" | cut -f1)
+  input_cost_per_m=$(echo "$pricing_data" | cut -f2)
+  output_cost_per_m=$(echo "$pricing_data" | cut -f3)
 else
-  # Fallback if pricing.json missing or model not found
   model_label="${model:-unknown}"
   input_cost_per_m=15.00
   output_cost_per_m=75.00
 fi
 
-# Calculate cost in dollars
-cost=$(awk "BEGIN {
-  input_cost = ($input_tokens / 1000000) * $input_cost_per_m
-  output_cost = ($output_tokens / 1000000) * $output_cost_per_m
-  total = input_cost + output_cost
-  printf \"%.6f\", total
-}")
-
-# Format cost for display
+# Calculate cost and format for display
 cost_display=$(awk "BEGIN {
-  c = $cost
+  c = ($input_tokens / 1000000) * $input_cost_per_m + ($output_tokens / 1000000) * $output_cost_per_m
   if (c < 0.001) printf \"<\$0.001\"
   else if (c < 0.01) printf \"\$%.4f\", c
   else printf \"\$%.3f\", c

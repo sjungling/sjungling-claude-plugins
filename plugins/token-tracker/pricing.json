@@ -1,24 +1,204 @@
 {
   "models": {
-    "claude-opus-4-6": {
-      "label": "Opus 4.6",
-      "input_per_mtok": 15.00,
-      "output_per_mtok": 75.00
+    "claude-3-5-haiku-20241022": {
+      "label": "Haiku 3.5",
+      "input_per_mtok": 0.8,
+      "output_per_mtok": 4
     },
-    "claude-sonnet-4-6": {
-      "label": "Sonnet 4.6",
-      "input_per_mtok": 3.00,
-      "output_per_mtok": 15.00
+    "claude-3-5-haiku-0": {
+      "label": "Haiku 3.5",
+      "input_per_mtok": 0.8,
+      "output_per_mtok": 4
+    },
+    "claude-3-5-haiku": {
+      "label": "Haiku 3.5",
+      "input_per_mtok": 0.8,
+      "output_per_mtok": 4
+    },
+    "claude-3-5-sonnet-20240620": {
+      "label": "Sonnet 3.5",
+      "input_per_mtok": 3,
+      "output_per_mtok": 15
+    },
+    "claude-3-5-sonnet-0": {
+      "label": "Sonnet 3.5",
+      "input_per_mtok": 3,
+      "output_per_mtok": 15
+    },
+    "claude-3-5-sonnet": {
+      "label": "Sonnet 3.5",
+      "input_per_mtok": 3,
+      "output_per_mtok": 15
+    },
+    "claude-3-5-sonnet-20241022": {
+      "label": "Sonnet 3.5",
+      "input_per_mtok": 3,
+      "output_per_mtok": 15
+    },
+    "claude-3-7-sonnet-20240620": {
+      "label": "Sonnet 3.7",
+      "input_per_mtok": 3.6,
+      "output_per_mtok": 18
+    },
+    "claude-3-7-sonnet-0": {
+      "label": "Sonnet 3.7",
+      "input_per_mtok": 3,
+      "output_per_mtok": 15
+    },
+    "claude-3-7-sonnet": {
+      "label": "Sonnet 3.7",
+      "input_per_mtok": 3,
+      "output_per_mtok": 15
+    },
+    "claude-3-7-sonnet-20250219": {
+      "label": "Sonnet 3.7",
+      "input_per_mtok": 3,
+      "output_per_mtok": 15
+    },
+    "claude-3-haiku-20240307": {
+      "label": "Haiku 3",
+      "input_per_mtok": 0.25,
+      "output_per_mtok": 1.25
+    },
+    "claude-3-haiku-0": {
+      "label": "Haiku 3",
+      "input_per_mtok": 0.25,
+      "output_per_mtok": 1.25
+    },
+    "claude-3-haiku": {
+      "label": "Haiku 3",
+      "input_per_mtok": 0.25,
+      "output_per_mtok": 1.25
+    },
+    "claude-3-opus-20240229": {
+      "label": "Opus 3",
+      "input_per_mtok": 15,
+      "output_per_mtok": 75
+    },
+    "claude-3-opus-0": {
+      "label": "Opus 3",
+      "input_per_mtok": 15,
+      "output_per_mtok": 75
+    },
+    "claude-3-opus": {
+      "label": "Opus 3",
+      "input_per_mtok": 15,
+      "output_per_mtok": 75
+    },
+    "claude-3-sonnet-20240229": {
+      "label": "Sonnet 3",
+      "input_per_mtok": 3,
+      "output_per_mtok": 15
+    },
+    "claude-3-sonnet-0": {
+      "label": "Sonnet 3",
+      "input_per_mtok": 3,
+      "output_per_mtok": 15
+    },
+    "claude-3-sonnet": {
+      "label": "Sonnet 3",
+      "input_per_mtok": 3,
+      "output_per_mtok": 15
     },
     "claude-haiku-4-5-20251001": {
       "label": "Haiku 4.5",
-      "input_per_mtok": 0.80,
-      "output_per_mtok": 4.00
+      "input_per_mtok": 1,
+      "output_per_mtok": 5
+    },
+    "claude-haiku-4-5-0": {
+      "label": "Haiku 4.5",
+      "input_per_mtok": 1,
+      "output_per_mtok": 5
     },
     "claude-haiku-4-5": {
       "label": "Haiku 4.5",
-      "input_per_mtok": 0.80,
-      "output_per_mtok": 4.00
+      "input_per_mtok": 1,
+      "output_per_mtok": 5
+    },
+    "claude-opus-4-1-20250805": {
+      "label": "Opus 4.1",
+      "input_per_mtok": 15,
+      "output_per_mtok": 75
+    },
+    "claude-opus-4-1-0": {
+      "label": "Opus 4.1",
+      "input_per_mtok": 15,
+      "output_per_mtok": 75
+    },
+    "claude-opus-4-1": {
+      "label": "Opus 4.1",
+      "input_per_mtok": 15,
+      "output_per_mtok": 75
+    },
+    "claude-opus-4-20250514": {
+      "label": "Opus 4",
+      "input_per_mtok": 15,
+      "output_per_mtok": 75
+    },
+    "claude-opus-4-0": {
+      "label": "Opus 4",
+      "input_per_mtok": 15,
+      "output_per_mtok": 75
+    },
+    "claude-opus-4": {
+      "label": "Opus 4",
+      "input_per_mtok": 15,
+      "output_per_mtok": 75
+    },
+    "claude-opus-4-5-20251101": {
+      "label": "Opus 4.5",
+      "input_per_mtok": 5,
+      "output_per_mtok": 25
+    },
+    "claude-opus-4-5-0": {
+      "label": "Opus 4.5",
+      "input_per_mtok": 5,
+      "output_per_mtok": 25
+    },
+    "claude-opus-4-5": {
+      "label": "Opus 4.5",
+      "input_per_mtok": 5,
+      "output_per_mtok": 25
+    },
+    "claude-opus-4-6": {
+      "label": "Opus 4.6",
+      "input_per_mtok": 5,
+      "output_per_mtok": 25
+    },
+    "claude-sonnet-4-20250514": {
+      "label": "Sonnet 4",
+      "input_per_mtok": 3,
+      "output_per_mtok": 15
+    },
+    "claude-sonnet-4-0": {
+      "label": "Sonnet 4",
+      "input_per_mtok": 3,
+      "output_per_mtok": 15
+    },
+    "claude-sonnet-4": {
+      "label": "Sonnet 4",
+      "input_per_mtok": 3,
+      "output_per_mtok": 15
+    },
+    "claude-sonnet-4-5-20250929": {
+      "label": "Sonnet 4.5",
+      "input_per_mtok": 3,
+      "output_per_mtok": 15
+    },
+    "claude-sonnet-4-5-0": {
+      "label": "Sonnet 4.5",
+      "input_per_mtok": 3,
+      "output_per_mtok": 15
+    },
+    "claude-sonnet-4-5": {
+      "label": "Sonnet 4.5",
+      "input_per_mtok": 3,
+      "output_per_mtok": 15
+    },
+    "claude-sonnet-4-6": {
+      "label": "Sonnet 4.6",
+      "input_per_mtok": 3,
+      "output_per_mtok": 15
     }
   },
   "default": "claude-opus-4-6"

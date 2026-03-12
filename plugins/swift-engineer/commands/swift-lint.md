@@ -3,44 +3,41 @@ description: Format and lint Swift code using swift-format
 argument-hint: "[path]"
 model: haiku
 allowed-tools:
-  - Task
   - Bash
+  - Read
+  - Edit
   - Glob
-  - AskUserQuestion
 ---
 
 To keep the codebase clean, execute the following workflow. If a path is provided as `$ARGUMENTS`, scope all formatting and linting to that path; otherwise, operate on the entire project.
 
 For the visual workflow diagram, see `./references/swift-lint-workflow.mmd`.
 
-## Step 1: Check for Periphery
+## Step 1: Run swift-lint.sh
 
-Before formatting and linting, check if Periphery (unused code detector) is available:
+Execute the helper script which handles periphery (auto-detected), formatting, and linting in a single invocation:
 
-1. Run `which periphery` to check if periphery is installed
-2. If installed, check if the project is configured by looking for:
-   - `.periphery.yml` configuration file in the project root, OR
-   - An Xcode project/workspace file (`.xcodeproj` or `.xcworkspace`)
+```
+bash ${CLAUDE_PLUGIN_ROOT}/commands/references/swift-lint.sh [path] --periphery
+```
 
-3. If periphery is installed AND the project has either a `.periphery.yml` config or Xcode project files, use AskUserQuestion to prompt:
-   - Question: "Periphery is available for detecting unused code. Would you like to run it before formatting and linting?"
-   - Header: "Run Periphery"
-   - Options:
-     - "Yes" - "Run periphery scan first to identify unused code"
-     - "No" - "Skip periphery and proceed with formatting/linting"
+- Pass the target path (or `.` for the full project)
+- Always pass `--periphery` — the script automatically skips if periphery is not installed or the project lacks configuration
 
-4. If user selects "Yes", launch a general-purpose subagent to run `periphery scan` and report findings. Wait for it to complete before proceeding.
+The script outputs one JSON line per step with the structure: `{"step": "...", "status": "...", "output": "..."}`.
 
-## Step 2: Format and Lint with swift-format
+## Step 3: Handle Results
 
-Execute the following workflow using subagents for context isolation:
+Parse the JSON output from the script:
 
-**IMPORTANT**: Launch TWO separate subagents sequentially. Do NOT run them in parallel. Formatting often fixes issues that would be flagged by the linter, so linting must happen AFTER formatting is complete.
+1. **periphery** step (if run): Report any unused code findings to the user
+2. **format** step: Note that formatting was applied in-place
+3. **lint** step:
+   - If `status` is `"clean"` — report success, done
+   - If `status` is `"issues"` — read the flagged files, fix each lint issue using Edit, then re-verify by running:
+     ```
+     bash ${CLAUDE_PLUGIN_ROOT}/commands/references/swift-lint.sh [path] --lint-only
+     ```
+   - Repeat until lint is clean
 
-1. First, launch a general-purpose subagent to run `swift-format format --in-place --recursive` to format all Swift code. Wait for it to complete.
-
-2. Then, launch a second general-purpose subagent to run `swift-format lint --recursive` on the project and resolve all remaining lint issues until clean.
-
-Use the Task tool for all subagent steps to keep output isolated from the main agent context.
-
-Report a brief summary of results after all steps are complete.
+Report a brief summary of all results.

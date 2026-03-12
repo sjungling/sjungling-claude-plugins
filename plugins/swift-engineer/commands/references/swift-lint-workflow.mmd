@@ -1,18 +1,16 @@
 graph TD
     start([Start])
-    check_periphery[Check: periphery<br/>installed + configured?]
-    periphery_available{Available?}
-    ask_user[AskUserQuestion:<br/>run Periphery?]
-    user_choice{User says yes?}
-    run_periphery[Subagent:<br/>periphery scan]
-    format[Subagent 1:<br/>swift-format format<br/>--in-place --recursive]
-    lint[Subagent 2:<br/>swift-format lint<br/>--recursive]
-    fix_lint[Resolve lint issues<br/>until clean]
+    run_script[swift-lint.sh<br/>--periphery]
+    parse[Parse JSON output]
+    periphery_result{Periphery<br/>findings?}
+    report_periphery[Report unused code]
+    lint_result{Lint issues?}
+    fix_lint[Read + Edit<br/>source files]
+    rerun_lint[swift-lint.sh<br/>--lint-only]
     report([Report summary])
 
-    start --> check_periphery --> periphery_available
-    periphery_available -->|yes| ask_user --> user_choice
-    periphery_available -->|no| format
-    user_choice -->|yes| run_periphery --> format
-    user_choice -->|no| format
-    format --> lint --> fix_lint --> report
+    start --> run_script --> parse --> periphery_result
+    periphery_result -->|yes| report_periphery --> lint_result
+    periphery_result -->|no| lint_result
+    lint_result -->|clean| report
+    lint_result -->|issues| fix_lint --> rerun_lint --> lint_result
