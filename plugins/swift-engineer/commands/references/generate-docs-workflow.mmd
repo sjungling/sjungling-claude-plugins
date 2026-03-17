@@ -1,0 +1,30 @@
+graph TD
+    start([Start])
+    run_script[generate-docs.sh<br/>scheme]
+    parse[Parse JSON output]
+    preflight{Preflight<br/>ok?}
+    preflight_err[Report error]
+    scheme_result{Scheme<br/>found?}
+    scheme_err[List schemes,<br/>ask user]
+    docbuild_result{Docbuild<br/>ok?}
+    docbuild_err[Report build error,<br/>suggest /build-and-run]
+    extract_result{Symbol graphs<br/>found?}
+    extract_warn[Warn: no public API]
+    transform_result{Transform<br/>ok?}
+    transform_err[Report transform error]
+    gitignore[Update .gitignore]
+    claude_md[Update CLAUDE.md<br/>breadcrumb]
+    report([Report summary])
+
+    start --> run_script --> parse --> preflight
+    preflight -->|no| preflight_err
+    preflight -->|yes| scheme_result
+    scheme_result -->|no| scheme_err
+    scheme_result -->|yes| docbuild_result
+    docbuild_result -->|no| docbuild_err
+    docbuild_result -->|yes| extract_result
+    extract_result -->|warning| extract_warn
+    extract_result -->|ok| transform_result
+    transform_result -->|no| transform_err
+    transform_result -->|yes| gitignore
+    gitignore --> claude_md --> report

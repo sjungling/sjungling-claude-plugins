@@ -38,6 +38,7 @@ Each plugin can contain:
 **swift-engineer** (`plugins/swift-engineer/`):
 - Skill: `ios-swift-expert` - Elite iOS and macOS development expertise that automatically activates when working with Swift, SwiftUI, UIKit, Xcode projects, or Apple frameworks
 - Command: `swift-lint.md` - Runs swift-format for code formatting and linting
+- Command: `generate-docs.md` - Builds symbol graph documentation via xcodebuild docbuild, extracts .symbolgraph.json files to .build/symbol-graphs/, and updates the target project's CLAUDE.md with jq query examples for LLM-friendly API discovery
 - Agent (legacy): `ios-swift-expert.md` - Original agent implementation (prefer skills for automatic activation)
 
 **cli-developer** (`plugins/cli-developer/`):
