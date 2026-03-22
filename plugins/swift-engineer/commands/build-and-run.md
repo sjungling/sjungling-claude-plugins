@@ -1,7 +1,7 @@
 ---
 description: Build the Xcode project, fix any errors, then run the application
 argument-hint: "[scheme]"
-model: haiku
+model: sonnet
 allowed-tools:
   - Bash
   - Read
@@ -59,7 +59,7 @@ Once the build succeeds, run the app using Bash:
   ```
   Determine the bundle identifier from the project's build settings or `Info.plist`.
 
-- **macOS**: Run the built binary directly from derived data, or use `open` on the `.app` bundle.
+- **macOS**: First kill any running instance of the app (`pkill -x <app-name>`), then remove the old `.app` bundle from `DerivedData/.../Build/Products/Debug/` before building. After the build succeeds, open the fresh `.app` bundle. This avoids launching a stale cached binary.
 
 Report the result to the user.
 
@@ -109,6 +109,6 @@ Once the build succeeds, run the app in the simulator or locally:
   ```
   Determine the bundle identifier from the project's `Info.plist` or build settings.
 
-- **macOS**: Run the built binary directly from derived data, or use `open` on the `.app` bundle.
+- **macOS**: First kill any running instance of the app (`pkill -x <app-name>`), then remove the old `.app` bundle from `DerivedData/.../Build/Products/Debug/` before building. After the build succeeds, open the fresh `.app` bundle. This avoids launching a stale cached binary.
 
 Report the result to the user.
