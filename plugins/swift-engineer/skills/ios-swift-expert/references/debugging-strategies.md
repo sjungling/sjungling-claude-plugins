@@ -4,11 +4,19 @@ Comprehensive debugging techniques for iOS and macOS development.
 
 ## Xcode Build Issues
 
-1. **Clean Build Folder**: Product → Clean Build Folder (Cmd+Shift+K)
-2. **Delete Derived Data**: `rm -rf ~/Library/Developer/Xcode/DerivedData`
-3. **Check Build Settings**: Verify code signing, Swift version, deployment target
-4. **Read Error Carefully**: Xcode errors often include fix-its
-5. **Check Dependencies**: Swift Package Manager, CocoaPods, or Carthage issues
+1. **Read Error Carefully**: Xcode errors often include fix-its — address the actual error before clearing caches
+2. **Check Build Settings**: Verify code signing, Swift version, deployment target
+3. **Check Dependencies**: Swift Package Manager, CocoaPods, or Carthage issues
+4. **Clean Project-Scoped Build Cache** (escalate in order):
+   - `xcodebuild clean` — clears build products for the current scheme only
+   - Delete the project-specific derived data folder, not the global one:
+     ```bash
+     # Find the project's derived data subfolder
+     xcodebuild -project YourProject.xcodeproj -showBuildSettings | grep -m1 BUILD_DIR
+     # Delete only that project's derived data (parent of Build/Products)
+     rm -rf /path/to/DerivedData/YourProject-<hash>
+     ```
+   - **Never run `rm -rf ~/Library/Developer/Xcode/DerivedData`** — this nukes caches for all projects and breaks concurrent builds
 
 ## Runtime Issues
 
