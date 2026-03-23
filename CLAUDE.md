@@ -14,6 +14,7 @@ This repository doesn't require a build step - it's a collection of markdown-bas
 - **Test plugin locally**: Use `/plugin marketplace add /Users/scott.jungling/Work/sjungling-claude-plugins` to add this marketplace
 - **Install plugin**: Use `/plugin install <plugin-name>@sjungling-plugins` to test installation
 - **Validate agent/command syntax**: Check YAML frontmatter in markdown files is properly formatted
+- **Bump plugin version**: Always increment `version` in `plugins/<plugin-name>/.claude-plugin/plugin.json` when making any changes to a plugin. Claude Code won't detect updates on reinstall without a version bump.
 
 ## Architecture
 
