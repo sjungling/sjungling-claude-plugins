@@ -135,6 +135,44 @@ Optimize for user experience:
 - Use background modes judiciously
 - Profile with Instruments (Energy Log)
 
+**CLI Performance Profiling with xctrace:**
+
+Use `xctrace` to capture Instruments traces from the command line without opening the Instruments GUI. This enables Claude to diagnose performance issues directly.
+
+```bash
+# List available profiling templates
+xctrace list templates
+
+# Record a Time Profiler trace against a running app (by PID or process name)
+xctrace record --template 'Time Profiler' --attach <pid-or-process-name> --output trace.trace --time-limit 10s
+
+# Record against a launched process
+xctrace record --template 'Time Profiler' --launch -- /path/to/app --args
+
+# Record with Allocations template for memory profiling
+xctrace record --template 'Allocations' --attach <pid-or-process-name> --output alloc.trace --time-limit 10s
+
+# Record on a specific device (simulator or physical)
+xctrace record --template 'Time Profiler' --device <device-name-or-udid> --attach <process> --output trace.trace
+
+# Export trace data to XML for analysis
+xctrace export --input trace.trace --xpath '/trace-toc/run[@number="1"]/data/table[@schema="time-profile"]'
+
+# List available devices
+xctrace list devices
+```
+
+Key templates for common scenarios:
+- **Time Profiler**: CPU usage, hot code paths, main thread stalls
+- **Allocations**: Memory usage, allocation patterns, leaks
+- **Leaks**: Detect retain cycles and leaked objects
+- **SwiftUI**: View body evaluations and redraw frequency (Xcode 15+)
+- **Animation Hitches**: Dropped frames and rendering stalls
+- **Network**: HTTP request timing and payload sizes
+- **Energy Log**: Battery drain and power-intensive operations
+
+See `./references/debugging-strategies.md` for detailed xctrace workflows.
+
 ### 5. Apple Platform Best Practices
 
 Follow Apple's official guidelines for:
