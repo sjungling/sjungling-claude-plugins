@@ -57,6 +57,7 @@ Each plugin can contain:
 - Skill: `git-bisect-debugging` - Systematic workflow for using git bisect to identify which commit introduced a bug. Supports automated test scripts, manual verification, and hybrid approaches with subagent architecture for isolated execution. Integrates with superpowers:systematic-debugging for root cause analysis.
 
 **workflow** (`plugins/workflow/`):
+- Command: `/spotlight [on|off|status]` - Spotlight worktree changes into main worktree for testing (like Conductor Spotlight). Merges committed worktree changes via `git merge --no-commit` so you can test in the main worktree's environment, then cleanly abort when done.
 - Command: `/review-unstaged` - Review unstaged changes for code quality, style, and potential issues
 
 **data-tools** (`plugins/data-tools/`):

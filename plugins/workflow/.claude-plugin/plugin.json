@@ -1,11 +1,11 @@
 {
   "name": "workflow",
-  "description": "Code review commands for analyzing unstaged changes",
-  "version": "2.4.0",
+  "description": "Code review and worktree workflow commands",
+  "version": "2.5.0",
   "author": {
     "name": "Scott",
     "email": "scott.jungling@gmail.com"
   },
   "license": "MIT",
-  "keywords": ["code-review", "workflow", "git", "quality"]
+  "keywords": ["code-review", "workflow", "git", "quality", "worktree", "spotlight", "testing"]
 }
