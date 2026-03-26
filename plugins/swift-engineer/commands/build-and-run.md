@@ -59,7 +59,20 @@ Once the build succeeds, run the app using Bash:
   ```
   Determine the bundle identifier from the project's build settings or `Info.plist`.
 
-- **macOS**: First kill any running instance of the app (`pkill -x <app-name>`), then remove the old `.app` bundle from `DerivedData/.../Build/Products/Debug/` before building. After the build succeeds, open the fresh `.app` bundle. This avoids launching a stale cached binary.
+- **macOS**: Kill only the previous instance from this worktree (not a blanket `pkill`), then remove the old `.app` bundle before building. After a successful build, open the fresh `.app` and capture the new PID. Do **not** use `pkill -x` as it would kill instances from other worktrees.
+  ```bash
+  # Kill previous instance from this worktree only
+  if [ -f .build.pid ]; then
+    OLD_PID=$(cat .build.pid)
+    if kill -0 "$OLD_PID" 2>/dev/null; then kill "$OLD_PID" 2>/dev/null; sleep 1; fi
+  fi
+  rm -f "$BUILT_PRODUCTS_DIR/<app-name>.app"  # remove stale .app before rebuild
+  # ... build happens here ...
+  open "$BUILT_PRODUCTS_DIR/<app-name>.app"
+  sleep 2
+  pgrep -f "$BUILT_PRODUCTS_DIR/<app-name>" > .build.pid || echo "Warning: could not capture PID" >&2
+  ```
+  Ensure `.build.pid` is listed in the project's `.gitignore`.
 
 Report the result to the user.
 
@@ -122,10 +135,17 @@ Once the build succeeds, use the `BUILT_PRODUCTS_DIR` from Step 2 to launch the 
   ```
   Determine the bundle identifier from the project's `Info.plist` or build settings.
 
-- **macOS**: First kill any running instance of the app (`pkill -x <app-name>`), then open the `.app` from the resolved build products directory:
+- **macOS**: Kill only the previous instance from this worktree (not a blanket `pkill`), then open the `.app` from the resolved build products directory and capture the new PID:
   ```bash
-  pkill -x <app-name> 2>/dev/null; sleep 1
+  # Kill previous instance from this worktree only
+  if [ -f .build.pid ]; then
+    OLD_PID=$(cat .build.pid)
+    if kill -0 "$OLD_PID" 2>/dev/null; then kill "$OLD_PID" 2>/dev/null; sleep 1; fi
+  fi
   open "$BUILT_PRODUCTS_DIR/<app-name>.app"
+  sleep 2
+  pgrep -f "$BUILT_PRODUCTS_DIR/<app-name>" > .build.pid || echo "Warning: could not capture PID" >&2
   ```
+  Ensure `.build.pid` is listed in the project's `.gitignore`.
 
 Report the result to the user.
