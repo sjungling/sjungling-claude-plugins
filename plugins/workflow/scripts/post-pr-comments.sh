@@ -31,8 +31,9 @@ set -euo pipefail
 
 error_json() {
   local msg="$1"
+  local exit_code="${2:-1}"
   echo "{\"error\": \"$msg\"}"
-  exit 1
+  exit "$exit_code"
 }
 
 # --- Pre-checks ---
@@ -53,13 +54,14 @@ COMMENT_COUNT=$(jq 'if type == "array" then length else -1 end' "$COMMENTS_FILE"
 
 [[ "$COMMENT_COUNT" -gt 0 ]] || error_json "comments file must contain a non-empty JSON array"
 
+jq -e '.[] | has("path") and has("line") and has("side") and has("body")' "$COMMENTS_FILE" >/dev/null 2>&1 || \
+  error_json "each comment must have path, line, side, and body fields"
+
 # --- Get PR metadata ---
 
-PR_NUMBER=$(gh pr view --json number --jq '.number' 2>/dev/null || echo "")
-[[ -n "$PR_NUMBER" ]] || error_json "no PR found for current branch"
-
-HEAD_SHA=$(gh pr view --json headRefOid --jq '.headRefOid' 2>/dev/null || echo "")
-[[ -n "$HEAD_SHA" ]] || error_json "could not determine PR head commit SHA"
+PR_DATA=$(gh pr view --json number,headRefOid 2>/dev/null) || error_json "no PR found for current branch"
+PR_NUMBER=$(echo "$PR_DATA" | jq -r '.number')
+HEAD_SHA=$(echo "$PR_DATA" | jq -r '.headRefOid')
 
 REPO=$(gh repo view --json nameWithOwner --jq '.nameWithOwner' 2>/dev/null || echo "")
 [[ -n "$REPO" ]] || error_json "could not determine repository"
@@ -82,7 +84,8 @@ jq -n \
 
 RESPONSE=$(gh api "repos/$REPO/pulls/$PR_NUMBER/reviews" --input "$PAYLOAD_FILE" 2>&1) || {
   rm -f "$PAYLOAD_FILE"
-  error_json "API request failed: $(echo "$RESPONSE" | head -1)"
+  API_ERROR=$(echo "$RESPONSE" | jq -r '.message // .errors[0].message // "unknown API error"' 2>/dev/null || echo "$RESPONSE")
+  error_json "API request failed: $API_ERROR" 2
 }
 
 rm -f "$PAYLOAD_FILE"
