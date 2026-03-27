@@ -30,10 +30,9 @@ If there are uncommitted changes (staged or unstaged):
 ## Step 3: Rebase based on context
 
 ### Case A: In a worktree
-The main worktree has the authoritative copy of main. Fetch from the main worktree path:
-1. Get the main worktree path (first entry from `git worktree list`)
-2. Run `git fetch <main-worktree-path> main:main` to update the local main ref from the main worktree
-3. Run `git rebase main`
+Fetch the latest main from origin and rebase against it. Do NOT try to update the local `main` ref — git refuses to update a branch that is checked out in another worktree.
+1. Run `git fetch origin main`
+2. Run `git rebase origin/main`
 
 ### Case B: Not in a worktree, ON main branch
 We're on main itself — rebase against origin:
