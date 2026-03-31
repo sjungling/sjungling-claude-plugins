@@ -61,6 +61,7 @@ Each plugin can contain:
 - Command: `/review-unstaged` - Review unstaged changes for code quality, style, and potential issues
 - Command: `/create-issue [file-path]` - Create a GitHub issue from session context. Auto-discovers superpowers specs/plans, Claude plan files, or generates a conversation summary. Uses `gh` CLI with `--body-file`.
 - Command: `/post-pr-comments` - Post inline code review comments from conversation onto the current branch's PR. Writes a comments JSON file, then uses `gh api` to post a pull request review with targeted line comments.
+- Command: `/monitor-prs` - Monitor open PRs on a recurring basis: review changes, post validated comments, resolve merge conflicts in worktrees, and surface new reviewer feedback. Designed for use with `/loop` (e.g., `/loop 5m /monitor-prs`).
 
 **data-tools** (`plugins/data-tools/`):
 - Skill: `structured-logging` - Use SQLite for structured data during complex workflows, debugging, and data analysis instead of temp files or stdout parsing. Automatically activates when parsing large output (>100 lines), tracking state across operations, correlating events, or analyzing structured data. Databases stored in `~/.claude-logs/<project-name>.db` persist across sessions.
