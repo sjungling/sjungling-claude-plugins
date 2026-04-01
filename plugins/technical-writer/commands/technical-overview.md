@@ -11,7 +11,7 @@ allowed-tools:
   - Grep
 ---
 
-Create or update a comprehensive technical manual for this project. The output directory is `$ARGUMENTS` (default: `doc/technical-overview` if no path given).
+Create or update a comprehensive technical manual for this project. The output directory is `$ARGUMENTS` (default: `docs/technical-overview` if no path given).
 
 **Before writing any content**, invoke the `technical-writer` skill to load the full technical writing style guide. All chapters must follow those conventions — in particular: sentence case for all headings (never title case), descriptive link text (never "click here"), and the standard content structure rules.
 
@@ -47,27 +47,36 @@ Write the table of contents to `{output-dir}/README.md` first.
 
 ### 3. Write chapters in parallel using teammates
 
-Launch one Agent (subagent_type: "general-purpose") per chapter. Each agent should:
+Launch one Agent (subagent_type: "general-purpose", model: "sonnet") per chapter. Each agent should:
 
-- Read the relevant source code for their chapter
+- **Read the actual source files** for every type, method, and data flow they will reference — do not infer type names or signatures from CLAUDE.md alone. If writing about navigation, read the navigation source files directly.
 - Read any existing version of their chapter file (to update rather than rewrite from scratch)
 - Write or update their chapter file in `{output-dir}/`
 - Follow the writing style guidelines above
 - Include real code snippets from the project (not invented examples)
 - Explain the "why" not just the "what"
-- Target ~500-1500 words per chapter (enough to be useful, short enough to stay focused)
+- Target 1,000–1,500 words for complex topics (architecture, data flow, task lifecycle); 500–800 words for focused utility chapters
 
 Give each agent the full context: project name, language, the table of contents for cross-referencing, and the style guidelines.
 
-### 4. Review and link
+### 4. Technical accuracy review
 
-After all chapters are written, read through the output directory and:
+Launch a single Agent (subagent_type: "general-purpose", model: "opus") to act as a technical editor. It should:
+
+- Read every chapter written in `{output-dir}/`
+- For each type name, method signature, enum case, or data flow described, verify it against the actual source files
+- Make targeted in-place edits to fix any invented identifiers, wrong signatures, or misrepresented flows — do NOT rewrite for style, patch facts only
+- Append a brief `<!-- accuracy-review: ... -->` comment at the bottom of any file it corrects, summarising what changed
+
+### 5. Review and link
+
+After all chapters are written and reviewed, read through the output directory and:
 
 - Ensure cross-references between chapters are correct and use relative markdown links
 - Verify the README table of contents matches actual files
 - Check that code examples reference real files/lines in the project
 
-### 5. Generate PDF
+### 7. Generate PDF
 
 Invoke the `pdf-generation` skill and run the generation script to produce a PDF book from the completed chapters. This gives the user a single shareable/printable artifact.
 
