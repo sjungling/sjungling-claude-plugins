@@ -1,5 +1,5 @@
 ---
-description: Build the Xcode project, fix any errors, then run the application
+description: Build the Xcode project, fix errors, then run the application
 argument-hint: "[scheme]"
 model: sonnet
 allowed-tools:
@@ -9,143 +9,98 @@ allowed-tools:
   - Glob
   - Grep
   - AskUserQuestion
-  - ToolSearch
 ---
 
-Build and run the current Xcode project. If a scheme is provided as `$1`, use that scheme; otherwise, discover available schemes and prompt if multiple exist. Follow this workflow:
+Build and run the current Xcode project.
 
-For the visual workflow diagram, see `./references/build-and-run-workflow.mmd`.
+**Important:** Run all `xcodebuild` commands as background tasks. Builds can take significant time (30s–5m+ depending on project size). Use Bash with `run_in_background: true` parameter to avoid blocking. Poll build completion and capture output for error analysis.
 
-## Step 0: Check for Xcode MCP
+## Workflow
 
-Use ToolSearch with query "xcode build" to check if Xcode MCP tools are available (e.g., `BuildProject`, `GetBuildLog`, `XcodeListWindows`). If found, follow the **MCP Path**. Otherwise, follow the **CLI Fallback Path**.
+### Step 1: Find the Project
 
----
+Look for `.xcworkspace` (preferred) or `.xcodeproj` in current directory. If multiple exist, ask the user which to use.
 
-## MCP Path (preferred — requires Xcode MCP configured via `claude mcp add xcode`)
+### Step 2: Find the Scheme
 
-### Step 1: Identify the Project
+Get available schemes with:
+```bash
+xcodebuild -workspace <workspace> -list -quiet
+```
 
-1. Call `XcodeListWindows` to discover open Xcode windows and their `tabIdentifier` values
-2. If no windows are open, tell the user to open their project in Xcode first
-3. If multiple windows are open, use AskUserQuestion to ask which one to use
-4. Note the `tabIdentifier` — it is required for most subsequent MCP tool calls
-
-### Step 2: Build the Project
-
-1. Call `BuildProject` with the `tabIdentifier` to trigger an incremental build
-2. Call `GetBuildLog` to retrieve the build output
-
-### Step 3: Fix Build Errors
-
-If the build fails:
-
-1. Call `XcodeListNavigatorIssues` to get structured diagnostics (errors and warnings)
-2. Use `XcodeRead` to read the files with errors
-3. Use `XcodeUpdate` (str_replace-style patches) to fix each error
-4. Re-run `BuildProject` and check `GetBuildLog` again
-5. Repeat until the build succeeds
-
-Prioritize errors over warnings. If warnings remain after a clean build, briefly note them to the user.
-
-### Step 4: Run the Application
-
-Once the build succeeds, run the app using Bash:
-
-- **iOS/iPadOS**: Determine the best available simulator dynamically, then boot and launch:
-  ```
-  SIMULATOR=$(xcrun simctl list devices available -j | python3 -c "import sys,json; devs=[d for r in json.load(sys.stdin)['devices'].values() for d in r if d['isAvailable']]; iphones=[d for d in devs if 'iPhone' in d['name']]; print(iphones[-1]['name'] if iphones else devs[0]['name'] if devs else '')")
-  xcrun simctl boot "$SIMULATOR" 2>/dev/null; xcrun simctl launch --terminate-running-process --console-stdout booted <bundle-identifier>
-  ```
-  Determine the bundle identifier from the project's build settings or `Info.plist`.
-
-- **macOS**: Kill only the previous instance from this worktree (not a blanket `pkill`), then remove the old `.app` bundle before building. After a successful build, open the fresh `.app` and capture the new PID. Do **not** use `pkill -x` as it would kill instances from other worktrees.
-  ```bash
-  # Kill previous instance from this worktree only
-  if [ -f .build.pid ]; then
-    OLD_PID=$(cat .build.pid)
-    if kill -0 "$OLD_PID" 2>/dev/null; then kill "$OLD_PID" 2>/dev/null; sleep 1; fi
-  fi
-  rm -f "$BUILT_PRODUCTS_DIR/<app-name>.app"  # remove stale .app before rebuild
-  # ... build happens here ...
-  open "$BUILT_PRODUCTS_DIR/<app-name>.app"
-  sleep 2
-  pgrep -f "$BUILT_PRODUCTS_DIR/<app-name>" > .build.pid || echo "Warning: could not capture PID" >&2
-  ```
-  Ensure `.build.pid` is listed in the project's `.gitignore`.
-
-Report the result to the user.
-
----
-
-## CLI Fallback Path (no Xcode MCP available)
-
-### Step 1: Identify the Project
-
-1. Look for `.xcworkspace` files first (preferred), then `.xcodeproj` files in the current directory
-2. If multiple are found, use AskUserQuestion to ask the user which one to use
-3. Determine the available schemes by running: `xcodebuild -list -workspace <workspace>` or `xcodebuild -list -project <project>`
-4. If multiple schemes exist, use AskUserQuestion to ask which scheme to build and run
-
-### Step 2: Resolve the Build Products Directory
-
-Before building, determine the exact output path using `-showBuildSettings`. This avoids launching a stale binary from a different DerivedData directory:
+or 
 
 ```bash
-# For macOS:
-BUILT_PRODUCTS_DIR=$(xcodebuild -project <project> -scheme <scheme> -configuration Debug -showBuildSettings -skipMacroValidation -destination 'platform=macOS' 2>/dev/null | grep ' BUILT_PRODUCTS_DIR =' | awk '{print $3}')
-
-# For iOS:
-BUILT_PRODUCTS_DIR=$(xcodebuild -project <project> -scheme <scheme> -configuration Debug -showBuildSettings -skipMacroValidation -destination "platform=iOS Simulator,name=$SIMULATOR" 2>/dev/null | grep ' BUILT_PRODUCTS_DIR =' | awk '{print $3}')
+xcodebuild -project <project> -list -quiet
 ```
 
-Save this path — you will use it in Step 4 to launch the correct binary.
+If multiple schemes exist, ask the user which to build. If scheme is provided as `$1`, use that.
 
-### Step 3: Build the Project
+### Step 3: Build
 
-Run the build using `xcodebuild`. For iOS, determine the simulator first:
+**Run as background task** to avoid blocking.
 
+For macOS projects, build for native architecture:
+```bash
+ARCH=$(uname -m)
+xcodebuild -project <project> -scheme <scheme> -destination "platform=macOS,arch=$ARCH" -quiet build
 ```
-SIMULATOR=$(xcrun simctl list devices available -j | python3 -c "import sys,json; devs=[d for r in json.load(sys.stdin)['devices'].values() for d in r if d['isAvailable']]; iphones=[d for d in devs if 'iPhone' in d['name']]; print(iphones[-1]['name'] if iphones else devs[0]['name'] if devs else '')")
-xcodebuild -workspace <workspace> -scheme <scheme> -destination "platform=iOS Simulator,name=$SIMULATOR" build 2>&1 | tail -50
+
+For iOS projects, determine available simulator and build:
+```bash
+SIMULATOR=$(xcrun simctl list devices available -j | python3 -c "import sys,json; devs=[d for r in json.load(sys.stdin)['devices'].values() for d in r if d['isAvailable']]; iphones=[d for d in devs if 'iPhone' in d['name']]; print(iphones[-1]['name'] if iphones else '')")
+xcodebuild -project <project> -scheme <scheme> -destination "platform=iOS Simulator,name=$SIMULATOR" -quiet build
 ```
 
-Adjust the destination as appropriate for the project type (iOS, macOS, etc.). For macOS apps, use `-destination 'platform=macOS'`.
-
-If using a `.xcodeproj` instead of a workspace, use `-project` instead of `-workspace`.
+When build completes (exit code 0 = success, non-zero = failure), proceed to Step 4 if errors, or Step 5 if successful.
 
 ### Step 4: Fix Build Errors
 
-If the build fails:
+If build fails, read error messages and fix each issue:
+1. Read the file with the error
+2. Identify and fix the issue
+3. Re-run build
+4. Repeat until build succeeds
 
-1. Read the build output to identify the errors
-2. Fix each error by reading and editing the relevant source files
-3. Re-run the build command
-4. Repeat until the build succeeds with no errors
+Prioritize errors over warnings.
 
-Prioritize errors over warnings. If warnings remain after a clean build, briefly note them to the user.
+### Step 5: Run the App
 
-### Step 5: Run the Application
+**For macOS:**
+```bash
+# Get native architecture and build output directory
+ARCH=$(uname -m)
+BUILT_PRODUCTS_DIR=$(xcodebuild -project <project> -scheme <scheme> -destination "platform=macOS,arch=$ARCH" -quiet -showBuildSettings | grep ' BUILT_PRODUCTS_DIR =' | awk '{print $3}')
 
-Once the build succeeds, use the `BUILT_PRODUCTS_DIR` from Step 2 to launch the exact binary that was just built:
+# Kill previous instance and run
+if [ -f .build.pid ]; then
+  OLD_PID=$(cat .build.pid)
+  kill -0 "$OLD_PID" 2>/dev/null && kill "$OLD_PID" 2>/dev/null
+fi
 
-- **iOS/iPadOS**: Boot the simulator and launch:
-  ```
-  xcrun simctl boot "$SIMULATOR" 2>/dev/null; xcrun simctl launch --terminate-running-process --console-stdout booted <bundle-identifier>
-  ```
-  Determine the bundle identifier from the project's `Info.plist` or build settings.
+open "$BUILT_PRODUCTS_DIR/<app-name>.app"
+sleep 1
+pgrep -f "$BUILT_PRODUCTS_DIR/<app-name>" > .build.pid
+```
 
-- **macOS**: Kill only the previous instance from this worktree (not a blanket `pkill`), then open the `.app` from the resolved build products directory and capture the new PID:
-  ```bash
-  # Kill previous instance from this worktree only
-  if [ -f .build.pid ]; then
-    OLD_PID=$(cat .build.pid)
-    if kill -0 "$OLD_PID" 2>/dev/null; then kill "$OLD_PID" 2>/dev/null; sleep 1; fi
-  fi
-  open "$BUILT_PRODUCTS_DIR/<app-name>.app"
-  sleep 2
-  pgrep -f "$BUILT_PRODUCTS_DIR/<app-name>" > .build.pid || echo "Warning: could not capture PID" >&2
-  ```
-  Ensure `.build.pid` is listed in the project's `.gitignore`.
+**For iOS:**
+```bash
+# Get bundle identifier from Info.plist or build settings
+BUNDLE_ID=$(xcodebuild -project <project> -scheme <scheme> -quiet -showBuildSettings | grep ' PRODUCT_BUNDLE_IDENTIFIER =' | awk '{print $3}')
 
-Report the result to the user.
+# Boot simulator and launch
+xcrun simctl boot "$SIMULATOR" 2>/dev/null
+xcrun simctl launch --terminate-running-process booted "$BUNDLE_ID"
+```
+
+Report success or errors to the user.
+
+## Troubleshooting: Clean Build Cache
+
+If build issues persist or changes aren't being picked up, clean DerivedData and rebuild:
+
+```bash
+rm -rf ~/Library/Developer/Xcode/DerivedData/*
+```
+
+Then rebuild from Step 3. This removes all cached build artifacts and forces a fresh build. Use sparingly—only when a rebuild doesn't pick up code changes or when encountering mysterious build failures.

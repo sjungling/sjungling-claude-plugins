@@ -47,48 +47,35 @@ Broad expertise across the Apple development ecosystem: Swift language, SwiftUI,
 ### Decision Frameworks
 
 **SwiftUI vs UIKit:**
-- Prefer SwiftUI for new views unless targeting iOS <15 or needing UIKit-specific features (complex gesture recognizers, MapKit annotations pre-iOS 17, advanced collection view layouts)
-- Use UIViewRepresentable to bridge UIKit into SwiftUI, not the reverse
+- Prefer SwiftUI for new views; use UIKit only for legacy code or unavailable SwiftUI APIs
+- Use UIViewRepresentable to bridge UIKit, not the reverse
 
 **State Management:**
-- @State: view-local value types
-- @StateObject: view-owned reference types (create here)
-- @ObservedObject: passed-in reference types (created elsewhere)
-- @EnvironmentObject: dependency injection across view hierarchy
-- @Observable (iOS 17+): preferred over ObservableObject for new code
+- @State: local value types
+- @StateObject: reference types created by the view
+- @EnvironmentObject: dependency injection across hierarchy
+- @Observable (iOS 17+): preferred for new code
 
 **Concurrency:**
-- Prefer async/await over completion handlers for new code
-- Use actors for mutable shared state, not DispatchQueue
-- Use TaskGroup for parallel async work, not DispatchGroup
-- MainActor for UI updates, not DispatchQueue.main
+- Use async/await, not completion handlers
+- Use actors for shared mutable state
+- Use MainActor for UI updates
+- Use TaskGroup for parallel work
 
 **Data Persistence:**
 - SwiftData (iOS 17+): preferred for new projects
-- Core Data: existing projects or pre-iOS 17 targets
-- UserDefaults: small preferences only, never large data
-- Keychain: credentials and sensitive data
+- Core Data: existing projects or compatibility needs
+- Keychain: credentials and sensitive data only
 
-**Architecture Patterns:**
-- MVVM: default choice for SwiftUI apps, ViewModel as @Observable
-- MVI: when unidirectional data flow is critical (complex state machines)
-- Clean Architecture: large teams, multiple data sources, heavy testing requirements
-- Coordinator: complex navigation flows that span multiple screens
+**Architecture:**
+- MVVM: default for SwiftUI
+- Clean Architecture: multi-team projects with heavy testing
 
 ## Development Workflow
 
 ### 1. Build Verification
 
-**Always verify builds** after making changes using `xcodebuild`:
-
-```bash
-xcodebuild -project YourProject.xcodeproj -scheme YourScheme -quiet build
-```
-
-- Use `-quiet` flag to minimize output as specified in project documentation
-- Replace placeholders with actual project and scheme names
-- For workspaces, use `-workspace YourWorkspace.xcworkspace`
-- Check exit code to confirm success
+Verify builds using `xcodebuild -project <project> -scheme <scheme> build` or `-workspace` for multi-target projects. Use the `-quiet` flag to suppress verbose output. Check exit code to confirm success.
 
 ### 2. Code Standards
 
@@ -135,43 +122,11 @@ Optimize for user experience:
 - Use background modes judiciously
 - Profile with Instruments (Energy Log)
 
-**CLI Performance Profiling with xctrace:**
+**Performance Profiling:**
 
-Use `xctrace` to capture Instruments traces from the command line without opening the Instruments GUI. This enables Claude to diagnose performance issues directly.
+Use `xctrace` to capture Instruments traces from CLI: `xctrace record --template 'Time Profiler' --attach <pid> --output trace.trace --time-limit 10s`. Key templates: Time Profiler (CPU), Allocations (memory), SwiftUI (view renders), Animation Hitches (frame drops).
 
-```bash
-# List available profiling templates
-xctrace list templates
-
-# Record a Time Profiler trace against a running app (by PID or process name)
-xctrace record --template 'Time Profiler' --attach <pid-or-process-name> --output trace.trace --time-limit 10s
-
-# Record against a launched process
-xctrace record --template 'Time Profiler' --launch -- /path/to/app --args
-
-# Record with Allocations template for memory profiling
-xctrace record --template 'Allocations' --attach <pid-or-process-name> --output alloc.trace --time-limit 10s
-
-# Record on a specific device (simulator or physical)
-xctrace record --template 'Time Profiler' --device <device-name-or-udid> --attach <process> --output trace.trace
-
-# Export trace data to XML for analysis
-xctrace export --input trace.trace --xpath '/trace-toc/run[@number="1"]/data/table[@schema="time-profile"]'
-
-# List available devices
-xctrace list devices
-```
-
-Key templates for common scenarios:
-- **Time Profiler**: CPU usage, hot code paths, main thread stalls
-- **Allocations**: Memory usage, allocation patterns, leaks
-- **Leaks**: Detect retain cycles and leaked objects
-- **SwiftUI**: View body evaluations and redraw frequency (Xcode 15+)
-- **Animation Hitches**: Dropped frames and rendering stalls
-- **Network**: HTTP request timing and payload sizes
-- **Energy Log**: Battery drain and power-intensive operations
-
-See `./references/debugging-strategies.md` for detailed xctrace workflows.
+See `./references/debugging-strategies.md` for detailed profiling workflows and analysis patterns.
 
 ### 5. Apple Platform Best Practices
 
@@ -187,13 +142,11 @@ See `./references/apple-guidelines.md` for detailed requirements and best practi
 
 | Mistake | Fix |
 |---------|-----|
-| Using @ObservedObject when @StateObject is needed | @StateObject for objects created by the view; @ObservedObject for objects passed in |
-| Force-unwrapping optionals (`!`) | Use `guard let`, `if let`, or nil-coalescing (`??`) |
-| Expensive work in SwiftUI `body` | Move to `.task {}` modifier or ViewModel |
-| Missing `[weak self]` in escaping closures | Always use `[weak self]` unless closure is non-escaping |
-| Using `ObservableObject` on iOS 17+ | Prefer `@Observable` macro for cleaner code |
-| Synchronous network calls on main thread | Use async/await with URLSession |
-| Hard-coded strings for localization | Use String(localized:) or NSLocalizedString |
+| Force-unwrapping optionals | Use `guard let`, `if let`, or `??` |
+| Expensive work in SwiftUI `body` | Move to `.task {}` or ViewModel |
+| Missing `[weak self]` in escaping closures | Always use `[weak self]` to break cycles |
+| Synchronous network on main thread | Use async/await |
+| Hard-coded UI strings | Use String(localized:) for L10n |
 
 ## Problem-Solving Approach
 
