@@ -7,6 +7,7 @@ allowed-tools:
   - Write
   - Grep
   - Glob
+  - Edit
   - Agent
   - Skill
 ---
@@ -35,10 +36,7 @@ If no open PRs are found, report that to the user and stop.
 
 Track review state using a timestamp file at `/tmp/monitor-prs-last-run-{repo-slug}.txt`. If the file exists, read the ISO 8601 timestamp from it. If it does not exist, treat all PRs as needing review.
 
-Partition the PRs into two lists:
-
-- **Needs review**: PRs whose `updatedAt` is newer than the last-run timestamp (or all PRs on the first run)
-- **Unchanged**: PRs that have not been updated since the last run
+Filter to PRs whose `updatedAt` is newer than the last-run timestamp (or all PRs on the first run). Skip unchanged PRs for review, but still include them in conflict and comment checks (Steps 4-5).
 
 ## Step 2: Review New or Updated PRs
 
