@@ -14,7 +14,7 @@ allowed-tools:
 
 Monitor all open pull requests in the current repository. Designed for recurring use with `/loop` or as a one-shot check.
 
-This command runs on haiku for the main orchestration loop. Expensive review work is delegated to specialized skills that use their own models.
+This command runs on haiku for the main orchestration loop. All per-PR work (reviews, conflict resolution) is performed in isolated worktrees to keep the main worktree clean.
 
 ## Setup
 
@@ -27,7 +27,7 @@ REPO=$(gh repo view --json nameWithOwner -q '.nameWithOwner')
 Fetch all open PRs authored by the current user:
 
 ```bash
-gh pr list --author "@me" --state open --json number,title,headRefName,updatedAt,mergeable
+gh pr list --author "@me" --state open --json number,title,headRefName,baseRefName,updatedAt,mergeable
 ```
 
 If no open PRs are found, report that to the user and stop.
@@ -36,34 +36,29 @@ If no open PRs are found, report that to the user and stop.
 
 Track review state using a timestamp file at `/tmp/monitor-prs-last-run-{repo-slug}.txt`. If the file exists, read the ISO 8601 timestamp from it. If it does not exist, treat all PRs as needing review.
 
-Filter to PRs whose `updatedAt` is newer than the last-run timestamp (or all PRs on the first run). Skip unchanged PRs for review, but still include them in conflict and comment checks (Steps 4-5).
+Filter to PRs whose `updatedAt` is newer than the last-run timestamp (or all PRs on the first run). Skip unchanged PRs for review, but still include them in conflict and comment checks (Steps 3-4).
 
-## Step 2: Review New or Updated PRs
+## Step 2: Review and Comment on New or Updated PRs
 
-For each PR that needs review, invoke the `/pr-review-toolkit:review-pr` skill using the `Skill` tool:
-
-```
-Skill: "pr-review-toolkit:review-pr"
-Args: "{number}"
-```
-
-This delegates the full code review (diff analysis, finding issues, confidence scoring, validation) to the specialized review toolkit, which uses its own model and agent pipeline.
-
-Wait for the review to complete before proceeding. The skill will produce validated review findings.
-
-## Step 3: Post Review Comments
-
-If the review from Step 2 produced any findings, use the `/workflow:post-pr-comments` skill to post them on the PR:
+For each PR that needs review, dispatch an `Agent` with `isolation: "worktree"` to perform the review from an isolated copy of the repository. The agent checks out the PR branch and runs the full review pipeline from that worktree.
 
 ```
-Skill: "workflow:post-pr-comments"
+Agent:
+  isolation: "worktree"
+  prompt: |
+    You are reviewing PR #{number}: {title} in {REPO}.
+
+    1. Check out branch '{headRefName}'
+    2. Run the /pr-review-toolkit:review-pr skill with args "{number}" to perform the code review
+    3. If the review produced findings, run the /workflow:post-pr-comments skill to post them on the PR
+    4. Report what you found and what comments (if any) were posted
 ```
 
-Invoke the skill once per PR that has findings. The skill handles formatting comments, resolving line numbers, and posting via the GitHub API.
+This delegates the full code review (diff analysis, finding issues, confidence scoring, validation, and comment posting) to an isolated worktree. The worktree is automatically cleaned up when the agent completes since no changes are made to the repo.
 
-If no findings were produced, skip to Step 4.
+If multiple PRs need review, dispatch agents in parallel when possible.
 
-## Step 4: Check for Merge Conflicts
+## Step 3: Check for Merge Conflicts
 
 For each open PR, check the `mergeable` field from the PR list query:
 
@@ -71,22 +66,20 @@ For each open PR, check the `mergeable` field from the PR list query:
 - `CONFLICTING` — resolve the conflict
 - `UNKNOWN` — re-fetch: `gh pr view {number} --json mergeable -q '.mergeable'`
 
-For each PR with merge conflicts, dispatch a teammate agent in a worktree to resolve them:
-
-Use the `Agent` tool with `isolation: "worktree"` to:
-
-1. Check out the PR branch
-2. Attempt to rebase onto the base branch (usually `main`)
-3. Resolve any conflicts
-4. Push the resolved branch to update the PR
+For each PR with merge conflicts, dispatch an `Agent` with `isolation: "worktree"` to resolve them:
 
 ```
-Agent prompt: "Check out branch '{headRefName}', rebase it onto 'main', resolve any merge conflicts, and push the result. The repo is {REPO}. PR #{number}: {title}"
+Agent:
+  isolation: "worktree"
+  prompt: |
+    Check out branch '{headRefName}', rebase it onto '{baseRefName}',
+    resolve any merge conflicts, and push the result.
+    The repo is {REPO}. PR #{number}: {title}
 ```
 
 If conflict resolution fails, note it for the summary but do not block the rest of the workflow.
 
-## Step 5: Surface New Review Comments
+## Step 4: Surface New Review Comments
 
 For each open PR, fetch review comments posted since the last monitoring cycle:
 
@@ -108,6 +101,28 @@ gh api repos/{REPO}/pulls/{number}/reviews --jq '[.[] | select(.submitted_at > "
 
 Summarize any new comments for the user, grouped by PR.
 
+## Step 5: Clean Up Stale Worktrees
+
+Check for any lingering worktrees from previous monitoring runs whose PRs have since been merged or closed:
+
+```bash
+git worktree list --porcelain
+```
+
+For each worktree that is not the main worktree, check if its branch corresponds to a PR that is no longer open:
+
+```bash
+gh pr list --head "{branch}" --state open --json number -q '.[0].number'
+```
+
+If the query returns empty (no open PR for that branch), remove the worktree:
+
+```bash
+git worktree remove --force "{worktree_path}"
+```
+
+Only clean up worktrees that appear to be agent-created (located in the `.claude/worktrees/` directory). Do not touch worktrees outside that directory.
+
 ## Finalize
 
 Update the last-run timestamp file:
@@ -122,4 +137,5 @@ Report a summary to the user:
 - **Comments posted**: count per PR
 - **Conflicts resolved**: which PRs, success/failure
 - **New reviewer feedback**: summary of comments per PR
+- **Worktrees cleaned**: count of stale worktrees removed
 - **No changes**: if nothing required attention, say so briefly
