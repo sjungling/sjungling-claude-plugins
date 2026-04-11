@@ -62,6 +62,8 @@ Each plugin can contain:
 - Command: `/create-issue [file-path]` - Create a GitHub issue from session context. Auto-discovers superpowers specs/plans, Claude plan files, or generates a conversation summary. Uses `gh` CLI with `--body-file`.
 - Command: `/post-pr-comments` - Post inline code review comments from conversation onto the current branch's PR. Writes a comments JSON file, then uses `gh api` to post a pull request review with targeted line comments.
 - Command: `/monitor-prs` - Monitor open PRs on a recurring basis: review changes, post validated comments, resolve merge conflicts in worktrees, and surface new reviewer feedback. Designed for use with `/loop` (e.g., `/loop 5m /monitor-prs`).
+- Command: `/review-and-fix [pr-number]` - Run a review-and-fix cycle on an existing PR: dispatches a code-review subagent, applies high-confidence fixes (>=80), runs build verification, asks for confirmation, then commits and pushes. Mandatory build gate before commit.
+- Hook: SessionStart - Emits worktree context (cwd, git toplevel, branch, worktree detection) so subagents stay in the correct working tree and don't accidentally edit the main repo.
 
 **data-tools** (`plugins/data-tools/`):
 - Skill: `structured-logging` - Use SQLite for structured data during complex workflows, debugging, and data analysis instead of temp files or stdout parsing. Automatically activates when parsing large output (>100 lines), tracking state across operations, correlating events, or analyzing structured data. Databases stored in `~/.claude-logs/<project-name>.db` persist across sessions.
