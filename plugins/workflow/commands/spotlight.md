@@ -1,6 +1,6 @@
 ---
 description: Spotlight worktree changes into main worktree for testing (like Conductor Spotlight)
-argument-hint: [on|off|status]
+argument-hint: [on|off|refresh|status]
 allowed-tools:
   - Bash(git:*)
 ---
@@ -8,7 +8,7 @@ allowed-tools:
 Spotlight testing: merge worktree changes into the main worktree without committing,
 so you can test in the main worktree's environment (build artifacts, node_modules, databases, etc.).
 
-Parse `$ARGUMENTS` for the mode: `on` (default if empty), `off`, or `status`.
+Parse `$ARGUMENTS` for the mode: `on` (default if empty), `off`, `refresh`, or `status`.
 
 ## Step 1: Detect Environment
 
@@ -57,6 +57,22 @@ If NOT in a linked worktree, abort with:
      - Run `/spotlight off` when done to clean up
    - **Conflicts**: Report conflicting files. User can resolve in main worktree or
      run `/spotlight off` to abort
+
+### Mode: `refresh`
+
+Re-spotlight the current branch's latest state into the main worktree. Useful after making new commits on the feature branch — avoids the `off` + `on` dance.
+
+1. **Clear any existing spotlight in main:**
+   - If main worktree has an active merge (MERGE_HEAD exists): `git -C <main-worktree-path> merge --abort`
+   - Otherwise continue.
+
+2. **Undo a prior checkpoint commit (if any):**
+   - If current worktree HEAD subject is `spotlight: checkpoint`: `git reset --soft HEAD~1`.
+
+3. **Re-run the `on` flow:** checkpoint any uncommitted changes, then
+   `git -C <main-worktree-path> merge --no-commit --no-ff <branch>`.
+
+4. **Report** the refreshed state (branch, main worktree path, whether a new checkpoint was created).
 
 ### Mode: `off`
 

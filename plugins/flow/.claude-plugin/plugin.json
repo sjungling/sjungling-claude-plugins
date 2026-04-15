@@ -1,0 +1,11 @@
+{
+  "name": "flow",
+  "description": "Interactive flow/diagram viewer using React Flow. Renders a JSON graph in the browser with live two-way sync so the LLM and user can collaborate on diagrams.",
+  "version": "0.2.0",
+  "author": {
+    "name": "Scott",
+    "email": "scott.jungling@gmail.com"
+  },
+  "license": "MIT",
+  "keywords": ["diagram", "flowchart", "visualization", "react-flow", "graph"]
+}

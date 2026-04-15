@@ -49,6 +49,10 @@
     {
       "name": "token-tracker",
       "source": "./plugins/token-tracker"
+    },
+    {
+      "name": "flow",
+      "source": "./plugins/flow"
     }
   ]
 }
