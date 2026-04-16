@@ -2,7 +2,7 @@
 name: swift-lint
 description: Format and lint Swift code using swift-format. Iteratively fixes lint issues until clean. Use when the /swift-lint command dispatches to this agent.
 tools: Bash, Read, Edit, Glob
-model: haiku
+model: claude-haiku-4-5-20251001
 color: green
 ---
 

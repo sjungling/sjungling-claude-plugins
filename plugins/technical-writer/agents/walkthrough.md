@@ -2,7 +2,7 @@
 name: walkthrough
 description: Generate a comprehensive code walkthrough using showboat or plain markdown. Reads the codebase and produces a structured walkthrough document. Use when the /walkthrough command dispatches to this agent.
 tools: Bash, Read, Write, Grep, Glob
-model: haiku
+model: claude-haiku-4-5-20251001
 color: cyan
 ---
 

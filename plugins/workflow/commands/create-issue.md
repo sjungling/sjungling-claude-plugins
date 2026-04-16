@@ -1,7 +1,7 @@
 ---
 description: Create a GitHub issue from session context (specs, plans, or conversation summary)
 argument-hint: "[file-path]"
-model: sonnet
+model: claude-sonnet-4-6
 allowed-tools:
   - Bash
   - Read

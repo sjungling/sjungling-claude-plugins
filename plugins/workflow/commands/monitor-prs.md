@@ -1,6 +1,6 @@
 ---
 description: Monitor open PRs — review changes, post comments, resolve conflicts, surface new feedback
-model: haiku
+model: claude-haiku-4-5-20251001
 allowed-tools:
   - Bash
   - Read

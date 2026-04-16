@@ -2,7 +2,7 @@
 name: generate-docs
 description: Build symbol graph documentation for the current Xcode project. Runs docbuild, extracts symbol graphs, transforms to CSVs, and updates project CLAUDE.md. Use when the /generate-docs command dispatches to this agent.
 tools: Bash, Read, Edit, Glob, Grep
-model: haiku
+model: claude-haiku-4-5-20251001
 color: green
 ---
 

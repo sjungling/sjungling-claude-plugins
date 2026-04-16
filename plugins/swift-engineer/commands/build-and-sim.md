@@ -1,7 +1,7 @@
 ---
 description: Build the Xcode project and launch it in an available iOS simulator
 argument-hint: "[scheme]"
-model: sonnet
+model: claude-sonnet-4-6
 allowed-tools:
   - Bash
   - Read
