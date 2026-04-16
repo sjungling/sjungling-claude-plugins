@@ -2,7 +2,7 @@
 name: review-unstaged
 description: Review unstaged changes for code quality, style, and potential issues. Use when the /review-unstaged command dispatches to this agent.
 tools: Bash, Read, Grep, Glob
-model: claude-sonnet-4-6
+model: sonnet
 color: yellow
 ---
 

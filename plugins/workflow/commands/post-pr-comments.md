@@ -1,6 +1,6 @@
 ---
 description: Post code review comments from conversation onto the current branch's PR
-model: claude-sonnet-4-6
+model: sonnet
 allowed-tools:
   - Bash
   - Read
