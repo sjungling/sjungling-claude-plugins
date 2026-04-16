@@ -1,6 +1,5 @@
 ---
 description: Monitor open PRs — review changes, post comments, resolve conflicts, surface new feedback
-model: haiku
 allowed-tools:
   - Bash
   - Read
@@ -14,7 +13,7 @@ allowed-tools:
 
 Monitor all open pull requests in the current repository. Designed for recurring use with `/loop` or as a one-shot check.
 
-This command runs on haiku for the main orchestration loop. Expensive review work is delegated to specialized skills that use their own models.
+This command orchestrates PR monitoring. Expensive review work is delegated to specialized skills and agents that use their own models.
 
 ## Setup
 

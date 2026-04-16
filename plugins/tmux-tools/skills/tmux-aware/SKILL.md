@@ -1,7 +1,6 @@
 ---
 name: tmux-aware
 description: This skill should be used when the user asks to "start a service in tmux", "check tmux pane output", "manage background processes", or "run a server in a pane". Automatically activates when running in a TMUX session (detected by SessionStart hook). Not for one-off commands that do not need a persistent pane.
-model: haiku
 ---
 
 # TMUX-Aware Process Management
