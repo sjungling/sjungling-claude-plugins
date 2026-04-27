@@ -20,10 +20,9 @@ Before performing vault operations:
    obsidian vaults
    ```
 
-3. **Find vault path on disk** (needed for direct file writes):
+3. **Get vault path:**
    ```bash
-   # Ask the user where their vault lives, or check Obsidian's config file
-   # (location varies by OS — see the CLI reference for details)
+   obsidian vault "<name>" info=path
    ```
 
 ## Overview
@@ -35,10 +34,12 @@ Before performing vault operations:
 | Task | Command | Notes |
 |------|---------|-------|
 | List vaults | `obsidian vaults` | Always run first |
+| Vault info | `obsidian vault "<name>"` | Name, path, file count |
+| Vault path | `obsidian vault "<name>" info=path` | Path only, good for scripting |
 | List folders | `obsidian "vault=<name>" folders` | Quote vault name if it has spaces |
 | Read note | `obsidian "vault=<name>" read "<note name>"` | Reads by name (fuzzy) |
-| Create note (simple) | `obsidian "vault=<name>" create path="folder/name.md" content="<text>"` | Single-line content only |
-| Create note (rich) | Write directly to vault path on disk | Use for multi-line/frontmatter content |
+| Create note | `obsidian "vault=<name>" create path="folder/name.md" content="$CONTENT"` | Use `printf` to build `$CONTENT` for multi-line |
+| Overwrite note | `obsidian "vault=<name>" create path="..." content="$CONTENT" overwrite` | |
 | Append to note | `obsidian "vault=<name>" append path="<path>" content="<text>"` | |
 | Move note | `obsidian "vault=<name>" move path="old.md" newpath="new.md"` | **Auto-updates all links** |
 | Search content | `obsidian "vault=<name>" search query="<term>" [path=<folder>] [format=json]` | |
@@ -57,8 +58,11 @@ Before performing vault operations:
 # List vaults to confirm the name
 obsidian vaults
 
-# Get the disk path — ask the user, or find it in Obsidian's config file
-# (see the CLI reference for how to locate it on each OS)
+# Get full info (name, path, file count)
+obsidian vault "<name>"
+
+# Get just the path (useful for scripting)
+VAULT_PATH=$(obsidian vault "<name>" info=path)
 ```
 
 ### Step 2 — Explore Structure
@@ -73,11 +77,11 @@ obsidian "vault=<name>" search query="<topic>" path=<folder> format=json
 
 ### Step 3 — Create Notes with Rich Content
 
-The CLI `create` command works for simple single-line content. For notes with frontmatter and multiple paragraphs, **write directly to the vault path**:
+Use `printf` to build the content variable — this correctly handles newlines and multi-line content including frontmatter:
 
 ```bash
-# Write note directly (preserves all content, newlines, frontmatter)
-# Use the Write tool with the full path: <vault-path>/folder/note.md
+CONTENT=$(printf '---\ntags:\n  - til\nindex: "[[Today I learned]]"\n---\n## Heading\n\nContent here.')
+obsidian "vault=<name>" create path="til/2026-04-27 My Note.md" content="$CONTENT"
 ```
 
 **Look at an existing note first** to match local formatting conventions (tag names, frontmatter fields, `index` backlinks, etc.):
@@ -101,16 +105,15 @@ mv "vault/Random Notes/Design.md" "vault/Projects/Design.md"
 |---------|-----------|-----|
 | Using `obsidian-cli` | That's a different npm package — the tool is `obsidian` | Use `obsidian` |
 | Using `--flags` syntax | The CLI uses `key=value` positional args, not `--flags` | Use `key=value` format |
-| `create` with `\n` content | Multi-line content gets stripped to frontmatter only | Write directly to vault path |
+| `create` with `\n` in double-quoted string | Escapes get stripped, content truncated | Use `printf` to build a `$CONTENT` variable |
 | Using `mv` to move notes | Breaks all `[[wiki-links]]` to that note | Use `obsidian move` |
 | Not checking existing note format | Each vault has different tagging/frontmatter conventions | Read an existing note first |
 | Using absolute paths in wiki-links | Breaks when vault moves | Use vault-relative paths |
 
 ## When to Use Standard Tools
 
-- **Rich note creation**: Use `Write` tool with the full disk path (faster, no content truncation)
 - **Bulk content editing**: Use `Edit` after reading with `obsidian read`
-- **Complex search patterns**: Use `Grep` directly on the vault path
+- **Complex search patterns**: Use `Grep` directly on the vault path (use `obsidian vault "<name>" info=path` to get it)
 
 **Always preserve:**
 - Frontmatter (YAML between `---`)

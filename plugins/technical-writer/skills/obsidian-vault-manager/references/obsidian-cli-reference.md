@@ -20,6 +20,28 @@ obsidian "vault=my vault" <command>
 
 ## Core Commands
 
+### vault
+
+Get info about a specific vault by name.
+
+```bash
+obsidian vault "<name>"
+```
+
+**Output:** name, path, file count, folder count, size.
+
+**Flags:**
+- `info=path` — return only the disk path (useful for scripting)
+
+**Examples:**
+```bash
+# Full vault info
+obsidian vault "my vault"
+
+# Get path for scripting
+VAULT_PATH=$(obsidian vault "my vault" info=path)
+```
+
 ### vaults
 
 List all vaults Obsidian knows about.
@@ -58,13 +80,22 @@ obsidian "vault=my vault" read "til/2024-03-21 Some Note Title.md"
 
 ### create
 
-Create a new note. **Only reliable for single-line or very short content.** Multi-line content passed via `\n` escapes gets stripped to frontmatter only.
+Create a new note.
 
 ```bash
-obsidian "vault=<name>" create path="folder/note.md" content="<text>"
+obsidian "vault=<name>" create path="folder/note.md" content="$CONTENT"
 ```
 
-**For notes with frontmatter, multiple paragraphs, or code blocks:** write directly to the vault's disk path using the `Write` tool instead.
+**Multi-line content:** Pass content via a `printf`-built variable — `\n` escapes inside double-quoted strings get stripped, but `printf` handles them correctly:
+
+```bash
+CONTENT=$(printf '---\ntags:\n  - til\nindex: "[[Today I learned]]"\n---\n## Heading\n\nFull content here, multiple paragraphs, frontmatter all preserved.')
+obsidian "vault=<name>" create path="til/2026-04-27 My Note.md" content="$CONTENT"
+```
+
+**Flags:**
+- `overwrite` — replace file if it already exists
+- `template=<name>` — apply a vault template
 
 ### append
 
@@ -115,15 +146,15 @@ obsidian "vault=<name>" daily
 
 ## Finding the Vault Path on Disk
 
-For direct file writes (the preferred method for rich content), you need the vault's absolute path. The easiest approach is to **ask the user** — they'll know where their vault lives.
+Use the CLI directly:
 
-If the user doesn't know, Obsidian stores vault paths in its config file:
+```bash
+# Full info including path
+obsidian vault "<name>"
 
-- **macOS:** `~/Library/Application Support/obsidian/obsidian.json`
-- **Windows:** `%APPDATA%\obsidian\obsidian.json`
-- **Linux:** `~/.config/obsidian/obsidian.json`
-
-The file contains a `vaults` object; each entry has a `path` field with the absolute disk path.
+# Path only (for scripting)
+VAULT_PATH=$(obsidian vault "<name>" info=path)
+```
 
 ## Troubleshooting
 
