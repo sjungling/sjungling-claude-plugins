@@ -9,136 +9,111 @@ description: This skill should be used when the user asks to "manage Obsidian va
 
 Before performing vault operations:
 
-1. **Verify obsidian-cli is installed:**
+1. **Verify obsidian CLI is installed:**
    ```bash
-   obsidian-cli --version
+   obsidian --version
+   ```
+   The CLI is the native `obsidian` binary that ships with the Obsidian desktop app — not a separate npm package.
+
+2. **List available vaults:**
+   ```bash
+   obsidian vaults
    ```
 
-2. **If obsidian-cli is unavailable:**
-   - Install via: `npm install -g @johnlindquist/obsidian-cli`
-   - Fallback: Standard file operations can be used but will NOT preserve wiki-links
-   - Warning: Without obsidian-cli, moving notes will break all internal `[[wiki-links]]`
-
-3. **Verify vault is accessible:**
+3. **Get vault path:**
    ```bash
-   obsidian-cli print-default
+   obsidian vault "<name>" info=path
    ```
 
 ## Overview
 
-**Use `obsidian-cli` for all Obsidian vault operations.** Standard file tools (mv, Write, Edit) break internal links and ignore vault structure. The `obsidian-cli` tool automatically preserves `[[wiki-links]]` and maintains vault integrity.
-
-## When to Use
-
-This skill activates when:
-- Working with Obsidian vaults (`.md` files with `[[wiki-links]]`)
-- Moving/renaming notes (links must stay valid)
-- Creating notes with Obsidian-specific syntax (wiki-links, checkboxes, tags)
-- Searching vault content or note names
-- Organizing multiple notes across folders
-
-**Don't use for:**
-- General markdown editing outside Obsidian vaults
-- Static documentation (no internal links)
-- Single-file markdown operations
+**Use `obsidian` for vault operations that touch links or structure.** For creating notes with substantial content (multi-line, frontmatter, etc.), use the `Write` tool directly after locating the vault path — the CLI's `create` command strips multi-line content when `\n` escapes are used.
 
 ## Quick Reference
 
 | Task | Command | Notes |
 |------|---------|-------|
-| Check vault | `obsidian-cli print-default` | Always run first |
-| Read note | `obsidian-cli print "Note Name"` | Reads by name or path |
-| Create note | `obsidian-cli create "Name" --content "text"` | Add `--open` to launch Obsidian |
-| Update note | `obsidian-cli create "Name" --content "text" --append` | Use `--overwrite` to replace |
-| Move note | `obsidian-cli move "old/path" "new/path"` | **Auto-updates all links** |
-| Search content | `obsidian-cli search-content "term"` | Searches note contents |
-| Search names | `obsidian-cli search` | Fuzzy search (interactive) |
-| Daily note | `obsidian-cli daily` | Create/open today's note |
+| List vaults | `obsidian vaults` | Always run first |
+| Vault info | `obsidian vault "<name>"` | Name, path, file count |
+| Vault path | `obsidian vault "<name>" info=path` | Path only, good for scripting |
+| List folders | `obsidian "vault=<name>" folders` | Quote vault name if it has spaces |
+| Read note | `obsidian "vault=<name>" read "<note name>"` | Reads by name (fuzzy) |
+| Create note | `obsidian "vault=<name>" create path="folder/name.md" content="$CONTENT"` | Use `printf` to build `$CONTENT` for multi-line |
+| Overwrite note | `obsidian "vault=<name>" create path="..." content="$CONTENT" overwrite` | |
+| Append to note | `obsidian "vault=<name>" append path="<path>" content="<text>"` | |
+| Move note | `obsidian "vault=<name>" move path="old.md" newpath="new.md"` | **Auto-updates all links** |
+| Search content | `obsidian "vault=<name>" search query="<term>" [path=<folder>] [format=json]` | |
+| Daily note | `obsidian "vault=<name>" daily` | Create/open today's note |
 
 **See also:**
-- [Complete obsidian-cli Command Reference](./references/obsidian-cli-reference.md) - All commands with flags and advanced usage
+- [Complete obsidian Command Reference](./references/obsidian-cli-reference.md) - All commands with flags and advanced usage
 - [Obsidian Syntax Reference](./references/obsidian-syntax.md) - Wiki-links, tags, frontmatter, and markdown syntax
 - [Note Templates](./assets/templates/) - Daily note, project, and meeting templates
 
 ## Core Workflows
 
-### Always Check Vault First
+### Step 1 — Find the Vault
 
 ```bash
-# REQUIRED before any operation
-obsidian-cli print-default
+# List vaults to confirm the name
+obsidian vaults
 
-# Get path for direct file operations if needed
-VAULT_PATH=$(obsidian-cli print-default --path-only)
+# Get full info (name, path, file count)
+obsidian vault "<name>"
+
+# Get just the path (useful for scripting)
+VAULT_PATH=$(obsidian vault "<name>" info=path)
 ```
 
-**Why:** Paths are vault-relative, not repository-relative. Creating files in wrong location breaks vault structure.
+### Step 2 — Explore Structure
 
-**If obsidian-cli is not installed:** Warn the user that move/rename operations will break wiki-links. Offer to install (`npm install -g @johnlindquist/obsidian-cli`). Read and search operations are safe with standard tools.
+```bash
+# List folders
+obsidian "vault=<name>" folders
+
+# Search for existing notes
+obsidian "vault=<name>" search query="<topic>" path=<folder> format=json
+```
+
+### Step 3 — Create Notes with Rich Content
+
+Use `printf` to build the content variable — this correctly handles newlines and multi-line content including frontmatter:
+
+```bash
+CONTENT=$(printf '---\ntags:\n  - til\nindex: "[[Today I learned]]"\n---\n## Heading\n\nContent here.')
+obsidian "vault=<name>" create path="til/2026-04-27 My Note.md" content="$CONTENT"
+```
+
+**Look at an existing note first** to match local formatting conventions (tag names, frontmatter fields, `index` backlinks, etc.):
+```bash
+obsidian "vault=<name>" read "<existing note name>"
+```
 
 ### Moving/Reorganizing Notes
 
 ```bash
 # ✅ CORRECT: Auto-updates all links
-obsidian-cli move "Random Notes/Design" "Projects/Design"
+obsidian "vault=<name>" move path="Random Notes/Design.md" newpath="Projects/Design.md"
 
 # ❌ WRONG: Breaks all links to this note
 mv "vault/Random Notes/Design.md" "vault/Projects/Design.md"
-```
-
-**Critical:** `obsidian-cli move` updates every link in the vault automatically. Using `mv` or file operations breaks internal references.
-
-### Creating/Updating Notes
-
-```bash
-# Create new note
-obsidian-cli create "Projects/Mobile App" --content "# Mobile App\n\n## Tasks\n- [ ] Task 1"
-
-# Append to existing (safe if file exists)
-obsidian-cli create "Daily Log" --content "\n## Update\n- New entry" --append
-
-# Replace existing (use cautiously)
-obsidian-cli create "Draft" --content "# Fresh content" --overwrite
-```
-
-**Obsidian syntax in `--content`:**
-- Wiki-links: `[[Note Name]]`
-- Tags: `#project`
-- Checkboxes: `- [ ] Task`
-- Newlines: `\n`
-
-**Templates:** Use provided [note templates](./assets/templates/) as starting points for common note types (daily notes, projects, meetings).
-
-### Searching and Organizing
-
-```bash
-# Find notes mentioning topic
-obsidian-cli search-content "API design"
-
-# Read found note
-obsidian-cli print "Backend/API Design"
-
-# Reorganize (preserves all links)
-obsidian-cli move "Backend/API Design" "Projects/Backend/API Design"
 ```
 
 ## Common Mistakes
 
 | Mistake | Why Wrong | Fix |
 |---------|-----------|-----|
-| Using `mv` to move notes | Breaks all `[[wiki-links]]` to that note | Use `obsidian-cli move` |
-| Using `Write` tool for notes | Creates files outside vault or wrong location | Use `obsidian-cli create --content` |
-| Using `Read` for vault notes | Misses vault context, no search integration | Use `obsidian-cli print` |
-| Not checking vault first | Operations fail or create files in wrong place | Always run `print-default` first |
-| Manual link updating with sed | Error-prone, misses bidirectional links | `obsidian-cli move` handles automatically |
-| Using absolute paths | Breaks when vault moves | Use vault-relative paths |
+| Using `obsidian-cli` | That's a different npm package — the tool is `obsidian` | Use `obsidian` |
+| Using `--flags` syntax | The CLI uses `key=value` positional args, not `--flags` | Use `key=value` format |
+| `create` with `\n` in double-quoted string | Escapes get stripped, content truncated | Use `printf` to build a `$CONTENT` variable |
+| Using `mv` to move notes | Breaks all `[[wiki-links]]` to that note | Use `obsidian move` |
+| Not checking existing note format | Each vault has different tagging/frontmatter conventions | Read an existing note first |
+| Using absolute paths in wiki-links | Breaks when vault moves | Use vault-relative paths |
 
 ## When to Use Standard Tools
 
-**Use `obsidian-cli` first.** Only use standard tools when:
-- Bulk editing note contents (use `Edit` after `obsidian-cli print`)
-- Complex search patterns (use `Grep` with vault path)
-- File pattern matching (use `Glob` on `$VAULT_PATH/**/*.md`)
+- **Bulk content editing**: Use `Edit` after reading with `obsidian read`
+- **Complex search patterns**: Use `Grep` directly on the vault path (use `obsidian vault "<name>" info=path` to get it)
 
 **Always preserve:**
 - Frontmatter (YAML between `---`)
@@ -146,25 +121,10 @@ obsidian-cli move "Backend/API Design" "Projects/Backend/API Design"
 - Tag syntax `#tag-name`
 - Markdown structure
 
-## Integration Pattern
-
-```bash
-# 1. Check vault
-obsidian-cli print-default
-
-# 2. Use obsidian-cli for vault operations
-obsidian-cli search-content "search term"
-obsidian-cli print "Found Note"
-
-# 3. Use standard tools ONLY when needed
-# (e.g., complex editing after reading with obsidian-cli)
-```
-
 ## Success Criteria
 
 Vault operations succeed when:
 - All `[[wiki-links]]` remain valid after moves
-- Notes created in correct vault location
-- Markdown and YAML frontmatter preserved intact during all operations
-- Search returns accurate results
+- Notes created in correct vault location with full content intact
+- Formatting matches existing notes in the same folder
 - No broken links or orphaned notes
