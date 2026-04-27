@@ -22,7 +22,8 @@ Before performing vault operations:
 
 3. **Find vault path on disk** (needed for direct file writes):
    ```bash
-   grep -o '"path":"[^"]*<vault-name>[^"]*"' ~/Library/Application\ Support/obsidian/obsidian.json
+   # Ask the user where their vault lives, or check Obsidian's config file
+   # (location varies by OS — see the CLI reference for details)
    ```
 
 ## Overview
@@ -56,19 +57,18 @@ Before performing vault operations:
 # List vaults to confirm the name
 obsidian vaults
 
-# Get the disk path for direct writes
-grep -o '"path":"[^"]*<vault-name>[^"]*"' ~/Library/Application\ Support/obsidian/obsidian.json
-# Example output: "path":"/Users/me/Library/Mobile Documents/iCloud~md~obsidian/Documents/my vault"
+# Get the disk path — ask the user, or find it in Obsidian's config file
+# (see the CLI reference for how to locate it on each OS)
 ```
 
 ### Step 2 — Explore Structure
 
 ```bash
 # List folders
-obsidian "vault=my vault" folders
+obsidian "vault=<name>" folders
 
 # Search for existing notes
-obsidian "vault=my vault" search query="devcenter" path=til format=json
+obsidian "vault=<name>" search query="<topic>" path=<folder> format=json
 ```
 
 ### Step 3 — Create Notes with Rich Content
@@ -76,23 +76,20 @@ obsidian "vault=my vault" search query="devcenter" path=til format=json
 The CLI `create` command works for simple single-line content. For notes with frontmatter and multiple paragraphs, **write directly to the vault path**:
 
 ```bash
-# Get vault path
-VAULT_PATH="/Users/me/Library/Mobile Documents/iCloud~md~obsidian/Documents/my vault"
-
 # Write note directly (preserves all content, newlines, frontmatter)
-# Use the Write tool with the full path: $VAULT_PATH/til/2026-04-27 My TIL.md
+# Use the Write tool with the full path: <vault-path>/folder/note.md
 ```
 
 **Look at an existing note first** to match local formatting conventions (tag names, frontmatter fields, `index` backlinks, etc.):
 ```bash
-obsidian "vault=my vault" read "some existing note"
+obsidian "vault=<name>" read "<existing note name>"
 ```
 
 ### Moving/Reorganizing Notes
 
 ```bash
 # ✅ CORRECT: Auto-updates all links
-obsidian "vault=my vault" move path="Random Notes/Design.md" newpath="Projects/Design.md"
+obsidian "vault=<name>" move path="Random Notes/Design.md" newpath="Projects/Design.md"
 
 # ❌ WRONG: Breaks all links to this note
 mv "vault/Random Notes/Design.md" "vault/Projects/Design.md"

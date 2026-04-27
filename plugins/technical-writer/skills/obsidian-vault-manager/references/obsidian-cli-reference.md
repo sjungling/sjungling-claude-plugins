@@ -15,7 +15,7 @@ obsidian --version
 All vault commands use `vault=<name>` as a positional key=value argument. Quote it when the vault name has spaces:
 
 ```bash
-obsidian "vault=moderne 2" <command>
+obsidian "vault=my vault" <command>
 ```
 
 ## Core Commands
@@ -52,8 +52,8 @@ obsidian "vault=<name>" read "<note name or path>"
 
 **Examples:**
 ```bash
-obsidian "vault=moderne 2" read "2026-04-23 macOS Limit IP Address Tracking"
-obsidian "vault=moderne 2" read "til/2026-04-23 macOS Limit IP Address Tracking.md"
+obsidian "vault=my vault" read "2024-03-21 Some Note Title"
+obsidian "vault=my vault" read "til/2024-03-21 Some Note Title.md"
 ```
 
 ### create
@@ -99,10 +99,10 @@ obsidian "vault=<name>" search query="<term>" [path=<folder>] [limit=<n>] [forma
 **Examples:**
 ```bash
 # Search entire vault
-obsidian "vault=moderne 2" search query="devcenter"
+obsidian "vault=my vault" search query="API design"
 
 # Search within a folder, return JSON paths
-obsidian "vault=moderne 2" search query="committer" path=til format=json
+obsidian "vault=my vault" search query="setup" path=til format=json
 ```
 
 ### daily
@@ -115,16 +115,15 @@ obsidian "vault=<name>" daily
 
 ## Finding the Vault Path on Disk
 
-For direct file writes (the preferred method for rich content), find the vault's disk path:
+For direct file writes (the preferred method for rich content), you need the vault's absolute path. The easiest approach is to **ask the user** — they'll know where their vault lives.
 
-```bash
-grep -o '"path":"[^"]*<vault-name>[^"]*"' ~/Library/Application\ Support/obsidian/obsidian.json
-```
+If the user doesn't know, Obsidian stores vault paths in its config file:
 
-Common location for iCloud-synced vaults:
-```
-/Users/<user>/Library/Mobile Documents/iCloud~md~obsidian/Documents/<vault name>
-```
+- **macOS:** `~/Library/Application Support/obsidian/obsidian.json`
+- **Windows:** `%APPDATA%\obsidian\obsidian.json`
+- **Linux:** `~/.config/obsidian/obsidian.json`
+
+The file contains a `vaults` object; each entry has a `path` field with the absolute disk path.
 
 ## Troubleshooting
 
