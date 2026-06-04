@@ -25,6 +25,30 @@
         width: 100%; border: 0; outline: 0; font: inherit; text-align: center; background: transparent;
       }
       .react-flow__handle { width: 10px; height: 10px; background: #2563eb; border: 2px solid #fff; }
+
+      /* detail node — compact label + hover tooltip */
+      .detail-node {
+        background: #fff; border: 1px solid #999; border-radius: 6px;
+        padding: 6px 12px; font-size: 12px; font-weight: 600;
+        min-width: 80px; text-align: center; cursor: default; position: relative;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+        white-space: nowrap;
+      }
+      .detail-node.selected { border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37,99,235,0.2); }
+      .detail-node .badge {
+        position: absolute; top: -6px; right: -6px;
+        background: #6366f1; color: #fff; border-radius: 999px;
+        font-size: 9px; padding: 1px 5px; font-weight: 700; pointer-events: none;
+      }
+      .detail-node .tooltip {
+        display: none; position: absolute; z-index: 999;
+        top: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+        background: #1e1e2e; color: #cdd6f4; border-radius: 8px;
+        padding: 10px 14px; font-size: 11px; font-weight: 400;
+        white-space: pre-wrap; text-align: left; min-width: 240px; max-width: 360px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.35); line-height: 1.5; pointer-events: none;
+      }
+      .detail-node:hover .tooltip { display: block; }
       #hint {
         position: fixed; bottom: 8px; left: 8px; z-index: 10;
         background: rgba(17,17,17,0.85); color: #ccc; padding: 6px 10px;
@@ -118,7 +142,23 @@
           h(Handle, { type: 'source', position: sourcePosition || Position.Right }),
         );
       });
-      const nodeTypes = { editable: EditableNode };
+      // Detail node: compact label always visible, full detail in hover tooltip.
+      // data.label = short name shown in box
+      // data.detail = multi-line text shown on hover
+      // data.badge = optional short badge (e.g. "NSView", "SPM")
+      const DetailNode = memo(({ id, data, selected, sourcePosition, targetPosition }) => {
+        return h('div', {
+          className: 'detail-node' + (selected ? ' selected' : ''),
+        },
+          h(Handle, { type: 'target', position: targetPosition || Position.Left }),
+          data.badge ? h('span', { className: 'badge' }, data.badge) : null,
+          h('div', null, data.label ?? id),
+          data.detail ? h('div', { className: 'tooltip' }, data.detail) : null,
+          h(Handle, { type: 'source', position: sourcePosition || Position.Right }),
+        );
+      });
+
+      const nodeTypes = { editable: EditableNode, detail: DetailNode };
 
       function normalizeType(nodes) {
         return nodes.map(n => ({ ...n, type: n.type || 'editable' }));

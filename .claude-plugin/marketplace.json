@@ -53,6 +53,10 @@
     {
       "name": "flow",
       "source": "./plugins/flow"
+    },
+    {
+      "name": "obsidian-excalidraw",
+      "source": "./plugins/obsidian-excalidraw"
     }
   ]
 }
