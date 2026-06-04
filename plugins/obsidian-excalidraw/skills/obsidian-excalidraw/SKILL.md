@@ -109,16 +109,25 @@ Pass these as `opts`: `ex.node('id', x, y, w, h, 'Label', { strokeColor: '#dc262
 ## Finding the Obsidian vault path
 
 ```bash
-# Read all vault paths from Obsidian's config
-cat ~/Library/Application\ Support/obsidian/obsidian.json \
-  | python3 -c "import json,sys; [print(v.get('path','')) for v in json.load(sys.stdin).get('vaults',{}).values()]"
+# Current active vault's path on disk
+obsidian vault info=path
+
+# All known vaults with paths
+obsidian vaults verbose
 ```
 
-Or use the `obsidian` CLI if installed:
+Use the path to construct where to write diagram files:
 
 ```bash
-obsidian create path="FolderName/diagram.md" content="![[my-diagram.excalidraw]]"
-obsidian open path="FolderName/diagram.md"
+VAULT=$(obsidian vault info=path)
+node helpers/example.js > "$VAULT/Diagrams/my-diagram.excalidraw"
+```
+
+Then embed in a note:
+
+```bash
+obsidian create path="Diagrams/overview.md" content="![[my-diagram.excalidraw]]"
+obsidian open path="Diagrams/overview.md"
 ```
 
 ## Pitfalls
