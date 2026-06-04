@@ -106,13 +106,35 @@ Always add shapes to the elements array before (or in the same batch as) the arr
 
 **Cause:** macOS privacy (TCC) restricts the iCloud Drive directory to apps with the entitlement. Claude Code's process doesn't have it; the Obsidian app does. So `Write`/`node > file` simply cannot reach the vault.
 
-**Fix:** Write through the Obsidian CLI, which proxies to the running app. Build the `.excalidraw.md` form with `scripts/to-obsidian-md.js` and `obsidian create … content=…`. Run the CLI **unsandboxed** (it hangs under the sandbox) and use **single-line labels** (the CLI corrupts `\n` in content).
+**Fix:** Write through the Obsidian CLI with `scripts/write-to-vault.js`, which proxies to the running app. Run the CLI **unsandboxed** (it hangs under the sandbox) and use **single-line labels** (the CLI corrupts `\n` in content).
 
 ```bash
-node scripts/your-generator.js > /tmp/d.excalidraw          # single-line labels
-node scripts/to-obsidian-md.js /tmp/d.excalidraw > /tmp/note.txt
-obsidian create vault="My Vault" path="Diagrams/d.excalidraw.md" \
-  content="$(cat /tmp/note.txt)" overwrite
+node scripts/your-generator.js > "$TMPDIR/d.excalidraw"      # single-line labels, no " chars
+node scripts/write-to-vault.js --vault "My Vault" \
+  --path "Diagrams/d.excalidraw.md" --input "$TMPDIR/d.excalidraw"
 ```
 
-See `icloud-vaults.md` for the complete workflow and why each constraint exists.
+Three traps the script handles for you, and you must respect if writing the CLI by hand:
+- **~10KB per-call payload limit** — a larger `content=` fails silently (broken pipe, nothing written) or errors with `Argument must be a file path or a NativeImage`. Split the JSON into sub-limit chunks via `append` (between elements, so it stays valid JSON).
+- **The `Created:`/`Appended to:` confirmation line is omitted for larger successful writes** — don't gate on it; verify by reading the note back and counting `elements`.
+- **`overwrite` no-ops on a note that's currently open in Obsidian** — close it first.
+
+Use `$TMPDIR`, never `/tmp` (the sandbox blocks `/tmp`). See `icloud-vaults.md` for the complete workflow and why each constraint exists.
+
+---
+
+## 9. CLI-written labels must not contain `"` (double-quote) characters
+
+**Symptom:** `to-obsidian-md.js` / `write-to-vault.js` abort with "drawing JSON contains escaped characters", or a hand-written CLI `create` produces a corrupt note.
+
+**Cause:** A `"` inside a text value is serialized by `JSON.stringify` as `\"` — a backslash. The Obsidian CLI's `content=` interprets backslash escapes (`\n`, `\t`, `\\`), so any backslash in the drawing JSON gets corrupted on write. The helpers refuse to run rather than emit a broken file.
+
+```js
+// ❌ The " becomes \" → backslash → CLI corrupts it (and the guard rejects it)
+ex.floatingLabel('t', 0, 0, 'tag: "v1.2"')
+
+// ✅ Use single quotes, or drop the quotes entirely
+ex.floatingLabel('t', 0, 0, 'tag: v1.2')
+```
+
+This only applies to the iCloud CLI route. Filesystem-writable vaults (raw `.excalidraw` written directly) have no such restriction.

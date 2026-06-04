@@ -144,17 +144,20 @@ obsidian open path="Diagrams/overview.md"
 
 ### Route B — iCloud vault (filesystem blocked)
 
-Paths under `~/Library/Mobile Documents/...` return `Operation not permitted` on read/write — only the Obsidian app can touch them. Write the `.excalidraw.md` form through the CLI with the `scripts/to-obsidian-md.js` helper. **Run these commands unsandboxed** (the CLI hangs under the sandbox) and use single-line labels:
+Paths under `~/Library/Mobile Documents/...` return `Operation not permitted` on read/write — only the Obsidian app can touch them. Use the `scripts/write-to-vault.js` helper: it builds the `.excalidraw.md` form, chunks it under the CLI's ~10KB payload limit, streams it via `create`+`append`, retries transient errors, and verifies the result by reading it back. **Run it unsandboxed** (the CLI hangs under the sandbox) and use single-line labels (no `\n`, no `"`):
 
 ```bash
-node scripts/your-generator.js > /tmp/diagram.excalidraw      # compact, single-line labels
-node scripts/to-obsidian-md.js /tmp/diagram.excalidraw > /tmp/note.txt
-obsidian create vault="My Vault" path="Diagrams/my-diagram.excalidraw.md" \
-  content="$(cat /tmp/note.txt)" overwrite
+node scripts/your-generator.js > "$TMPDIR/diagram.excalidraw"   # compact, single-line labels
+node scripts/write-to-vault.js \
+  --vault "My Vault" \
+  --path  "Diagrams/my-diagram.excalidraw.md" \
+  --input "$TMPDIR/diagram.excalidraw"
 obsidian open vault="My Vault" path="Diagrams/my-diagram.excalidraw.md"
 ```
 
-See `references/icloud-vaults.md` for the full rationale and verification steps.
+Key gotchas (all handled by the script): the CLI's per-call payload limit is ~10KB and oversized writes **fail silently**; the `Created:`/`Appended to:` confirmation line is omitted for larger successful writes, so success is gated by a read-back element count, not that line; and `overwrite` **no-ops on a note that's currently open** in Obsidian — close it first. Use `$TMPDIR`, never `/tmp` (sandbox blocks `/tmp`).
+
+See `references/icloud-vaults.md` for the full rationale, the manual single-`create` route for tiny diagrams, and verification steps.
 
 ## Pitfalls
 
@@ -163,9 +166,9 @@ The most common issues:
 1. **Colored fills render dark in Obsidian embeds** — use `backgroundColor: "#ffffff"` always; convey state via stroke color/style only.
 2. **`node()` and `box()` return arrays** — spread them: `[...ex.node(...), ex.arrow(...)]` not `[ex.node(...), ex.arrow(...)]`.
 3. **Arrow `points` are relative to arrow `x,y`** — the helper handles this; if writing arrows manually, `points[0]` is always `[0,0]`.
-4. **iCloud vaults can't be written on the filesystem** — `~/Library/Mobile Documents/...` is blocked by macOS; use the CLI route (Route B above). Use single-line labels there.
+4. **iCloud vaults can't be written on the filesystem** — `~/Library/Mobile Documents/...` is blocked by macOS; use the CLI route (Route B above) via `scripts/write-to-vault.js`. Single-line labels only, and no `"` characters in label text.
 
-See `references/pitfalls.md` for all 8 pitfalls with examples.
+See `references/pitfalls.md` for all 9 pitfalls with examples.
 
 ## Additional Resources
 
@@ -174,12 +177,13 @@ See `references/pitfalls.md` for all 8 pitfalls with examples.
 - **`references/element-api.md`** — Full field reference for all element types (ellipse, rectangle, text, arrow), including every required field and valid values
 - **`references/obsidian-file-format.md`** — How Obsidian converts `.excalidraw` to `.excalidraw.md`, the scaffold structure, update-in-place rules, and decompression instructions
 - **`references/icloud-vaults.md`** — Writing diagrams into iCloud-synced vaults (filesystem blocked) via the Obsidian CLI, with the format/escape constraints and verification steps
-- **`references/pitfalls.md`** — 8 common mistakes with before/after examples
+- **`references/pitfalls.md`** — 9 common mistakes with before/after examples
 
 ### Scripts
 
 - **`scripts/shapes.js`** — Zero-dependency factory module: `node()`, `box()`, `arrow()`, `annotationBox()`, `floatingLabel()`, `document()`
-- **`scripts/to-obsidian-md.js`** — Wrap compact `.excalidraw` JSON into single-line `.excalidraw.md` content for writing to iCloud vaults via the Obsidian CLI (Route B). Guards against escape-sequence corruption.
+- **`scripts/write-to-vault.js`** — Recommended writer for iCloud vaults (Route B). Takes `--vault`, `--path`, `--input` (or stdin); builds the `.excalidraw.md`, chunks under the CLI ~10KB limit, streams via `create`+`append` with retries, and verifies by read-back. Run unsandboxed.
+- **`scripts/to-obsidian-md.js`** — Lower-level helper: wrap compact `.excalidraw` JSON into single-line `.excalidraw.md` content for a single manual `create` (tiny diagrams only). Guards against escape-sequence corruption.
 
 ### Examples
 
