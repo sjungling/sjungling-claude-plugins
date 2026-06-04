@@ -1,0 +1,11 @@
+{
+  "name": "obsidian-excalidraw",
+  "version": "1.0.0",
+  "description": "Generate and embed Excalidraw diagrams programmatically inside Obsidian vaults",
+  "author": {
+    "name": "Scott Jungling",
+    "email": "scott.jungling@gmail.com"
+  },
+  "license": "MIT",
+  "keywords": ["obsidian", "excalidraw", "diagrams", "visualization", "flowchart", "network"]
+}
