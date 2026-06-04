@@ -97,3 +97,22 @@ Always add shapes to the elements array before (or in the same batch as) the arr
 **Cause:** Ellipses don't auto-grow to fit text. The text element height must fit within the shape's height.
 
 **Fix:** Use `fontSize: 12` or `13` for 3-line labels in an 80px-tall shape. Or increase `height` of the shape. Rule of thumb: `height >= lineCount * (fontSize * 1.4)`.
+
+---
+
+## 8. iCloud vaults can't be written on the filesystem
+
+**Symptom:** `Operation not permitted` when reading or writing any file under `~/Library/Mobile Documents/iCloud~md~obsidian/Documents/<vault>` — even with the sandbox disabled. The diagram never appears.
+
+**Cause:** macOS privacy (TCC) restricts the iCloud Drive directory to apps with the entitlement. Claude Code's process doesn't have it; the Obsidian app does. So `Write`/`node > file` simply cannot reach the vault.
+
+**Fix:** Write through the Obsidian CLI, which proxies to the running app. Build the `.excalidraw.md` form with `scripts/to-obsidian-md.js` and `obsidian create … content=…`. Run the CLI **unsandboxed** (it hangs under the sandbox) and use **single-line labels** (the CLI corrupts `\n` in content).
+
+```bash
+node scripts/your-generator.js > /tmp/d.excalidraw          # single-line labels
+node scripts/to-obsidian-md.js /tmp/d.excalidraw > /tmp/note.txt
+obsidian create vault="My Vault" path="Diagrams/d.excalidraw.md" \
+  content="$(cat /tmp/note.txt)" overwrite
+```
+
+See `icloud-vaults.md` for the complete workflow and why each constraint exists.

@@ -23,7 +23,7 @@ node examples/example.js | jq '.elements[] | select(.type == "arrow") | .id'
 Or require it in your own script:
 
 ```js
-const ex = require('./helpers/shapes');
+const ex = require('./scripts/shapes');
 
 const elements = [
   ...ex.node('alpha', 100, 80,  180, 70, 'Alpha\n(primary)'),
@@ -33,7 +33,7 @@ const elements = [
 ];
 
 require('fs').writeFileSync('diagram.excalidraw', JSON.stringify(ex.document(elements), null, 2));
-// shapes.js path when requiring from a project script: adjust relative path as needed
+// shapes.js lives in scripts/ — adjust the relative path if requiring from elsewhere
 ```
 
 Embed in any Obsidian note:
@@ -44,7 +44,9 @@ Embed in any Obsidian note:
 
 ## How Obsidian stores Excalidraw files
 
-**Write `.excalidraw` JSON → Obsidian converts it to `.excalidraw.md`.** The original `.excalidraw` disappears. The `.excalidraw.md` format wraps compressed JSON with a plaintext text-elements section (for Obsidian search/backlinks). No need to produce this format — write plain JSON and let the plugin convert.
+**Write `.excalidraw` JSON → Obsidian converts it to `.excalidraw.md`.** The original `.excalidraw` disappears. The `.excalidraw.md` format wraps compressed JSON with a plaintext text-elements section (for Obsidian search/backlinks). On a filesystem-writable vault, no need to produce this format — write plain JSON and let the plugin convert.
+
+> **iCloud vaults are the exception.** Vaults under `~/Library/Mobile Documents/` cannot be written on the filesystem (macOS blocks the process — see "Writing to the vault" below). There you must write the `.excalidraw.md` form through the Obsidian CLI.
 
 `![[name.excalidraw]]` embeds resolve to `name.excalidraw.md` automatically.
 
@@ -121,29 +123,49 @@ obsidian vault info=path
 obsidian vaults verbose
 ```
 
-Use the path to construct where to write diagram files:
+## Writing to the vault — pick the route by vault type
+
+There are two ways to get a diagram into a vault. **Check which applies before writing.**
 
 ```bash
 VAULT=$(obsidian vault info=path)
-node helpers/example.js > "$VAULT/Diagrams/my-diagram.excalidraw"
+ls "$VAULT" >/dev/null 2>&1 && echo "filesystem-writable" || echo "blocked — use CLI route"
 ```
 
-Then embed in a note:
+### Route A — filesystem-writable vault (default)
+
+Ordinary paths (e.g. `~/Work/knowledge-base`). Write the raw `.excalidraw` and let the plugin convert:
 
 ```bash
+node examples/example.js > "$VAULT/Diagrams/my-diagram.excalidraw"
 obsidian create path="Diagrams/overview.md" content="![[my-diagram.excalidraw]]"
 obsidian open path="Diagrams/overview.md"
 ```
 
+### Route B — iCloud vault (filesystem blocked)
+
+Paths under `~/Library/Mobile Documents/...` return `Operation not permitted` on read/write — only the Obsidian app can touch them. Write the `.excalidraw.md` form through the CLI with the `scripts/to-obsidian-md.js` helper. **Run these commands unsandboxed** (the CLI hangs under the sandbox) and use single-line labels:
+
+```bash
+node scripts/your-generator.js > /tmp/diagram.excalidraw      # compact, single-line labels
+node scripts/to-obsidian-md.js /tmp/diagram.excalidraw > /tmp/note.txt
+obsidian create vault="My Vault" path="Diagrams/my-diagram.excalidraw.md" \
+  content="$(cat /tmp/note.txt)" overwrite
+obsidian open vault="My Vault" path="Diagrams/my-diagram.excalidraw.md"
+```
+
+See `references/icloud-vaults.md` for the full rationale and verification steps.
+
 ## Pitfalls
 
-The three most common issues:
+The most common issues:
 
 1. **Colored fills render dark in Obsidian embeds** — use `backgroundColor: "#ffffff"` always; convey state via stroke color/style only.
 2. **`node()` and `box()` return arrays** — spread them: `[...ex.node(...), ex.arrow(...)]` not `[ex.node(...), ex.arrow(...)]`.
 3. **Arrow `points` are relative to arrow `x,y`** — the helper handles this; if writing arrows manually, `points[0]` is always `[0,0]`.
+4. **iCloud vaults can't be written on the filesystem** — `~/Library/Mobile Documents/...` is blocked by macOS; use the CLI route (Route B above). Use single-line labels there.
 
-See `references/pitfalls.md` for all 7 pitfalls with examples.
+See `references/pitfalls.md` for all 8 pitfalls with examples.
 
 ## Additional Resources
 
@@ -151,11 +173,13 @@ See `references/pitfalls.md` for all 7 pitfalls with examples.
 
 - **`references/element-api.md`** — Full field reference for all element types (ellipse, rectangle, text, arrow), including every required field and valid values
 - **`references/obsidian-file-format.md`** — How Obsidian converts `.excalidraw` to `.excalidraw.md`, the scaffold structure, update-in-place rules, and decompression instructions
-- **`references/pitfalls.md`** — 7 common mistakes with before/after examples
+- **`references/icloud-vaults.md`** — Writing diagrams into iCloud-synced vaults (filesystem blocked) via the Obsidian CLI, with the format/escape constraints and verification steps
+- **`references/pitfalls.md`** — 8 common mistakes with before/after examples
 
 ### Scripts
 
 - **`scripts/shapes.js`** — Zero-dependency factory module: `node()`, `box()`, `arrow()`, `annotationBox()`, `floatingLabel()`, `document()`
+- **`scripts/to-obsidian-md.js`** — Wrap compact `.excalidraw` JSON into single-line `.excalidraw.md` content for writing to iCloud vaults via the Obsidian CLI (Route B). Guards against escape-sequence corruption.
 
 ### Examples
 
