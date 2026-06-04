@@ -14,6 +14,10 @@ Use the helper module in `scripts/shapes.js` — it generates valid Excalidraw J
 ```bash
 # Run the working example to generate a diagram
 node examples/example.js > my-diagram.excalidraw
+
+# Inspect or validate generated JSON with jq (never python)
+node examples/example.js | jq '.elements | length'
+node examples/example.js | jq '.elements[] | select(.type == "arrow") | .id'
 ```
 
 Or require it in your own script:
