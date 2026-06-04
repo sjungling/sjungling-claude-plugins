@@ -1,6 +1,6 @@
 ---
 name: obsidian-excalidraw
-description: Use when creating, editing, or embedding Excalidraw diagrams inside an Obsidian vault. Use when generating network diagrams, flowcharts, state machines, or relationship maps programmatically and saving them as .excalidraw files. Use when asked to visualize entities and their relationships, show state changes across diagrams, or embed diagrams in Obsidian markdown notes.
+description: This skill should be used when the user asks to "create an excalidraw diagram", "generate a diagram in Obsidian", "add a diagram to my vault", "embed a diagram", "make a flowchart", "visualize relationships", "draw a network diagram", or wants to programmatically generate .excalidraw files for an Obsidian vault. Also use when the user asks to update or regenerate an existing diagram file.
 ---
 
 # Obsidian Excalidraw
@@ -9,11 +9,11 @@ Generate `.excalidraw` files programmatically and embed them in Obsidian markdow
 
 ## Quick start
 
-Use the helper module in `helpers/shapes.js` — it generates valid Excalidraw JSON with no dependencies:
+Use the helper module in `scripts/shapes.js` — it generates valid Excalidraw JSON with no dependencies:
 
 ```bash
-# Run example to generate a diagram
-node helpers/example.js > my-diagram.excalidraw
+# Run the working example to generate a diagram
+node examples/example.js > my-diagram.excalidraw
 ```
 
 Or require it in your own script:
@@ -29,6 +29,7 @@ const elements = [
 ];
 
 require('fs').writeFileSync('diagram.excalidraw', JSON.stringify(ex.document(elements), null, 2));
+// shapes.js path when requiring from a project script: adjust relative path as needed
 ```
 
 Embed in any Obsidian note:
@@ -39,7 +40,7 @@ Embed in any Obsidian note:
 
 ## How Obsidian stores Excalidraw files
 
-**Write `.excalidraw` JSON → Obsidian converts it to `.excalidraw.md`.** The original `.excalidraw` disappears. The `.excalidraw.md` format wraps compressed JSON with a plaintext text-elements section (for Obsidian search/backlinks). You do not need to produce this format — write plain JSON and let the plugin convert.
+**Write `.excalidraw` JSON → Obsidian converts it to `.excalidraw.md`.** The original `.excalidraw` disappears. The `.excalidraw.md` format wraps compressed JSON with a plaintext text-elements section (for Obsidian search/backlinks). No need to produce this format — write plain JSON and let the plugin convert.
 
 `![[name.excalidraw]]` embeds resolve to `name.excalidraw.md` automatically.
 
@@ -132,8 +133,26 @@ obsidian open path="Diagrams/overview.md"
 
 ## Pitfalls
 
-See `references/pitfalls.md` for the full list. The three that matter most:
+The three most common issues:
 
 1. **Colored fills render dark in Obsidian embeds** — use `backgroundColor: "#ffffff"` always; convey state via stroke color/style only.
 2. **`node()` and `box()` return arrays** — spread them: `[...ex.node(...), ex.arrow(...)]` not `[ex.node(...), ex.arrow(...)]`.
 3. **Arrow `points` are relative to arrow `x,y`** — the helper handles this; if writing arrows manually, `points[0]` is always `[0,0]`.
+
+See `references/pitfalls.md` for all 7 pitfalls with examples.
+
+## Additional Resources
+
+### Reference Files
+
+- **`references/element-api.md`** — Full field reference for all element types (ellipse, rectangle, text, arrow), including every required field and valid values
+- **`references/obsidian-file-format.md`** — How Obsidian converts `.excalidraw` to `.excalidraw.md`, the scaffold structure, update-in-place rules, and decompression instructions
+- **`references/pitfalls.md`** — 7 common mistakes with before/after examples
+
+### Scripts
+
+- **`scripts/shapes.js`** — Zero-dependency factory module: `node()`, `box()`, `arrow()`, `annotationBox()`, `floatingLabel()`, `document()`
+
+### Examples
+
+- **`examples/example.js`** — Runnable org-chart diagram; pipe to a `.excalidraw` file and drop into an Obsidian vault to verify output

@@ -12,7 +12,7 @@
 
 'use strict';
 
-const ex = require('./shapes');
+const ex = require('../scripts/shapes');
 
 // Node positions — CEO at top, two VPs in middle, three ICs at bottom
 const CEO  = { x: 511, y: 40,  w: 180, h: 70, cx: 601, cy: 75  };
