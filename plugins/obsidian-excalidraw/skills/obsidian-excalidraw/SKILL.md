@@ -22,10 +22,10 @@ Or require it in your own script:
 const ex = require('./helpers/shapes');
 
 const elements = [
-  ...ex.node('alice', 100, 80,  180, 70, 'Alice\nWard (pays)'),
-  ...ex.node('bob',   400, 80,  180, 70, 'Bob\nGuardian only', { strokeStyle: 'dashed', strokeColor: '#6b7280' }),
-  ex.arrow('a1', 'bob', 'alice', [490, 115], [190, 115]),
-  ex.floatingLabel('l1', 290, 90, 'guards'),
+  ...ex.node('alpha', 100, 80,  180, 70, 'Alpha\n(primary)'),
+  ...ex.node('beta',  400, 80,  180, 70, 'Beta\n(secondary)', { strokeStyle: 'dashed', strokeColor: '#6b7280' }),
+  ex.arrow('a1', 'beta', 'alpha', [490, 115], [190, 115]),
+  ex.floatingLabel('l1', 290, 90, 'depends on'),
 ];
 
 require('fs').writeFileSync('diagram.excalidraw', JSON.stringify(ex.document(elements), null, 2));
@@ -43,7 +43,7 @@ Embed in any Obsidian note:
 
 `![[name.excalidraw]]` embeds resolve to `name.excalidraw.md` automatically.
 
-A live scaffold example: `~/Library/Mobile Documents/iCloud~md~obsidian/Documents/moderne 2/FraudFront/FraudFront — CoT Network — Ward Account Lapses.excalidraw.md`
+A live scaffold example of the converted format is in `references/obsidian-file-format.md`.
 
 See `references/obsidian-file-format.md` for the full format breakdown and decompression instructions.
 
@@ -100,7 +100,7 @@ Use stroke color + style to show state. **Always keep fills white** — colored 
 |---|---|---|---|---|
 | Active / normal | `#1d4ed8` (blue) | `#ffffff` | 2 | solid |
 | Lapsed / cancelled | `#dc2626` (red) | `#ffffff` | 3 | solid |
-| Guardian-only / free | `#6b7280` (gray) | `#ffffff` | 2 | dashed |
+| Secondary / decorative | `#6b7280` (gray) | `#ffffff` | 2 | dashed |
 | Paused relationship | `#9ca3af` | transparent | 2 | dashed |
 | Removed relationship | `#dc2626` | transparent | 2 | dashed |
 

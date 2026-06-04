@@ -6,11 +6,7 @@ When you write a `.excalidraw` JSON file to an Obsidian vault, the Excalidraw pl
 
 **Example path:**
 ```
-FraudFront — CoT Network — Ward Account Lapses.excalidraw.md
-```
-A live example lives at:
-```
-~/Library/Mobile Documents/iCloud~md~obsidian/Documents/moderne 2/FraudFront/FraudFront — CoT Network — Ward Account Lapses.excalidraw.md
+MyProject — Overview.excalidraw.md
 ```
 
 ## The `.excalidraw.md` structure
@@ -54,8 +50,8 @@ You embed:    ![[name.excalidraw]]  (wikilink still resolves to .excalidraw.md)
 Both extensions work in a wikilink:
 
 ```markdown
-![[FraudFront — CoT Network — Overview.excalidraw]]
-![[FraudFront — CoT Network — Overview.excalidraw.md]]
+![[MyProject — Overview.excalidraw]]
+![[MyProject — Overview.excalidraw.md]]
 ```
 
 Obsidian resolves both to the same file.

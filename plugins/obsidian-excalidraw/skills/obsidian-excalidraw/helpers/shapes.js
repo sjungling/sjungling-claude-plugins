@@ -6,9 +6,9 @@
  * Usage (require):
  *   const ex = require('./shapes');
  *   const elements = [
- *     ...ex.node('alice', 100, 80, 180, 70, 'Alice\nWard'),
- *     ...ex.node('bob',   400, 80, 180, 70, 'Bob\nGuardian', { strokeStyle: 'dashed' }),
- *     ex.arrow('a1', 'bob', 'alice', [490, 115], [190, 115]),
+ *     ...ex.node('alpha', 100, 80, 180, 70, 'Alpha\nPrimary'),
+ *     ...ex.node('beta',  400, 80, 180, 70, 'Beta\nSecondary', { strokeStyle: 'dashed' }),
+ *     ex.arrow('a1', 'beta', 'alpha', [490, 115], [190, 115]),
  *   ];
  *   require('fs').writeFileSync('out.excalidraw', JSON.stringify(ex.document(elements), null, 2));
  */
