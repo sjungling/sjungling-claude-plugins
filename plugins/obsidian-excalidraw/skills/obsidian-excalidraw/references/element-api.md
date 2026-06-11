@@ -88,6 +88,30 @@ Additional fields:
 
 **Arrow `x,y`**: place near the center of the source shape. The binding system overrides the exact start/end points.
 
+### Binding is bidirectional (required for a real connection)
+
+`startBinding`/`endBinding` on the arrow are only half of a connection. Each endpoint **shape** must also list the arrow in its `boundElements`:
+
+```json
+// arrow
+{ "id": "a1", "type": "arrow", "startBinding": { "elementId": "m1", ... }, "endBinding": { "elementId": "g1", ... } }
+// shape m1 — must reference the arrow back
+{ "id": "m1", "type": "rectangle", "boundElements": [{ "type": "text", "id": "m1_t" }, { "type": "arrow", "id": "a1" }] }
+```
+
+Set only the arrow's start/endBinding and the line *looks* attached but won't follow the shape when it moves. `shapes.js` fills in the shape→arrow back-references for you in `document()` (via `linkBindings`); if you build elements by hand, add them yourself.
+
+### Bound arrow label (label on the line)
+
+A label that rides on the arrow is a `text` element with `containerId` set to the **arrow's** id, plus the arrow listing it in `boundElements`. Excalidraw pins it to the arrow midpoint and paints a gap over the line:
+
+```json
+{ "id": "a1", "type": "arrow", "boundElements": [{ "type": "text", "id": "a1_lbl" }], ... }
+{ "id": "a1_lbl", "type": "text", "containerId": "a1", "text": "email arg", "textAlign": "center", "verticalAlign": "middle", ... }
+```
+
+Keep these labels to ~1–3 words — the line segment is short and long text overruns it. This differs from a floating caption (`containerId: null`), which is not attached to anything.
+
 ## Annotation box pattern
 
 A rectangle with a text element bound to it — use for callout notes:

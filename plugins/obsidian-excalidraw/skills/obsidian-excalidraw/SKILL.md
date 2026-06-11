@@ -92,12 +92,33 @@ Every `.excalidraw` file you generate is JSON with this structure:
 |---|---|
 | `ex.node(id, x, y, w, h, label, opts?)` | Ellipse + bound text (returns array of 2 elements) |
 | `ex.box(id, x, y, w, h, label, opts?)` | Rectangle + bound text (returns array of 2 elements) |
-| `ex.arrow(id, fromId, toId, fromCenter, toCenter, opts?)` | Bound arrow between two shapes |
+| `ex.arrow(id, fromId, toId, fromCenter, toCenter, opts?)` | Connected arrow between two shapes; `opts.label` rides *on* the line |
 | `ex.floatingLabel(id, x, y, text, opts?)` | Standalone text element |
 | `ex.annotationBox(id, x, y, w, h, text, opts?)` | Note/annotation box with text |
-| `ex.document(elements, opts?)` | Wraps element array in valid Excalidraw JSON |
+| `ex.document(elements, opts?)` | Wraps element array in valid Excalidraw JSON (and wires up bindings) |
 
 Spread node/box results into the elements array: `[...ex.node(...), ...ex.node(...), ex.arrow(...)]`
+
+## Connecting shapes with arrows (binding)
+
+**Use `ex.arrow(id, fromId, toId, ...)` for any arrow that represents a relationship between two shapes** — a flow, a dependency, a call. A bound arrow stays attached when either shape is moved or resized in Excalidraw, which is what makes a diagram editable rather than a brittle set of free-floating lines.
+
+Connection in Excalidraw is **bidirectional** and both directions are required:
+- the arrow names its endpoints via `startBinding`/`endBinding` (the factory sets these from the two shape IDs you pass), **and**
+- each endpoint shape must list the arrow in its own `boundElements`.
+
+You do **not** wire the second direction by hand — `ex.document(...)` runs a reconcile pass (`linkBindings`) that adds the shape→arrow back-references (and text→container links) automatically and idempotently. Just pass the shape IDs to `ex.arrow` and the labels' `containerId`s are handled for you. If you assemble raw element objects without `ex.document`, call `ex.linkBindings(flatArray)` yourself before wrapping, or the arrows will look connected but won't move with their shapes.
+
+When **not** to bind: a caption, legend, title, or note that isn't anchored to a specific shape edge is a `floatingLabel`/`annotationBox`, not an arrow label. Don't fake a connector with a floating line.
+
+### Arrow labels: bound and terse
+
+`opts.label` creates a text element **bound to the arrow** (`containerId` = arrow id), so it renders on the line with a gap and moves with it — not a caption sitting beside it. **Keep arrow labels to ~1–3 words** (`"act-as hdr"`, `"signed email"`, `"verbatim"`); the label sits on a short line segment and long text overruns it and collides with the shapes. Put any longer explanation in an `annotationBox` near the shapes instead.
+
+```js
+// connected, with a terse on-line label — back-references added by document()
+ex.arrow('a1', 'm1', 'g1', [230, 142], [380, 142], { label: 'email arg', strokeColor: '#dc2626' })
+```
 
 ## Status color system
 

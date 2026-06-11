@@ -167,7 +167,14 @@ function annotationBox(id, x, y, w, h, text, opts = {}) {
  * @param {string} toId   - ID of target shape
  * @param {number[]} fromCenter - [x, y] center of source shape (for path direction)
  * @param {number[]} toCenter   - [x, y] center of target shape
- * @param {object} opts - strokeColor, strokeWidth, strokeStyle, startFocus, endFocus, gap, label
+ * @param {object} opts - strokeColor, strokeWidth, strokeStyle, startFocus, endFocus, gap, label, labelColor, labelFontSize
+ *
+ * When `opts.label` is set, the label is a text element BOUND to the arrow
+ * (rendered on the line, with a gap, and moving with it) — not a floating
+ * caption. Keep arrow labels terse (1–3 words); long labels crowd the line.
+ *
+ * The shape→arrow back-reference (`boundElements`) is wired automatically by
+ * {@link document}, so you only pass the two shape IDs here.
  */
 function arrow(id, fromId, toId, fromCenter, toCenter, opts = {}) {
   const dx = toCenter[0] - fromCenter[0];
@@ -211,12 +218,22 @@ function arrow(id, fromId, toId, fromCenter, toCenter, opts = {}) {
 
   if (!opts.label) return el;
 
-  // Attach a floating label near the midpoint
-  const midX = fromCenter[0] + dx / 2 - 30;
-  const midY = fromCenter[1] + dy / 2 - 16;
-  const lbl = floatingLabel(`${id}_lbl`, midX, midY, opts.label, {
-    fontSize: 11,
-    strokeColor: opts.strokeColor || '#6b7280',
+  // Bound label: a text element whose containerId is this arrow. Excalidraw
+  // pins it to the arrow's midpoint and paints a gap over the line. The arrow
+  // must list the label in its own boundElements (the text→container link);
+  // document() adds the reverse shape→arrow links.
+  const labelId = `${id}_lbl`;
+  el.boundElements = [{ type: 'text', id: labelId }];
+  const fontSize = opts.labelFontSize || 11;
+  const w = Math.max(opts.label.length * fontSize * 0.6, 20);
+  const h = fontSize * 1.25;
+  const midX = fromCenter[0] + dx / 2;
+  const midY = fromCenter[1] + dy / 2;
+  const lbl = textEl(labelId, id, midX - w / 2, midY - h / 2, w, h, opts.label, {
+    fontSize,
+    strokeColor: opts.labelColor || opts.strokeColor || '#374151',
+    textAlign: 'center',
+    verticalAlign: 'middle',
   });
 
   return [el, lbl];
@@ -243,6 +260,38 @@ function floatingLabel(id, x, y, text, opts = {}) {
 }
 
 /**
+ * Ensure every binding is bidirectional.
+ *
+ * Excalidraw treats two elements as connected only when BOTH sides reference
+ * each other: an arrow names its endpoints via start/endBinding, and each
+ * endpoint shape must list the arrow in its own `boundElements`. Likewise a
+ * bound text names its host via `containerId`, and the host must list the
+ * text. The factories set the forward links; this pass fills in the reverse
+ * ones so callers never have to. Idempotent — safe to run on already-linked
+ * elements.
+ */
+function linkBindings(flat) {
+  const byId = new Map(flat.map((e) => [e.id, e]));
+  const ensure = (host, ref) => {
+    if (!host) return; // binding points at an element not in this document
+    if (!Array.isArray(host.boundElements)) host.boundElements = [];
+    if (!host.boundElements.some((b) => b.id === ref.id)) host.boundElements.push(ref);
+  };
+  for (const el of flat) {
+    if (el.type === 'arrow') {
+      const from = el.startBinding && el.startBinding.elementId;
+      const to = el.endBinding && el.endBinding.elementId;
+      if (from) ensure(byId.get(from), { type: 'arrow', id: el.id });
+      if (to) ensure(byId.get(to), { type: 'arrow', id: el.id });
+    }
+    if (el.type === 'text' && el.containerId) {
+      ensure(byId.get(el.containerId), { type: 'text', id: el.id });
+    }
+  }
+  return flat;
+}
+
+/**
  * Wraps an elements array in the top-level Excalidraw document structure.
  *
  * @param {Array} elements - flat array of element objects
@@ -250,8 +299,8 @@ function floatingLabel(id, x, y, text, opts = {}) {
  * @returns {object} ready to JSON.stringify and write as .excalidraw
  */
 function document(elements, opts = {}) {
-  // Flatten one level — allows passing [...node(), arrow()] without manual spreading
-  const flat = elements.flat(1).filter(Boolean);
+  // Flatten fully — allows passing [...node(), arrow()] without manual spreading
+  const flat = linkBindings(elements.flat(Infinity).filter(Boolean));
   return {
     type: 'excalidraw',
     version: 2,
@@ -265,4 +314,4 @@ function document(elements, opts = {}) {
   };
 }
 
-module.exports = { node, box, annotationBox, arrow, floatingLabel, document };
+module.exports = { node, box, annotationBox, arrow, floatingLabel, document, linkBindings };
