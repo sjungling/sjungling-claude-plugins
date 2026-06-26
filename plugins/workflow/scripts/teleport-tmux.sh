@@ -38,23 +38,22 @@ require_tmux() {
     || die "tmux is not installed. Install it with: brew install tmux"
 }
 
-# Probe the tmux server socket so a sandbox/permission failure surfaces clearly
-# rather than masquerading as "no sessions". Echoes one of:
-#   ok            - server reachable, sessions may or may not exist
-#   no-server     - tmux works but no server/sessions yet (benign)
-#   blocked:<msg> - socket connection refused (likely sandbox); <msg> is detail
-tmux_probe() {
-  local out rc
-  out="$(tmux list-sessions -F '#{session_name}' 2>&1)"; rc=$?
-  if [ "$rc" -eq 0 ]; then
-    printf 'ok\n%s\n' "$out"
-    return 0
+# Query the tmux server once and classify the result, so a sandbox/permission
+# failure surfaces clearly rather than masquerading as "no sessions". Sets two
+# globals (bash's idiom for returning more than one value):
+#   TMUX_STATUS = ok | no-server | blocked
+#   TMUX_OUT    = raw output — session names when ok, error detail when blocked
+probe_tmux() {
+  # Assign inside the `if` condition: this both captures the command
+  # substitution's exit status directly and exempts it from `set -e` (a bare
+  # `var=$(failing)` would abort the script under errexit).
+  if TMUX_OUT="$(tmux list-sessions -F '#{session_name}' 2>&1)"; then
+    TMUX_STATUS=ok
+  elif [[ "$TMUX_OUT" == *"no server running"* ]]; then
+    TMUX_STATUS=no-server
+  else
+    TMUX_STATUS=blocked
   fi
-  if printf '%s' "$out" | grep -qi 'no server running'; then
-    echo "no-server"
-    return 0
-  fi
-  printf 'blocked:%s\n' "$out"
 }
 
 # ---------------------------------------------------------------------------
@@ -118,19 +117,16 @@ do_discover() {
   echo "INSIDE_TMUX=${TMUX:+yes}"
   echo "--- existing tmux sessions ---"
 
-  local probe status
-  probe="$(tmux_probe)"
-  status="$(printf '%s' "$probe" | head -n1)"
-  case "$status" in
+  probe_tmux
+  case "$TMUX_STATUS" in
     ok)
-      # Lines after the first are the session names (may be empty).
-      printf '%s\n' "$probe" | tail -n +2 | sed '/^$/d' || true
+      [ -n "$TMUX_OUT" ] && printf '%s\n' "$TMUX_OUT" || true
       ;;
     no-server)
       echo "<none>"
       ;;
-    blocked:*)
-      echo "ERROR_LISTING_SESSIONS: ${status#blocked:}"
+    blocked)
+      echo "ERROR_LISTING_SESSIONS: $TMUX_OUT"
       echo "(This usually means the sandbox is blocking the tmux socket. Re-run"
       echo " with the sandbox disabled, or allowlist the tmux socket directory.)"
       ;;
@@ -158,14 +154,10 @@ do_arm() {
 
   # Surface a blocked socket before we try to create windows, so the failure is
   # legible instead of an opaque tmux error mid-way.
-  local probe status
-  probe="$(tmux_probe)"
-  status="$(printf '%s' "$probe" | head -n1)"
-  case "$status" in
-    blocked:*)
-      die "tmux socket is blocked (${status#blocked:}). Re-run with the sandbox disabled, or allowlist the tmux socket directory."
-      ;;
-  esac
+  probe_tmux
+  if [ "$TMUX_STATUS" = blocked ]; then
+    die "tmux socket is blocked ($TMUX_OUT). Re-run with the sandbox disabled, or allowlist the tmux socket directory."
+  fi
 
   # Create the window and capture its index so send-keys targets THIS window,
   # not whatever window happens to be active in the session.
