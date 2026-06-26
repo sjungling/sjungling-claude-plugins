@@ -15,82 +15,38 @@ so this does NOT move the running process. Instead it arms a new tmux window to
 the moment the old process exits. The conversation transcript is persisted per
 turn, so everything committed transfers; only truly in-flight work is lost.
 
+All the real work lives in `${CLAUDE_PLUGIN_ROOT}/scripts/teleport-tmux.sh`.
+This command just runs it in two phases and relays the result.
+
+> **IMPORTANT — run every bash block in this command with the sandbox
+> DISABLED** (`dangerouslyDisableSandbox: true`). tmux talks to its server over
+> a Unix socket (e.g. `/private/tmp/tmux-501/default`) that lives outside the
+> default sandbox's writable allowlist. Under the sandbox, `tmux list-sessions`,
+> `new-window`, and `send-keys` all fail with `error connecting to … (Operation
+> not permitted)`. The script surfaces this as `ERROR_LISTING_SESSIONS` instead
+> of silently hiding sessions — but it still cannot create the window unless the
+> sandbox is off. The `command -v tmux` check passes either way (the binary
+> exists), so the failure is easy to miss. Disable the sandbox up front.
+
 Follow this workflow exactly.
 
-## Step 1: Gather state and write the resume script
+## Step 1: Discover state
 
-Run this single block and read its output. It detects the old `claude` process
-and writes a self-contained resume script to a temp file — building the script
-in a real shell (with proper `printf %q` quoting) avoids any fragile text
-substitution or `tmux send-keys` quoting problems later.
+Run this (sandbox disabled) and read its output:
 
 ```bash
-set -euo pipefail
-
-# tmux must be installed
-if ! command -v tmux >/dev/null 2>&1; then
-  echo "ERROR: tmux is not installed. Install it with: brew install tmux"
-  exit 1
-fi
-
-# CLAUDE_CODE_SESSION_ID is an internal Claude Code env var (not shown in
-# `claude --help`); it holds the current session ID we resume. Fail loudly if
-# it ever stops being exported.
-SID="${CLAUDE_CODE_SESSION_ID:-}"
-if [ -z "$SID" ]; then
-  echo "ERROR: CLAUDE_CODE_SESSION_ID is not set; cannot determine which session to resume."
-  exit 1
-fi
-
-CWD="$PWD"
-CLAUDE_BIN="$(command -v claude || echo claude)"
-
-# Walk up the process tree to find the ancestor 'claude' process. Match the
-# basename EXACTLY so we don't match unrelated processes like 'claude-helper'.
-# kill -0 (used inside the resume script) only needs signal permission, so the
-# *wait* is reliable even where ps is restricted; this detection is best-effort.
-OLD_PID=""
-pid="$PPID"
-guard=0
-while [ -n "$pid" ] && [ "$pid" -gt 1 ] && [ "$guard" -lt 25 ]; do
-  comm="$(ps -o comm= -p "$pid" 2>/dev/null || true)"
-  case "${comm##*/}" in
-    claude) OLD_PID="$pid"; break ;;
-  esac
-  pid="$(ps -o ppid= -p "$pid" 2>/dev/null | tr -d ' ' || true)"
-  guard=$((guard + 1))
-done
-
-# Write the resume script the new tmux window will run. It is always invoked as
-# `bash <script>`, so no shebang is needed.
-SCRIPT="${CLAUDE_TMPDIR:-${TMPDIR:-/tmp}}/teleport-resume-${SID}.sh"
-{
-  if [ -n "$OLD_PID" ]; then
-    printf 'echo "Waiting for the original Claude session (PID %s) to exit, then resuming here..."\n' "$OLD_PID"
-    printf 'while kill -0 %s 2>/dev/null; do sleep 0.5; done\n' "$OLD_PID"
-    # Brief pause narrows the PID-reuse / TOCTOU window before we start writing
-    # to the same transcript the old process just released.
-    printf 'sleep 1\n'
-  fi
-  printf 'cd %q || exit 1\n' "$CWD"
-  # No `exec`: keep the pane open if resume fails so the error is visible.
-  printf '%q --resume %q\n' "$CLAUDE_BIN" "$SID"
-  printf 'ec=$?\n'
-  printf '[ "$ec" -ne 0 ] && { echo "claude --resume exited with $ec. Press Enter to close."; read -r _; }\n'
-} > "$SCRIPT"
-chmod +x "$SCRIPT"
-
-echo "SESSION_ID=$SID"
-echo "OLD_PID=${OLD_PID:-<not-detected>}"
-echo "RESUME_SCRIPT=$SCRIPT"
-echo "INSIDE_TMUX=${TMUX:+yes}"
-echo "--- existing tmux sessions ---"
-tmux list-sessions -F '#{session_name}' 2>/dev/null || echo "<none>"
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/teleport-tmux.sh" --discover
 ```
 
-Capture from the output: `RESUME_SCRIPT` (path), whether `OLD_PID` was detected
-(`AUTO=yes` if it is a number, `AUTO=no` if `<not-detected>`), whether we're
-`INSIDE_TMUX`, and the list of existing sessions.
+Capture from the output:
+- `RESUME_SCRIPT` — path passed to `--arm` in Step 3.
+- `AUTO` — `yes` if the old `claude` PID was detected, `no` otherwise.
+- `INSIDE_TMUX` — `yes` if we're already inside tmux.
+- The session list under `--- existing tmux sessions ---`.
+
+If you see `ERROR_LISTING_SESSIONS`, the sandbox is still on (or the tmux socket
+is otherwise blocked). Re-run the command with the sandbox disabled before
+continuing — do NOT treat it as "no sessions."
 
 ## Step 2: Resolve the target session
 
@@ -99,46 +55,25 @@ Capture from the output: `RESUME_SCRIPT` (path), whether `OLD_PID` was detected
   - If there are existing sessions, use **AskUserQuestion** to let the user pick
     one, or choose "Create a new session". Offer a sensible default name for a
     new session based on the current directory: `claude-<basename of CWD>`.
-  - If there are no sessions at all, default to creating `claude-<basename of CWD>`
-    (still confirm the name with AskUserQuestion if the user gave no argument).
+  - If `<none>`, default to creating `claude-<basename of CWD>` (still confirm
+    the name with AskUserQuestion if the user gave no argument).
 
 Set `TARGET` to the chosen session name.
 
 ## Step 3: Create the window and arm the resume
 
-Run this block, substituting only these simple, low-risk values: `__TARGET__`
-(the session name), `__SCRIPT__` (the `RESUME_SCRIPT` path from Step 1), and
-`__AUTO__` (`yes` or `no` from Step 1). The window's working directory is set by
-the resume script's own `cd`, so no path needs substituting here.
+Run this (sandbox disabled), substituting `__TARGET__` (chosen session),
+`__SCRIPT__` (the `RESUME_SCRIPT` path from Step 1), and `__AUTO__` (`yes`/`no`
+from Step 1):
 
 ```bash
-set -euo pipefail
-TARGET='__TARGET__'
-SCRIPT='__SCRIPT__'
-AUTO='__AUTO__'
-
-# Create the window and capture its index so send-keys targets THIS window,
-# not whatever window happens to be active in the session.
-if tmux has-session -t "$TARGET" 2>/dev/null; then
-  WIN="$(tmux new-window -t "$TARGET" -n claude -P -F '#{window_index}')"
-else
-  tmux new-session -d -s "$TARGET" -n claude
-  WIN="$(tmux list-windows -t "$TARGET" -F '#{window_index}' | head -n1)"
-fi
-PANE="${TARGET}:${WIN}"
-
-if [ "$AUTO" = yes ]; then
-  # Auto-wait: the script waits for the old process to exit, then resumes. This
-  # prevents two processes appending to the same transcript .jsonl at once.
-  tmux send-keys -t "$PANE" "bash $(printf %q "$SCRIPT")" C-m
-  echo "ARMED_AUTO_WAIT pane=$PANE"
-else
-  # Graceful degradation (PID not detected): pre-type the launch but do NOT run
-  # it, so the user can close the old terminal first, then press Enter.
-  tmux send-keys -t "$PANE" "bash $(printf %q "$SCRIPT")"
-  echo "ARMED_MANUAL pane=$PANE"
-fi
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/teleport-tmux.sh" --arm \
+  --target '__TARGET__' --script '__SCRIPT__' --auto '__AUTO__'
 ```
+
+The script prints `ARMED_AUTO_WAIT` (auto mode) or `ARMED_MANUAL` (PID not
+detected). If it dies with a "tmux socket is blocked" message, the sandbox is
+still on — re-run with it disabled.
 
 ## Step 4: Tell the user what to do
 
