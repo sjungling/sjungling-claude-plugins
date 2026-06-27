@@ -49,9 +49,15 @@ probe_tmux() {
   # `var=$(failing)` would abort the script under errexit).
   if TMUX_OUT="$(tmux list-sessions -F '#{session_name}' 2>&1)"; then
     TMUX_STATUS=ok
-  elif [[ "$TMUX_OUT" == *"no server running"* ]]; then
+  elif [[ "$TMUX_OUT" == *"no server running"* || "$TMUX_OUT" == *"No such file or directory"* ]]; then
+    # No server started yet. tmux's wording varies by platform/version:
+    #   Linux / older tmux: "no server running on <socket>"
+    #   macOS tmux 3.x:     "error connecting to <socket> (No such file or directory)"
+    # `tmux new-session` starts one on demand, so this is benign — not a block.
     TMUX_STATUS=no-server
   else
+    # Anything else — notably "(Operation not permitted)" from a sandbox
+    # blocking the socket — is a real connection failure we must surface.
     TMUX_STATUS=blocked
   fi
 }
