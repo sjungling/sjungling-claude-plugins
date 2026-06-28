@@ -33,7 +33,8 @@
 {
   "type": "ellipse",
   "roundness": { "type": 2 },
-  "boundElements": [{ "type": "text", "id": "TEXTID" }]
+  "boundElements": [],
+  "label": { "text": "Node label", "fontSize": 13 }
 }
 ```
 
@@ -43,11 +44,12 @@
 {
   "type": "rectangle",
   "roundness": { "type": 3 },
-  "boundElements": [{ "type": "text", "id": "TEXTID" }]
+  "boundElements": [],
+  "label": { "text": "Box label", "fontSize": 13 }
 }
 ```
 
-Use `"roundness": null` for sharp corners.
+Use `"roundness": null` for sharp corners. The `label` property is optional — omit it for unlabeled shapes. Excalidraw auto-centers the label and auto-resizes the container to fit.
 
 ## Text (floating or bound)
 
@@ -64,9 +66,9 @@ Additional fields:
 | `baseline` | number | Set equal to `fontSize` |
 | `containerId` | string\|null | ID of parent shape if bound, else `null` |
 
-**Bound text** (label inside a shape): set `containerId` to the shape's ID; set `boundElements: []`; set the shape's `boundElements` to include this text's ID.
+**Floating text**: set `containerId: null`. Use `floatingLabel()` in `shapes.js`.
 
-**Floating text**: set `containerId: null`.
+Shape and arrow labels are set via the `label` property on the element itself — not via separate text elements.
 
 ## Arrow
 
@@ -96,50 +98,36 @@ Additional fields:
 // arrow
 { "id": "a1", "type": "arrow", "startBinding": { "elementId": "m1", ... }, "endBinding": { "elementId": "g1", ... } }
 // shape m1 — must reference the arrow back
-{ "id": "m1", "type": "rectangle", "boundElements": [{ "type": "text", "id": "m1_t" }, { "type": "arrow", "id": "a1" }] }
+{ "id": "m1", "type": "rectangle", "boundElements": [{ "type": "arrow", "id": "a1" }] }
 ```
 
 Set only the arrow's start/endBinding and the line *looks* attached but won't follow the shape when it moves. `shapes.js` fills in the shape→arrow back-references for you in `document()` (via `linkBindings`); if you build elements by hand, add them yourself.
 
-### Bound arrow label (label on the line)
+### Arrow label (inline)
 
-A label that rides on the arrow is a `text` element with `containerId` set to the **arrow's** id, plus the arrow listing it in `boundElements`. Excalidraw pins it to the arrow midpoint and paints a gap over the line:
+Use the `label` property directly on the arrow element. Excalidraw pins it to the arrow midpoint:
 
 ```json
-{ "id": "a1", "type": "arrow", "boundElements": [{ "type": "text", "id": "a1_lbl" }], ... }
-{ "id": "a1_lbl", "type": "text", "containerId": "a1", "text": "email arg", "textAlign": "center", "verticalAlign": "middle", ... }
+{ "id": "a1", "type": "arrow", "label": { "text": "calls", "fontSize": 11 }, ... }
 ```
 
-Keep these labels to ~1–3 words — the line segment is short and long text overruns it. This differs from a floating caption (`containerId: null`), which is not attached to anything.
+Keep labels to ~1–3 words — the line segment is short and long text overruns it.
 
 ## Annotation box pattern
 
-A rectangle with a text element bound to it — use for callout notes:
+A rectangle with an inline `label` — use for callout notes:
 
 ```json
-[
-  {
-    "id": "note",
-    "type": "rectangle",
-    "x": 40, "y": 600, "width": 600, "height": 120,
-    "strokeColor": "#d1d5db",
-    "backgroundColor": "#ffffff",
-    "fillStyle": "solid",
-    "strokeWidth": 1,
-    "roundness": { "type": 3 },
-    "boundElements": [{ "type": "text", "id": "note_t" }],
-    ...
-  },
-  {
-    "id": "note_t",
-    "type": "text",
-    "x": 55, "y": 615, "width": 570, "height": 90,
-    "text": "Line 1\nLine 2\nLine 3",
-    "fontSize": 12,
-    "textAlign": "left",
-    "verticalAlign": "top",
-    "containerId": "note",
-    ...
-  }
-]
+{
+  "id": "note",
+  "type": "rectangle",
+  "x": 40, "y": 600, "width": 600, "height": 120,
+  "strokeColor": "#d1d5db",
+  "backgroundColor": "#ffffff",
+  "fillStyle": "solid",
+  "strokeWidth": 1,
+  "roundness": { "type": 3 },
+  "boundElements": [],
+  "label": { "text": "Line 1\nLine 2\nLine 3", "fontSize": 12, "textAlign": "left", "verticalAlign": "top" }
+}
 ```

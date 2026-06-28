@@ -90,9 +90,9 @@ Every `.excalidraw` file you generate is JSON with this structure:
 
 | Function | Generates |
 |---|---|
-| `ex.node(id, x, y, w, h, label, opts?)` | Ellipse + bound text (returns array of 2 elements) |
-| `ex.box(id, x, y, w, h, label, opts?)` | Rectangle + bound text (returns array of 2 elements) |
-| `ex.arrow(id, fromId, toId, fromPt, toPt, opts?)` | Connected arrow between two shapes; `opts.label` rides *on* the line |
+| `ex.node(id, x, y, w, h, label, opts?)` | Ellipse with inline label (returns single-element array) |
+| `ex.box(id, x, y, w, h, label, opts?)` | Rectangle with inline label (returns single-element array) |
+| `ex.arrow(id, fromId, toId, fromPt, toPt, opts?)` | Connected arrow between two shapes; `opts.label` inline on the line |
 | `ex.floatingLabel(id, x, y, text, opts?)` | Standalone text element |
 | `ex.annotationBox(id, x, y, w, h, text, opts?)` | Note/annotation box with text |
 | `ex.document(elements, opts?)` | Wraps element array in valid Excalidraw JSON (and wires up bindings) |
@@ -135,12 +135,12 @@ Use `gap: 0` alongside edge points — the default `gap: 6` is designed for cent
 
 The `startBinding`/`endBinding` are still set automatically and keep arrows magnetically attached when shapes are moved in the Excalidraw editor.
 
-### Arrow labels: bound and terse
+### Arrow labels: inline and terse
 
-`opts.label` creates a text element **bound to the arrow** (`containerId` = arrow id), so it renders on the line with a gap and moves with it — not a caption sitting beside it. **Keep arrow labels to ~1–3 words** (`"act-as hdr"`, `"signed email"`, `"verbatim"`); the label sits on a short line segment and long text overruns it and collides with the shapes. Put any longer explanation in an `annotationBox` near the shapes instead.
+`opts.label` sets an inline `label` property on the arrow element — Excalidraw renders it on the line at the midpoint. **Keep arrow labels to ~1–3 words** (`"act-as hdr"`, `"signed email"`, `"verbatim"`); the label sits on a short line segment and long text overruns it and collides with the shapes. Put any longer explanation in an `annotationBox` near the shapes instead.
 
 ```js
-// edge-to-edge, with a terse on-line label — back-references added by document()
+// edge-to-edge, with a terse on-line label
 const from = ex.rectEdge(src.x, src.y, src.w, src.h, dst.cx, dst.cy);
 const to   = ex.rectEdge(dst.x, dst.y, dst.w, dst.h, src.cx, src.cy);
 ex.arrow('a1', 'src', 'dst', from, to, { label: 'calls', strokeColor: '#dc2626', gap: 0 })
