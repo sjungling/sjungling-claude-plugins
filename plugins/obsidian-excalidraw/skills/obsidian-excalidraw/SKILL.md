@@ -92,10 +92,12 @@ Every `.excalidraw` file you generate is JSON with this structure:
 |---|---|
 | `ex.node(id, x, y, w, h, label, opts?)` | Ellipse + bound text (returns array of 2 elements) |
 | `ex.box(id, x, y, w, h, label, opts?)` | Rectangle + bound text (returns array of 2 elements) |
-| `ex.arrow(id, fromId, toId, fromCenter, toCenter, opts?)` | Connected arrow between two shapes; `opts.label` rides *on* the line |
+| `ex.arrow(id, fromId, toId, fromPt, toPt, opts?)` | Connected arrow between two shapes; `opts.label` rides *on* the line |
 | `ex.floatingLabel(id, x, y, text, opts?)` | Standalone text element |
 | `ex.annotationBox(id, x, y, w, h, text, opts?)` | Note/annotation box with text |
 | `ex.document(elements, opts?)` | Wraps element array in valid Excalidraw JSON (and wires up bindings) |
+| `ex.rectEdge(rx, ry, rw, rh, tx, ty)` | Point on a rect boundary toward (tx,ty) — use as arrow fromPt/toPt |
+| `ex.ellipseEdge(cx, cy, a, b, tx, ty)` | Point on an ellipse boundary toward (tx,ty) — use as arrow fromPt/toPt |
 
 Spread node/box results into the elements array: `[...ex.node(...), ...ex.node(...), ex.arrow(...)]`
 
@@ -111,13 +113,37 @@ You do **not** wire the second direction by hand — `ex.document(...)` runs a r
 
 When **not** to bind: a caption, legend, title, or note that isn't anchored to a specific shape edge is a `floatingLabel`/`annotationBox`, not an arrow label. Don't fake a connector with a floating line.
 
+### Always use edge-to-edge points — NOT center-to-center
+
+**Obsidian's embedded preview renders the raw `points` array without applying Excalidraw's live binding calculation.** If you pass shape centers as `fromPt`/`toPt`, every arrow will pass straight through the shapes and converge at their centers in the embedded view.
+
+**Always pass boundary intersection points** using the edge helpers:
+
+```js
+// For an arrow from a node (ellipse) to a box (rectangle):
+const from = ex.ellipseEdge(u.cx, u.cy, u.w/2, u.h/2,  box.cx, box.cy);
+const to   = ex.rectEdge(box.x, box.y, box.w, box.h,    u.cx,   u.cy);
+ex.arrow('a1', 'user', 'api', from, to, { strokeColor: '#1d4ed8', gap: 0 });
+
+// For an arrow between two rectangles:
+const from = ex.rectEdge(src.x, src.y, src.w, src.h,  dst.cx, dst.cy);
+const to   = ex.rectEdge(dst.x, dst.y, dst.w, dst.h,  src.cx, src.cy);
+ex.arrow('a2', 'src', 'dst', from, to, { gap: 0 });
+```
+
+Use `gap: 0` alongside edge points — the default `gap: 6` is designed for center-to-center arrows and adds unnecessary offset when points are already on the boundary.
+
+The `startBinding`/`endBinding` are still set automatically and keep arrows magnetically attached when shapes are moved in the Excalidraw editor.
+
 ### Arrow labels: bound and terse
 
 `opts.label` creates a text element **bound to the arrow** (`containerId` = arrow id), so it renders on the line with a gap and moves with it — not a caption sitting beside it. **Keep arrow labels to ~1–3 words** (`"act-as hdr"`, `"signed email"`, `"verbatim"`); the label sits on a short line segment and long text overruns it and collides with the shapes. Put any longer explanation in an `annotationBox` near the shapes instead.
 
 ```js
-// connected, with a terse on-line label — back-references added by document()
-ex.arrow('a1', 'm1', 'g1', [230, 142], [380, 142], { label: 'email arg', strokeColor: '#dc2626' })
+// edge-to-edge, with a terse on-line label — back-references added by document()
+const from = ex.rectEdge(src.x, src.y, src.w, src.h, dst.cx, dst.cy);
+const to   = ex.rectEdge(dst.x, dst.y, dst.w, dst.h, src.cx, src.cy);
+ex.arrow('a1', 'src', 'dst', from, to, { label: 'calls', strokeColor: '#dc2626', gap: 0 })
 ```
 
 ## Status color system

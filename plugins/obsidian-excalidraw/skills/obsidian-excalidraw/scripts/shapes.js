@@ -314,4 +314,46 @@ function document(elements, opts = {}) {
   };
 }
 
-module.exports = { node, box, annotationBox, arrow, floatingLabel, document, linkBindings };
+/**
+ * Returns the point on an ellipse boundary where a line from (cx,cy) exits toward (tx,ty).
+ * Use this to compute arrow start/end points so arrows render edge-to-edge rather than
+ * center-to-center in Obsidian's embedded preview (which skips Excalidraw's live binding).
+ *
+ * @param {number} cx - ellipse center x
+ * @param {number} cy - ellipse center y
+ * @param {number} a  - semi-axis x (half-width)
+ * @param {number} b  - semi-axis y (half-height)
+ * @param {number} tx - x of external target point
+ * @param {number} ty - y of external target point
+ * @returns {[number, number]}
+ */
+function ellipseEdge(cx, cy, a, b, tx, ty) {
+  const dx = tx - cx, dy = ty - cy;
+  if (dx === 0 && dy === 0) return [cx + a, cy];
+  const t = 1 / Math.sqrt((dx / a) ** 2 + (dy / b) ** 2);
+  return [cx + t * dx, cy + t * dy];
+}
+
+/**
+ * Returns the point on a rectangle boundary where a line from the rect center exits toward (tx,ty).
+ * Use with arrow() to produce edge-to-edge arrows: pass rectEdge(...) as fromCenter/toCenter.
+ *
+ * @param {number} rx - rect left x
+ * @param {number} ry - rect top y
+ * @param {number} rw - rect width
+ * @param {number} rh - rect height
+ * @param {number} tx - x of external target point
+ * @param {number} ty - y of external target point
+ * @returns {[number, number]}
+ */
+function rectEdge(rx, ry, rw, rh, tx, ty) {
+  const cx = rx + rw / 2, cy = ry + rh / 2;
+  const dx = tx - cx, dy = ty - cy;
+  if (dx === 0 && dy === 0) return [cx, cy];
+  const sx = dx !== 0 ? (rw / 2) / Math.abs(dx) : Infinity;
+  const sy = dy !== 0 ? (rh / 2) / Math.abs(dy) : Infinity;
+  const t = Math.min(sx, sy);
+  return [cx + t * dx, cy + t * dy];
+}
+
+module.exports = { node, box, annotationBox, arrow, floatingLabel, document, linkBindings, ellipseEdge, rectEdge };
