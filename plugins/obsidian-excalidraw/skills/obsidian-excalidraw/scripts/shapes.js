@@ -50,90 +50,55 @@ function base(id, type, x, y, w, h, opts = {}) {
   };
 }
 
-// Text element — either bound (containerId set) or floating
-function textEl(id, containerId, x, y, w, h, text, opts = {}) {
-  const seed = nextSeed();
-  const fontSize = opts.fontSize || 13;
-  return {
-    id,
-    type: 'text',
-    x,
-    y,
-    width: w,
-    height: h,
-    angle: 0,
-    strokeColor: opts.strokeColor || '#1e1e2e',
-    backgroundColor: 'transparent',
-    fillStyle: 'hachure',
-    strokeWidth: 1,
-    strokeStyle: 'solid',
-    roughness: 0,
-    opacity: 100,
-    groupIds: [],
-    seed,
-    version: 1,
-    versionNonce: seed,
-    isDeleted: false,
-    boundElements: [],
-    updated: ts,
-    link: null,
-    locked: false,
-    text,
-    originalText: text,
-    fontSize,
-    fontFamily: opts.fontFamily || 1,
-    textAlign: opts.textAlign || 'center',
-    verticalAlign: opts.verticalAlign || 'middle',
-    baseline: fontSize,
-    containerId: containerId || null,
-  };
-}
 
 /**
- * Ellipse node with a bound text label.
- * Returns [ellipse, text] — spread into your elements array.
+ * Ellipse node with an inline label.
+ * Returns [ellipse] — spread into your elements array.
  *
  * @param {string} id
  * @param {number} x - top-left x
  * @param {number} y - top-left y
  * @param {number} w - width
  * @param {number} h - height
- * @param {string} label - text content, use \n for line breaks
+ * @param {string} label - text content (use \n for line breaks)
  * @param {object} opts - strokeColor, strokeWidth, strokeStyle, backgroundColor, fontSize
  */
 function node(id, x, y, w, h, label, opts = {}) {
-  const textId = `${id}_t`;
   const shape = {
     ...base(id, 'ellipse', x, y, w, h, opts),
-    boundElements: label ? [{ type: 'text', id: textId }] : [],
+    boundElements: [],
   };
-  if (!label) return [shape];
-  const text = textEl(textId, id, x + 4, y + 4, w - 8, h - 8, label, opts);
-  return [shape, text];
+  if (label) {
+    shape.label = { text: label, fontSize: opts.fontSize || 13 };
+  }
+  return [shape];
 }
 
 /**
- * Rectangle node with a bound text label.
- * Returns [rect, text] — spread into your elements array.
+ * Rectangle node with an inline label.
+ * Returns [rect] — spread into your elements array.
  *
  * @param {string} id
  * @param {number} x - top-left x
  * @param {number} y - top-left y
  * @param {number} w - width
  * @param {number} h - height
- * @param {string} label - text content
- * @param {object} opts - strokeColor, strokeWidth, strokeStyle, backgroundColor, rounded (bool), fontSize
+ * @param {string} label - text content (use \n for line breaks)
+ * @param {object} opts - strokeColor, strokeWidth, strokeStyle, backgroundColor, rounded (bool), fontSize, textAlign, verticalAlign
  */
 function box(id, x, y, w, h, label, opts = {}) {
-  const textId = `${id}_t`;
-  const rounded = opts.rounded !== false; // default rounded
+  const rounded = opts.rounded !== false;
   const shape = {
     ...base(id, 'rectangle', x, y, w, h, { ...opts, roundness: rounded ? { type: 3 } : null }),
-    boundElements: label ? [{ type: 'text', id: textId }] : [],
+    boundElements: [],
   };
-  if (!label) return [shape];
-  const text = textEl(textId, id, x + 8, y + 8, w - 16, h - 16, label, { ...opts, textAlign: opts.textAlign || 'left', verticalAlign: 'top' });
-  return [shape, text];
+  if (label) {
+    const labelObj = { text: label, fontSize: opts.fontSize || 13 };
+    if (opts.textAlign) labelObj.textAlign = opts.textAlign;
+    if (opts.verticalAlign) labelObj.verticalAlign = opts.verticalAlign;
+    shape.label = labelObj;
+  }
+  return [shape];
 }
 
 /**
@@ -216,27 +181,11 @@ function arrow(id, fromId, toId, fromCenter, toCenter, opts = {}) {
     elbowed: false,
   };
 
-  if (!opts.label) return el;
+  if (opts.label) {
+    el.label = { text: opts.label, fontSize: opts.labelFontSize || 11 };
+  }
 
-  // Bound label: a text element whose containerId is this arrow. Excalidraw
-  // pins it to the arrow's midpoint and paints a gap over the line. The arrow
-  // must list the label in its own boundElements (the text→container link);
-  // document() adds the reverse shape→arrow links.
-  const labelId = `${id}_lbl`;
-  el.boundElements = [{ type: 'text', id: labelId }];
-  const fontSize = opts.labelFontSize || 11;
-  const w = Math.max(opts.label.length * fontSize * 0.6, 20);
-  const h = fontSize * 1.25;
-  const midX = fromCenter[0] + dx / 2;
-  const midY = fromCenter[1] + dy / 2;
-  const lbl = textEl(labelId, id, midX - w / 2, midY - h / 2, w, h, opts.label, {
-    fontSize,
-    strokeColor: opts.labelColor || opts.strokeColor || '#374151',
-    textAlign: 'center',
-    verticalAlign: 'middle',
-  });
-
-  return [el, lbl];
+  return el;
 }
 
 /**
@@ -252,28 +201,53 @@ function floatingLabel(id, x, y, text, opts = {}) {
   const fontSize = opts.fontSize || 12;
   const approxW = text.length * (fontSize * 0.6);
   const approxH = (text.split('\n').length) * (fontSize * 1.4);
-  return textEl(id, null, x, y, Math.max(approxW, 40), Math.max(approxH, fontSize + 4), text, {
-    ...opts,
+  const seed = nextSeed();
+  return {
+    id,
+    type: 'text',
+    x,
+    y,
+    width: Math.max(approxW, 40),
+    height: Math.max(approxH, fontSize + 4),
+    angle: 0,
+    strokeColor: opts.strokeColor || '#1e1e2e',
+    backgroundColor: 'transparent',
+    fillStyle: 'hachure',
+    strokeWidth: 1,
+    strokeStyle: 'solid',
+    roughness: 0,
+    opacity: 100,
+    groupIds: [],
+    seed,
+    version: 1,
+    versionNonce: seed,
+    isDeleted: false,
+    boundElements: [],
+    updated: ts,
+    link: null,
+    locked: false,
+    text,
+    originalText: text,
+    fontSize,
+    fontFamily: opts.fontFamily || 1,
     textAlign: opts.textAlign || 'center',
     verticalAlign: 'top',
-  });
+    baseline: fontSize,
+    containerId: null,
+  };
 }
 
 /**
- * Ensure every binding is bidirectional.
+ * Ensure arrow bindings are bidirectional.
  *
- * Excalidraw treats two elements as connected only when BOTH sides reference
- * each other: an arrow names its endpoints via start/endBinding, and each
- * endpoint shape must list the arrow in its own `boundElements`. Likewise a
- * bound text names its host via `containerId`, and the host must list the
- * text. The factories set the forward links; this pass fills in the reverse
- * ones so callers never have to. Idempotent — safe to run on already-linked
- * elements.
+ * An arrow names its endpoints via startBinding/endBinding, and each endpoint
+ * shape must list the arrow in its own `boundElements`. The factories set the
+ * forward links; this pass fills in the reverse ones. Idempotent.
  */
 function linkBindings(flat) {
   const byId = new Map(flat.map((e) => [e.id, e]));
   const ensure = (host, ref) => {
-    if (!host) return; // binding points at an element not in this document
+    if (!host) return;
     if (!Array.isArray(host.boundElements)) host.boundElements = [];
     if (!host.boundElements.some((b) => b.id === ref.id)) host.boundElements.push(ref);
   };
@@ -283,9 +257,6 @@ function linkBindings(flat) {
       const to = el.endBinding && el.endBinding.elementId;
       if (from) ensure(byId.get(from), { type: 'arrow', id: el.id });
       if (to) ensure(byId.get(to), { type: 'arrow', id: el.id });
-    }
-    if (el.type === 'text' && el.containerId) {
-      ensure(byId.get(el.containerId), { type: 'text', id: el.id });
     }
   }
   return flat;
@@ -314,4 +285,46 @@ function document(elements, opts = {}) {
   };
 }
 
-module.exports = { node, box, annotationBox, arrow, floatingLabel, document, linkBindings };
+/**
+ * Returns the point on an ellipse boundary where a line from (cx,cy) exits toward (tx,ty).
+ * Use this to compute arrow start/end points so arrows render edge-to-edge rather than
+ * center-to-center in Obsidian's embedded preview (which skips Excalidraw's live binding).
+ *
+ * @param {number} cx - ellipse center x
+ * @param {number} cy - ellipse center y
+ * @param {number} a  - semi-axis x (half-width)
+ * @param {number} b  - semi-axis y (half-height)
+ * @param {number} tx - x of external target point
+ * @param {number} ty - y of external target point
+ * @returns {[number, number]}
+ */
+function ellipseEdge(cx, cy, a, b, tx, ty) {
+  const dx = tx - cx, dy = ty - cy;
+  if (dx === 0 && dy === 0) return [cx + a, cy];
+  const t = 1 / Math.sqrt((dx / a) ** 2 + (dy / b) ** 2);
+  return [cx + t * dx, cy + t * dy];
+}
+
+/**
+ * Returns the point on a rectangle boundary where a line from the rect center exits toward (tx,ty).
+ * Use with arrow() to produce edge-to-edge arrows: pass rectEdge(...) as fromCenter/toCenter.
+ *
+ * @param {number} rx - rect left x
+ * @param {number} ry - rect top y
+ * @param {number} rw - rect width
+ * @param {number} rh - rect height
+ * @param {number} tx - x of external target point
+ * @param {number} ty - y of external target point
+ * @returns {[number, number]}
+ */
+function rectEdge(rx, ry, rw, rh, tx, ty) {
+  const cx = rx + rw / 2, cy = ry + rh / 2;
+  const dx = tx - cx, dy = ty - cy;
+  if (dx === 0 && dy === 0) return [cx, cy];
+  const sx = dx !== 0 ? (rw / 2) / Math.abs(dx) : Infinity;
+  const sy = dy !== 0 ? (rh / 2) / Math.abs(dy) : Infinity;
+  const t = Math.min(sx, sy);
+  return [cx + t * dx, cy + t * dy];
+}
+
+module.exports = { node, box, annotationBox, arrow, floatingLabel, document, linkBindings, ellipseEdge, rectEdge };

@@ -138,3 +138,25 @@ ex.floatingLabel('t', 0, 0, 'tag: v1.2')
 ```
 
 This only applies to the iCloud CLI route. Filesystem-writable vaults (raw `.excalidraw` written directly) have no such restriction.
+
+---
+
+## 10. Arrows built with center-to-center points render through shapes in Obsidian embeds
+
+**Symptom:** In the embedded `![[...]]` preview, all arrows converge at the center of shapes rather than connecting to their edges. The diagram looks like a starburst instead of a flow chart.
+
+**Cause:** Obsidian's embedded preview renders the raw `points` array directly without applying Excalidraw's live binding calculation. If `points` go from shape center to shape center, the lines pass straight through the shapes.
+
+**Fix:** Always pass boundary intersection points as `fromPt`/`toPt` using the edge helpers. The binding system keeps arrows attached in the editor; edge-to-edge `points` make them render correctly in preview too.
+
+```js
+// ❌ Center-to-center — renders through shapes in Obsidian embedded view
+ex.arrow('a1', 'user', 'api', [userCx, userCy], [apiCx, apiCy])
+
+// ✅ Edge-to-edge — renders correctly everywhere
+const from = ex.ellipseEdge(userCx, userCy, userW/2, userH/2, apiCx, apiCy);
+const to   = ex.rectEdge(api.x, api.y, api.w, api.h, userCx, userCy);
+ex.arrow('a1', 'user', 'api', from, to, { gap: 0 })
+```
+
+Use `gap: 0` with edge points — the default `gap: 6` is designed for center-to-center and adds unwanted offset when points are already on the boundary.
