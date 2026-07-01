@@ -50,8 +50,10 @@ Each plugin can contain:
 - Skill: `pdf-generation` - Generate a PDF book from a directory of ordered markdown chapters using pandoc and weasyprint. Includes print-optimized CSS, table of contents, and inter-chapter link resolution.
 - Command: `/technical-overview [output-dir]` - Create or update a comprehensive Beej's-Guide-style technical manual with parallel chapter writing via teammates, then generate a PDF
 - Command: `/walkthrough [path-to-source]` - Generate a code walkthrough using showboat
+- Command: `/save-to-obsidian [vault] [topic]` - Save the current spec/plan/session summary to Obsidian as a design note. Auto-discovers superpowers specs/plans or a Claude plan file (falls back to a conversation summary), resolves the target vault/folder/tag conventions from existing notes, then writes through `write-markdown-to-vault.js` (never the `Write` tool) since iCloud-synced vaults are TCC-protected against direct filesystem access.
 - Agent: `technical-writer.md` - Legacy agent implementation (prefer skill for automatic activation)
 - Agent: `obsidian-vault-manager.md` - Obsidian vault management specialist using obsidian-cli
+- Script: `skills/obsidian-vault-manager/scripts/write-markdown-to-vault.js` - Reliable CLI-based writer for markdown notes into iCloud-synced (or any) vault: chunks payloads under the CLI's ~10KB IPC ceiling, filters banner noise, retries transient errors, verifies via read-back. Must run unsandboxed.
 
 **git-tools** (`plugins/git-tools/`):
 - Skill: `git-bisect-debugging` - Systematic workflow for using git bisect to identify which commit introduced a bug. Supports automated test scripts, manual verification, and hybrid approaches with subagent architecture for isolated execution. Integrates with superpowers:systematic-debugging for root cause analysis.
