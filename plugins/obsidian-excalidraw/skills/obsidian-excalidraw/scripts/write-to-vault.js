@@ -76,7 +76,13 @@ function die(msg) {
 
 const BANNER = /Loading updated app package|installer is out of date|Checking for update|Latest version is|App is up to date|^\s*Success\.\s*$|^\s*20\d\d-\d\d-\d\d /;
 function filterBanner(s) {
-  return (s || '').split('\n').filter(l => l && !BANNER.test(l)).join('\n');
+  // Only drop lines that actually match a banner pattern — NOT blank lines.
+  // An earlier `l && ...` truthy filter here also silently ate every blank
+  // line, which happened to be harmless for this script's own JSON-parsing
+  // verify step (found while writing a markdown sibling of this script,
+  // where the same filter corrupted read-back comparisons of prose content
+  // with real blank lines) but is a real bug in a general-purpose helper.
+  return (s || '').split('\n').filter(l => !BANNER.test(l)).join('\n');
 }
 
 const HARD_ERR = ['Broken pipe', 'write() failed', 'not found', 'may require a plugin'];
