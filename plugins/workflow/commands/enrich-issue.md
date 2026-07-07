@@ -1,5 +1,5 @@
 ---
-description: Enrich a GitHub issue with codebase triage, pinned code permalinks, and an optional Mermaid sequence diagram
+description: Enrich a GitHub issue with codebase triage, inline code permalinks, and an optional Mermaid sequence diagram
 argument-hint: "<issue-number>"
 allowed-tools:
   - Bash
@@ -10,7 +10,7 @@ allowed-tools:
   - AskUserQuestion
 ---
 
-Enrich a GitHub issue with codebase analysis: triage which area of the code owns the problem, add GitHub permalinks pinned to the `origin/main` HEAD SHA, and optionally include a Mermaid sequence diagram illustrating where the flow breaks down.
+Enrich a GitHub issue with codebase analysis: write narrative prose that traces the problem through the code with inline identifier hyperlinks, and optionally include a Mermaid sequence diagram that is render-validated before posting.
 
 ## Step 1: Resolve Issue Number
 
@@ -40,17 +40,13 @@ Resolve the permalink base pinned to `origin/main` HEAD:
 REPO=$(gh repo view --json nameWithOwner -q '.nameWithOwner')
 SHA=$(git rev-parse origin/main 2>/dev/null || git rev-parse HEAD)
 PERMALINK_BASE="https://github.com/$REPO/blob/$SHA"
-COMMIT_URL="https://github.com/$REPO/commit/$SHA"
-SHORT_SHA="${SHA:0:7}"
 ```
 
-If `git rev-parse origin/main` fails (no remote), use `HEAD` and note the fallback in the enrichment footer so readers know the snapshot may not be `main`.
+If `git rev-parse origin/main` fails (no remote), use `HEAD` and note the fallback at the end of the triage prose.
 
 ## Step 3: Dispatch Research Subagent
 
-Dispatch a fresh `Agent` to search the codebase and map the issue to specific code locations. This keeps raw search output out of the main context.
-
-Fill in `<number>`, `<title>`, `<body>`, `<repo>`, `<sha>`, and `<permalink_base>` from the values resolved above before dispatching.
+Dispatch a fresh `Agent` to search the codebase. Fill in `<number>`, `<title>`, `<body>`, `<repo>`, `<sha>`, and `<permalink_base>` before dispatching.
 
 Agent prompt:
 
@@ -63,170 +59,196 @@ Issue body:
 Repository: <repo>
 Permalink base (pinned to origin/main HEAD <sha>): <permalink_base>
 
-Map this issue to the codebase. Do NOT prescribe solutions — only describe what currently exists and where the problem manifests. Do not use language like "should", "fix by", "change X to Y", or "the solution is".
+Map this issue to the codebase. Do NOT prescribe solutions. Do not use language like "should", "fix by", "change X to Y", or "the solution is".
 
 ## 1. TRIAGE THE CODEBASE
 
-- Identify which files, modules, or services the issue touches
-- Search for relevant symbols, error messages, configuration keys, or API paths mentioned in the issue using Grep, Glob, and Read
-- Trace the execution path or data flow relevant to this issue
-- Note the blast radius: which other areas are likely affected even if not the primary location
+- Search for relevant symbols, error messages, config keys, or API paths from the issue using Grep, Glob, and Read
+- Trace the execution path or data flow from entry point to failure
+- Note blast radius: other areas affected even if not the root cause
 
-Write a 2-4 sentence triage summary that names the specific subsystem or layer that owns the problem. Be concrete — name real files or packages, not generic descriptions like "the backend" or "the frontend".
+Write triage prose — 3-6 sentences of narrative that traces the call chain from where the problem enters to where it manifests. Every code identifier you name (class name, method name, field name) must be a markdown hyperlink whose link text IS the identifier itself, not the file path. Build each permalink as:
+  <permalink_base>/<file>#L<start>-L<end>
 
-## 2. COLLECT CODE REFERENCES
+Format: [`ClassName.methodName`](permalink) or [`fieldName`](permalink)
+Do NOT show raw file paths as visible link text. Do NOT write a separate table or list of code references.
 
-For each relevant code location found:
-- Verify the file exists: `test -f <path> && echo exists || echo MISSING` — skip any path that does not exist
-- Record the exact file path (relative to repo root)
-- Record the specific line range (start to end), confirmed against actual file content
-- Write one sentence describing why this location is relevant to the issue — no prescriptions
+Verify every file exists with `test -f <path>` before building its permalink. Skip any file that does not exist.
 
-Prefer narrower line ranges (5-20 lines) that isolate the specific logic, not entire files.
+Example (not real — illustrative only):
+  The issue originates in [`TokenRefreshFilter.doFilter`](https://github.com/org/repo/blob/SHA/path/Filter.java#L42-L67) where the session is re-issued without copying the expiry timestamp. The new token object is assembled in [`SessionFactory.build`](permalink) and written by [`SessionStore.persist`](permalink), which receives no expiry argument.
 
-Return as a JSON array where every entry has been verified to exist on disk:
+## 2. CODE REFS (for verification only — not displayed directly)
+
+Return a separate machine-readable list of the code locations embedded in the prose above. These are used for post-hoc verification only and are NOT rendered in the output.
+
 [
-  { "file": "src/auth/middleware.ts", "start": 42, "end": 58, "relevance": "Session token is written here without expiry enforcement" }
+  { "file": "relative/path/from/repo/root.java", "start": 42, "end": 67 }
 ]
 
 ## 3. ASSESS DIAGRAM VALUE
 
-Decide whether a Mermaid sequence diagram would materially help a reader understand WHERE the issue occurs:
-- Include if: the issue involves a sequence of calls, events, or interactions across multiple components or services
-- Omit if: the issue is contained within a single function or is a pure data/type bug
+Decide whether a Mermaid sequenceDiagram would materially help a reader understand WHERE the issue occurs:
+- Include if: the issue involves interactions across multiple components or services
+- Omit if: it is contained within a single function or class
 
-If including, generate a `sequenceDiagram` using real component, function, and service names verified to exist in the codebase. Show ONLY the actual current flow. Use a `Note` annotation to mark the failure point. Do NOT add branches, dashed lines, or annotations showing a corrected or desired flow — the diagram must describe what happens now, not what should happen. Never invent names that don't appear in the code.
+If including, use real component names verified to exist in the code. Show ONLY the actual current flow. Use a `Note` annotation to mark the failure point. Do NOT show a corrected or desired flow.
 
-Mermaid syntax constraints to ensure valid rendering on GitHub:
-- Participant aliases must be short identifiers with no spaces, parentheses, or special characters (use `as` to give them a display label: `participant W as WorkerService`)
-- `Note` text must be a single line and kept concise (under 80 characters) — no colons or semicolons in the note text
-- Do not use `activate`/`deactivate` blocks
+Critical Mermaid syntax rules — violations will cause the diagram to fail rendering:
+- Participant aliases: short identifiers only, NO spaces, parentheses, or special characters
+  Good: `participant W as WorkerService`   Bad: `participant WorkerService (recipe-worker)`
+- Message labels (arrows): NO semicolons. Semicolons are statement terminators in Mermaid — use a dash or comma instead
+  Good: `W->>R: readUpgradesAndMigrations - returns empty`   Bad: `W->>R: reads CSV; returns empty`
+- Note text: single line, under 80 characters, no colons or semicolons
+- Do not use activate/deactivate blocks
 
 ## RETURN
 
-Return a single JSON object:
 {
-  "triage_summary": "...",
-  "code_refs": [
-    { "file": "...", "start": N, "end": N, "relevance": "..." }
-  ],
+  "triage_prose": "narrative with inline [`Identifier`](permalink) links...",
+  "code_refs": [{ "file": "...", "start": N, "end": N }],
   "diagram": "sequenceDiagram\n  ..." or null,
-  "diagram_rationale": "one sentence: why included or omitted"
+  "diagram_rationale": "one sentence"
 }
 ```
 
-Capture the agent's returned JSON as `$RESEARCH`.
+Capture the result as `$RESEARCH`.
 
 ## Step 4: Build Enrichment Body
 
-Construct the enrichment markdown from `$RESEARCH` and write it to a temp file:
+Write the enrichment to a temp file:
 
 ```bash
 ENRICHMENT_FILE=$(mktemp /tmp/gh-enrich-XXXXXX.md)
 ```
 
-### Triage section
-
-Write to `$ENRICHMENT_FILE`:
+Write `triage_prose` as the entire body under a heading:
 
 ```
 ## Issue Triage
 
-<triage_summary>
+<triage_prose>
 ```
 
-### Code references
-
-For each entry in `code_refs`, build the permalink:
-
-```
-<PERMALINK_BASE>/<file>#L<start>-L<end>
-```
-
-Append a block like the following to `$ENRICHMENT_FILE` — each reference gets a bold label line followed by the bare URL on its own line. GitHub automatically expands bare permalink URLs into inline code snippet previews. Do NOT wrap the URL in `[]()` markdown link syntax.
-
-```
-### Relevant Code
-
-**`<file>:<start>-<end>`** — <relevance>
-<PERMALINK_BASE>/<file>#L<start>-L<end>
-
-**`<file2>:<start>-<end>`** — <relevance>
-<PERMALINK_BASE>/<file2>#L<start>-L<end>
-```
-
-If `code_refs` is empty, write a note that no specific code locations were identified and the issue may need more detail.
-
-### Mermaid diagram (conditional)
-
-If `diagram` is non-null, append a `### Flow Diagram` heading followed by a fenced `mermaid` code block to `$ENRICHMENT_FILE`. Write the block exactly as:
+If `diagram` is non-null, append a `### Flow Diagram` heading followed by a fenced mermaid block. Use 4-space indentation here to avoid nested-fence ambiguity when writing the command file itself — when writing the actual enrichment file, use literal triple-backtick fences:
 
     ### Flow Diagram
 
     ```mermaid
-    <diagram content here>
+    <diagram content>
     ```
 
-## Step 5: Dispatch Review Subagent
+## Step 5: Render-validate the Mermaid Diagram
 
-Before posting anything, dispatch a fresh `Agent` to review the enrichment. The review subagent has access to Bash, Grep, Glob, and Read tools and must use them — this is an active code check, not a literary review.
+If a diagram was included, validate it renders before posting. A diagram that fails to parse is worse than no diagram.
 
-Fill in `<number>`, `<title>`, `<body>`, and the full contents of `$ENRICHMENT_FILE` before dispatching.
+```bash
+# Extract the mermaid block content from the enrichment file
+MMD_FILE=$(mktemp /tmp/gh-diagram-XXXXXX.mmd)
+sed -n '/^```mermaid$/,/^```$/{ /^```/d; p }' "$ENRICHMENT_FILE" > "$MMD_FILE"
+
+# Create puppeteer config pointing at system Chrome (default puppeteer Chrome not installed)
+PUPPETEER_CFG=$(mktemp /tmp/puppeteer-XXXXXX.json)
+cat > "$PUPPETEER_CFG" <<'JSON'
+{
+  "args": ["--no-sandbox"],
+  "executablePath": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+}
+JSON
+
+# Resolve mmdc
+if command -v mmdc &>/dev/null; then
+  MMDC_CMD="mmdc"
+else
+  MMDC_CMD="npx --yes @mermaid-js/mermaid-cli"
+fi
+
+OUT_PNG=$(mktemp /tmp/gh-diagram-XXXXXX.png)
+MMDC_OUTPUT=$($MMDC_CMD -i "$MMD_FILE" -o "$OUT_PNG" --puppeteerConfigFile "$PUPPETEER_CFG" 2>&1)
+MMDC_EXIT=$?
+rm -f "$OUT_PNG" "$PUPPETEER_CFG"
+```
+
+If `$MMDC_EXIT` is non-zero:
+1. Show `$MMDC_OUTPUT` to the user
+2. Pass the error and the failing diagram back to a fresh `Agent` with this prompt:
+
+```
+This Mermaid sequenceDiagram failed to render. Fix ONLY the syntax — do not change the diagram's meaning.
+
+Error from mmdc:
+<MMDC_OUTPUT>
+
+Failing diagram:
+<MMD content>
+
+Rules:
+- No semicolons anywhere in message labels or Note text — they are statement terminators in Mermaid
+- Participant aliases must be short identifiers with no spaces or parentheses
+- Note text must be a single line under 80 characters with no colons or semicolons
+- Return only the corrected diagram content (no fences, no explanation)
+```
+
+Replace the diagram block in `$ENRICHMENT_FILE` with the corrected diagram and re-run the mmdc validation. Repeat until the diagram renders cleanly or the agent cannot fix it (in which case, remove the diagram from the enrichment and note the failure to the user).
+
+Clean up `$MMD_FILE`.
+
+## Step 6: Dispatch Review Subagent
+
+Dispatch a fresh `Agent` to review the enrichment. Fill in `<number>`, `<title>`, `<body>`, and the contents of `$ENRICHMENT_FILE`.
 
 Agent prompt:
 
 ```
-Review this GitHub issue enrichment for quality and accuracy before it is posted. You have Bash, Grep, Glob, and Read tools — use them to verify claims rather than guessing.
+Review this GitHub issue enrichment before it is posted. Use Bash, Grep, Glob, and Read to verify — do not guess.
 
-Original issue #<number>: "<title>"
+Issue #<number>: "<title>"
+Body: <body>
 
-Issue body:
-<body>
-
-Proposed enrichment:
+Enrichment:
 <enrichment_body>
 
-Perform these checks:
+Checks:
 
-1. FILE EXISTENCE: For every file path in the code references, run:
-   test -f <path> && echo "OK: <path>" || echo "MISSING: <path>"
-   Fail any reference where the file does not exist on disk.
+1. FILE EXISTENCE: For every permalink in the enrichment, extract the file path and run:
+   test -f <path> && echo "OK" || echo "MISSING: <path>"
+   Fail any reference pointing to a nonexistent file.
 
-2. LINE RANGE VALIDITY: For each existing file, confirm the referenced line range is within the file's actual line count:
+2. LINE RANGE VALIDITY: For each file, confirm referenced lines are within the file:
    wc -l < <path>
-   Flag any range where end > line count.
 
-3. NO SOLUTIONS: Does the enrichment describe what exists WITHOUT prescribing what should change? Flag any language like "should", "fix by", "change X to Y", or "the solution is".
+3. LINK STYLE: Every code identifier link must use the identifier as link text — never a raw file path.
+   Good: [`ClassName.methodName`](url)   Bad: [`path/to/File.java:42-58`](url)
+   Flag any link where the visible text is a file path rather than an identifier name.
 
-4. DIAGRAM NAMES: If a Mermaid diagram is present, grep for each component or service name used in the diagram to confirm it appears in the codebase. Flag any name not found.
+4. NO SOLUTIONS: Flag any language like "should", "fix by", "change X to Y", or "the solution is".
 
-5. TRIAGE SPECIFICITY: Does the triage summary name real files or subsystems (not generic terms like "the backend")?
+5. TRIAGE SPECIFICITY: Does the prose name real identifiers from the codebase, not generic descriptions?
 
-6. GAPS: Search for related symbols or paths not covered in the code references. List any obvious locations that seem relevant to the issue but are absent.
+6. DIAGRAM: The diagram has already been validated by mmdc. Confirm that each participant alias
+   and component name in the diagram grep-matches to an actual name in the codebase.
 
 Return JSON:
 {
   "approved": true or false,
-  "issues": ["specific problems found, empty if none"],
-  "missed_areas": ["file paths or symbols that appear relevant but are absent from the enrichment"]
+  "issues": ["specific problems"],
+  "missed_areas": ["relevant symbols or paths absent from the enrichment"]
 }
 ```
 
 If `approved` is false or `missed_areas` is non-empty:
-- Revise `$ENRICHMENT_FILE` to address the flagged issues
-- For missed areas, perform targeted searches and append additional code refs
-- Re-run Step 5 if significant changes were made
+- Address flagged issues in `$ENRICHMENT_FILE`
+- For missed areas, search and incorporate additional inline references in the prose
+- Re-run this step if significant changes were made
 
-Only proceed to Step 6 once the review passes or all identified issues have been addressed.
-
-## Step 6: Choose Update Method
+## Step 7: Choose Update Method
 
 Use `AskUserQuestion` to ask how to apply the enrichment:
 
-- **Post as a comment** — preserves the original description unchanged, adds context as a new comment
-- **Append to description** — adds the enrichment as a new section at the bottom of the existing issue body
+- **Post as a comment** — preserves the original description, adds context below
+- **Append to description** — adds the enrichment as a new section at the bottom
 
-## Step 7: Post Enrichment
+## Step 8: Post Enrichment
 
 ### If comment:
 
@@ -236,7 +258,7 @@ gh issue comment "$ISSUE_NUMBER" --body-file "$ENRICHMENT_FILE"
 
 ### If append to description:
 
-Fetch the current body (re-fetch to avoid overwriting edits made since Step 2):
+Re-fetch the current body to avoid overwriting any edits made during this workflow:
 
 ```bash
 BODY_FILE=$(mktemp /tmp/gh-body-XXXXXX.md)
@@ -247,29 +269,27 @@ gh issue edit "$ISSUE_NUMBER" --body-file "$BODY_FILE"
 rm -f "$BODY_FILE"
 ```
 
-Clean up the enrichment temp file and report the issue URL to the user.
+Clean up `$ENRICHMENT_FILE` and report the issue URL to the user.
 
-## Step 8: Optional Title and Description Refinement
+## Step 9: Optional Title and Description Refinement
 
 Use `AskUserQuestion` to ask:
 
 > Based on the codebase research, would you like me to suggest a more precise title or description for this issue?
 
 If yes:
-- Propose a revised title that reflects the actual subsystem and observed behavior (e.g., "Auth middleware drops session expiry on token refresh" rather than "Login sometimes fails")
-- Propose an optional one-paragraph clarification to prepend to the description that references the triaged code location
+- Propose a revised title that names the actual component and observed behavior
+- Propose an optional one-paragraph clarification that references the triaged identifiers
 
-Present suggestions clearly and ask for explicit confirmation before applying any changes:
+Ask for explicit confirmation before applying:
 
 ```bash
 gh issue edit "$ISSUE_NUMBER" --title "<revised_title>"
 ```
 
-Do not apply title or description changes without the user's explicit confirmation.
-
 ## Notes
 
 - Never prescribe solutions — describe what exists, not what should change
-- All code links must use the `origin/main` HEAD SHA, not the branch name (which can move)
-- If the issue references multiple repositories, note this in the triage summary and focus on the current repo; mention the other repos by name for the implementer's reference
-- Clean up all temp files created by this command, whether the command succeeds or is cancelled
+- All permalinks use the `origin/main` HEAD SHA, never the branch name
+- If the issue spans multiple repositories, name all of them in the triage prose and focus research on the current repo
+- Clean up all temp files whether the command succeeds or is cancelled
