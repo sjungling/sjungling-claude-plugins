@@ -1,7 +1,7 @@
 {
   "name": "workflow",
   "description": "Code review and worktree workflow commands",
-  "version": "2.18.0",
+  "version": "2.18.1",
   "author": {
     "name": "Scott",
     "email": "scott.jungling@gmail.com"

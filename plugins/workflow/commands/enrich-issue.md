@@ -97,6 +97,11 @@ Decide whether a Mermaid sequence diagram would materially help a reader underst
 
 If including, generate a `sequenceDiagram` using real component, function, and service names verified to exist in the codebase. Show ONLY the actual current flow. Use a `Note` annotation to mark the failure point. Do NOT add branches, dashed lines, or annotations showing a corrected or desired flow — the diagram must describe what happens now, not what should happen. Never invent names that don't appear in the code.
 
+Mermaid syntax constraints to ensure valid rendering on GitHub:
+- Participant aliases must be short identifiers with no spaces, parentheses, or special characters (use `as` to give them a display label: `participant W as WorkerService`)
+- `Note` text must be a single line and kept concise (under 80 characters) — no colons or semicolons in the note text
+- Do not use `activate`/`deactivate` blocks
+
 ## RETURN
 
 Return a single JSON object:
@@ -130,7 +135,7 @@ Write to `$ENRICHMENT_FILE`:
 <triage_summary>
 ```
 
-### Code references table
+### Code references
 
 For each entry in `code_refs`, build the permalink:
 
@@ -138,38 +143,29 @@ For each entry in `code_refs`, build the permalink:
 <PERMALINK_BASE>/<file>#L<start>-L<end>
 ```
 
-Append to `$ENRICHMENT_FILE`:
+Append a block like the following to `$ENRICHMENT_FILE` — each reference gets a bold label line followed by the bare URL on its own line. GitHub automatically expands bare permalink URLs into inline code snippet previews. Do NOT wrap the URL in `[]()` markdown link syntax.
 
 ```
 ### Relevant Code
 
-| Location | Why it matters |
-|---|---|
-| [`<file>:<start>-<end>`](<permalink>) | <relevance> |
+**`<file>:<start>-<end>`** — <relevance>
+<PERMALINK_BASE>/<file>#L<start>-L<end>
+
+**`<file2>:<start>-<end>`** — <relevance>
+<PERMALINK_BASE>/<file2>#L<start>-L<end>
 ```
 
 If `code_refs` is empty, write a note that no specific code locations were identified and the issue may need more detail.
 
 ### Mermaid diagram (conditional)
 
-If `diagram` is non-null, append this block (using literal backtick fences) to `$ENRICHMENT_FILE`:
+If `diagram` is non-null, append a `### Flow Diagram` heading followed by a fenced `mermaid` code block to `$ENRICHMENT_FILE`. Write the block exactly as:
 
-```
-### Flow Diagram
+    ### Flow Diagram
 
-```mermaid
-<diagram content>
-```
-```
-
-### Footer
-
-Append to `$ENRICHMENT_FILE`:
-
-```
----
-_Enriched via `/enrich-issue` — codebase snapshot pinned to [`<SHORT_SHA>`](<COMMIT_URL>)_
-```
+    ```mermaid
+    <diagram content here>
+    ```
 
 ## Step 5: Dispatch Review Subagent
 
