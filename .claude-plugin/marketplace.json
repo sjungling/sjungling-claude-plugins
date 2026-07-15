@@ -57,6 +57,10 @@
     {
       "name": "obsidian-excalidraw",
       "source": "./plugins/obsidian-excalidraw"
+    },
+    {
+      "name": "obsidian",
+      "source": "./plugins/obsidian"
     }
   ]
 }

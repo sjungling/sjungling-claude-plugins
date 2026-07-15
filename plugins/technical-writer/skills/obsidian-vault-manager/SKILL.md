@@ -45,6 +45,8 @@ Before performing vault operations:
 | Move note | `obsidian "vault=<name>" move path="old.md" newpath="new.md"` | **Auto-updates all links** |
 | Search content | `obsidian "vault=<name>" search query="<term>" [path=<folder>] [format=json]` | |
 | Daily note | `obsidian "vault=<name>" daily` | Create/open today's note |
+| Active/default vault | `obsidian vault` | No name → the vault currently open |
+| Append to daily note | `obsidian "vault=<name>" daily:append content="<text>"` | Active vault; needs Daily Notes plugin |
 
 **See also:**
 - [Complete obsidian Command Reference](./references/obsidian-cli-reference.md) - All commands with flags and advanced usage
