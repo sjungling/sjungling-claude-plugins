@@ -59,16 +59,20 @@ Judge the capture text (`$ARGUMENTS` minus any `vault=` token):
   daily note. Ask with `AskUserQuestion`: *inline anyway* (Step 4a) or *create a linked
   note* (Step 4b).
 
-## Step 4a — Append inline
+## Step 4a — Append under a new heading
 
-Append a single timestamped bullet (block mode supplies the newline):
+Give each capture its own `###` (H3) heading so entries stay scannable. Derive a concise
+topic (3–6 words) from the content for the heading, then put the summary beneath it:
 
 ```bash
-obsidian "vault=$VAULT" daily:append content="- **$(date +%H:%M)** <summary text>"
+TOPIC="<concise topic — e.g. Obsidian daily-note command>"
+BLOCK=$(printf '\n### %s\n\n%s' "$TOPIC" "<summary text>")
+obsidian "vault=$VAULT" daily:append content="$BLOCK"
 ```
 
-For multi-line captures, build the content with `printf` and pass it via a variable — the
-CLI strips `\n` from plain double-quoted strings but honors `printf`-produced newlines.
+Build the block with `printf`, not a plain double-quoted string — the CLI strips literal
+`\n` from `content=` values but honors `printf`-produced newlines. The leading `\n`
+separates the new heading from earlier content.
 
 ## Step 4b — Create a linked note
 
@@ -81,9 +85,10 @@ CLI strips `\n` from plain double-quoted strings but honors `printf`-produced ne
    For a body beyond the CLI's ~10KB IPC ceiling, invoke the
    `technical-writer:obsidian-vault-manager` skill and use its chunked, verified
    `scripts/write-markdown-to-vault.js` instead.
-3. Link it from the daily note:
+3. Link it from the daily note under its own H3 heading (same shape as Step 4a):
    ```bash
-   obsidian "vault=$VAULT" daily:append content="- [[<Title>]] — <one-line gist>"
+   BLOCK=$(printf '\n### %s\n\n- [[%s]] — %s' "<Topic>" "<Title>" "<one-line gist>")
+   obsidian "vault=$VAULT" daily:append content="$BLOCK"
    ```
 
 ## Step 5 — Report
