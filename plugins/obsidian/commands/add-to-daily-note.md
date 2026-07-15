@@ -27,6 +27,12 @@ Two things that will bite you if ignored:
 If the capture text (`$ARGUMENTS`) is empty, ask the user what to capture — don't append
 an empty bullet.
 
+**This command acts; it does not gate.** Appending to a daily note is trivial and
+reversible. Do **not** enter plan mode, write a plan file, or call `ExitPlanMode` for it —
+the session's own permission prompt on the `daily:append` call is the only checkpoint you
+need. Ask a clarifying question only for the one genuine fork below (long content), and
+prefer a sensible default over asking.
+
 ## Step 1 — Resolve the target vault
 
 Default to the CLI's active vault — this is "the default vault":
@@ -49,15 +55,19 @@ If `$DAILY` is empty, the vault has no Daily Notes / Periodic Notes plugin confi
 it isn't the active vault — daily commands target the active vault). Report that and stop;
 do not fabricate a path.
 
-## Step 3 — Decide short vs. long
+## Step 3 — Right-size the capture
 
-Judge the capture text (`$ARGUMENTS` minus any `vault=` token):
+Judge the capture text (`$ARGUMENTS` minus any `vault=` token) and act — don't ask:
 
-- **Short** — a few sentences / one small paragraph, no headings or large code blocks.
-  Append it inline (Step 4a).
-- **Long** — multiple sections, headings, or code blocks. It doesn't belong inline in a
-  daily note. Ask with `AskUserQuestion`: *inline anyway* (Step 4a) or *create a linked
-  note* (Step 4b).
+- **Short** — a few sentences / one small paragraph. Append it as-is (Step 4a).
+- **Long** — multiple sections, headings, or code blocks. Don't dump it inline and don't
+  stop to ask. **Condense it** to a few key bullets plus any action items, then append
+  that under a heading (Step 4a). The daily note stays scannable; that's the default.
+
+Only take the linked-note branch (Step 4b) when the user explicitly wants the full text
+preserved verbatim, or the content is clearly a standalone document. If it's genuinely
+ambiguous, ask **one** short `AskUserQuestion` (condense inline vs. linked note) — never a
+plan or approval gate.
 
 ## Step 4a — Append under a new heading
 
