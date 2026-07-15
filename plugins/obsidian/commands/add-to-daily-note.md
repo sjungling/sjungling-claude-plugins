@@ -14,15 +14,25 @@ The full CLI surface and every caveat live in the shared reference: the
 `references/obsidian-cli-reference.md` (see the **Default / active vault**, **Daily
 notes**, and **iCloud vaults & sandboxing** sections). Consult it if any step is unclear.
 
-**Run every `obsidian` CLI call with the sandbox disabled.** The CLI talks to the running
-Obsidian app over a local socket the command sandbox blocks, so a sandboxed call hangs.
+Two things that will bite you if ignored:
+
+- **Run every `obsidian` CLI call with the sandbox disabled.** The CLI talks to the
+  running Obsidian app over a local socket the command sandbox blocks, so a sandboxed
+  call hangs.
+- **The CLI prepends a startup banner to stdout on every call** ("Loading updated app
+  package…", installer-out-of-date, an `obsidian.md` URL). Always filter it when
+  capturing output into a variable — the snippets below do this positionally
+  (`grep '^name'`, `grep '\.md$'`).
+
+If the capture text (`$ARGUMENTS`) is empty, ask the user what to capture — don't append
+an empty bullet.
 
 ## Step 1 — Resolve the target vault
 
 Default to the CLI's active vault — this is "the default vault":
 
 ```bash
-VAULT=$(obsidian vault | awk -F'\t' '$1=="name"{print $2}')
+VAULT=$(obsidian vault | grep '^name' | cut -f2-)
 ```
 
 If `$ARGUMENTS` begins with a `vault=<name>` token, use that name instead and strip the
@@ -32,7 +42,7 @@ errors, show `obsidian vaults` and stop (name typo).
 ## Step 2 — Resolve today's daily note
 
 ```bash
-DAILY=$(obsidian "vault=$VAULT" daily:path)
+DAILY=$(obsidian "vault=$VAULT" daily:path | grep -E '\.md$' | head -n1)
 ```
 
 If `$DAILY` is empty, the vault has no Daily Notes / Periodic Notes plugin configured (or

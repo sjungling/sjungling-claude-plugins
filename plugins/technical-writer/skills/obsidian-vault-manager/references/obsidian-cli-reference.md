@@ -24,9 +24,14 @@ Run `vault` with no name to get the **active vault** — the one currently open 
 Obsidian app. This is the CLI's implicit default when `vault=<name>` is omitted:
 
 ```bash
-# Active vault name, parsed from the tab-separated output
-VAULT=$(obsidian vault | awk -F'\t' '$1=="name"{print $2}')
+# Active vault name, from the tab-separated output (grep '^name' also drops the banner)
+VAULT=$(obsidian vault | grep '^name' | cut -f2-)
 ```
+
+> **Banner on stdout:** every `obsidian` call prepends startup lines to stdout ("Loading
+> updated app package…", an installer-out-of-date notice, an `obsidian.md` URL). When
+> capturing output into a variable, filter it — prefer a *positive* match on the shape you
+> want (`grep '^name'`, `grep '\.md$'`) over blocklisting the banner text.
 
 Daily-note commands (below) resolve against the active vault; targeting a non-active vault
 with `vault=<name>` may return empty for daily operations if that vault isn't open.
