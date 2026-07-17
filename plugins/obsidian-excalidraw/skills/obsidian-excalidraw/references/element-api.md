@@ -33,8 +33,7 @@
 {
   "type": "ellipse",
   "roundness": { "type": 2 },
-  "boundElements": [],
-  "label": { "text": "Node label", "fontSize": 13 }
+  "boundElements": [{ "type": "text", "id": "node1__label" }]
 }
 ```
 
@@ -44,12 +43,23 @@
 {
   "type": "rectangle",
   "roundness": { "type": 3 },
-  "boundElements": [],
-  "label": { "text": "Box label", "fontSize": 13 }
+  "boundElements": [{ "type": "text", "id": "box1__label" }]
 }
 ```
 
-Use `"roundness": null` for sharp corners. The `label` property is optional — omit it for unlabeled shapes. Excalidraw auto-centers the label and auto-resizes the container to fit.
+Use `"roundness": null` for sharp corners.
+
+**There is no `label` shorthand property in real Excalidraw JSON.** A labeled
+shape is always TWO elements: the container (rectangle/ellipse/arrow) plus a
+separate `text` element whose `containerId` points back at the container —
+and the container's own `boundElements` must list that text element. Writing
+a `label` field directly on the container is silently ignored by Excalidraw
+(and by Obsidian's renderer): the shape draws with no visible text at all.
+
+`node()`, `box()`, `annotationBox()`, and `arrow()` in `shapes.js` handle this
+for you — pass a label string and they return `[shape, text]` (or `[arrow,
+text]`) with the binding already wired. Always spread or push the full
+return value; do not discard the second element.
 
 ## Text (floating or bound)
 
@@ -68,7 +78,13 @@ Additional fields:
 
 **Floating text**: set `containerId: null`. Use `floatingLabel()` in `shapes.js`.
 
-Shape and arrow labels are set via the `label` property on the element itself — not via separate text elements.
+**Bound text** (shape/arrow labels): `containerId` is the id of the shape or
+arrow it labels. The container must list `{"type": "text", "id": <this id>}`
+in its own `boundElements`. `shapes.js` computes an approximate `x/y/width/height`
+for the bound text (centered in the container, or top-left for annotation
+boxes) since there's no canvas available to measure real text metrics — good
+enough for the embedded preview, but expect Excalidraw to reflow it slightly
+once the file is opened and edited in the app.
 
 ## Arrow
 
@@ -105,19 +121,25 @@ Set only the arrow's start/endBinding and the line *looks* attached but won't fo
 
 ### Arrow label (inline)
 
-Use the `label` property directly on the arrow element. Excalidraw pins it to the arrow midpoint:
+Pass `opts.label` to `ex.arrow(...)` — it returns `[arrow, text]` with a
+separate text element bound via `containerId`, positioned at the arrow's
+midpoint:
 
 ```json
-{ "id": "a1", "type": "arrow", "label": { "text": "calls", "fontSize": 11 }, ... }
+// arrow
+{ "id": "a1", "type": "arrow", "boundElements": [{ "type": "text", "id": "a1__label" }], ... }
+// bound text, positioned at the arrow midpoint
+{ "id": "a1__label", "type": "text", "containerId": "a1", "text": "calls", "fontSize": 11, ... }
 ```
 
 Keep labels to ~1–3 words — the line segment is short and long text overruns it.
 
 ## Annotation box pattern
 
-A rectangle with an inline `label` — use for callout notes:
+A rectangle with left/top-aligned bound text — use for callout notes. `ex.annotationBox(id, x, y, w, h, text)` builds both elements for you:
 
 ```json
+// container
 {
   "id": "note",
   "type": "rectangle",
@@ -127,7 +149,16 @@ A rectangle with an inline `label` — use for callout notes:
   "fillStyle": "solid",
   "strokeWidth": 1,
   "roundness": { "type": 3 },
-  "boundElements": [],
-  "label": { "text": "Line 1\nLine 2\nLine 3", "fontSize": 12, "textAlign": "left", "verticalAlign": "top" }
+  "boundElements": [{ "type": "text", "id": "note__label" }]
+}
+// bound text, top-left aligned inside the container
+{
+  "id": "note__label",
+  "type": "text",
+  "containerId": "note",
+  "text": "Line 1\nLine 2\nLine 3",
+  "fontSize": 12,
+  "textAlign": "left",
+  "verticalAlign": "top"
 }
 ```

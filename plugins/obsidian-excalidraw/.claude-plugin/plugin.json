@@ -1,6 +1,6 @@
 {
   "name": "obsidian-excalidraw",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "description": "Generate and embed Excalidraw diagrams programmatically inside Obsidian vaults",
   "author": {
     "name": "Scott Jungling",
