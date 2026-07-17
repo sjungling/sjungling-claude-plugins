@@ -50,10 +50,74 @@ function base(id, type, x, y, w, h, opts = {}) {
   };
 }
 
+/**
+ * Real Excalidraw format has no "label" shorthand on containers — a labeled
+ * shape/arrow is actually TWO elements: the container, plus a separate `text`
+ * element with `containerId` pointing back at it (and the container lists the
+ * text element in its own `boundElements`). This builds that text element.
+ *
+ * @param {string} id - id for the new text element
+ * @param {string} containerId - id of the shape/arrow this text is bound to
+ * @param {string} text - content (use \n for line breaks)
+ * @param {number} cx - x-center of the area the text should occupy
+ * @param {number} cy - y-center of the area the text should occupy
+ * @param {object} opts - fontSize, strokeColor, textAlign, verticalAlign, maxWidth
+ */
+function boundText(id, containerId, text, cx, cy, opts = {}) {
+  const fontSize = opts.fontSize || 13;
+  const lines = String(text).split('\n');
+  const charW = fontSize * 0.6;
+  const lineH = fontSize * 1.25;
+  let width = Math.max(...lines.map((l) => l.length * charW), fontSize);
+  if (opts.maxWidth) width = Math.min(width, opts.maxWidth);
+  const height = lines.length * lineH;
+  const textAlign = opts.textAlign || 'center';
+  const verticalAlign = opts.verticalAlign || 'middle';
+
+  // cx/cy denote the center of the available area regardless of alignment —
+  // text elements are always positioned by their own top-left x/y + width/height.
+  const x = textAlign === 'left' ? cx - (opts.areaWidth ? opts.areaWidth / 2 : width / 2) : cx - width / 2;
+  const y = verticalAlign === 'top' ? cy - (opts.areaHeight ? opts.areaHeight / 2 : height / 2) : cy - height / 2;
+
+  const seed = nextSeed();
+  return {
+    id,
+    type: 'text',
+    x,
+    y,
+    width,
+    height,
+    angle: 0,
+    strokeColor: opts.strokeColor || '#1e1e2e',
+    backgroundColor: 'transparent',
+    fillStyle: 'hachure',
+    strokeWidth: 1,
+    strokeStyle: 'solid',
+    roughness: 0,
+    opacity: 100,
+    groupIds: [],
+    seed,
+    version: 1,
+    versionNonce: seed,
+    isDeleted: false,
+    boundElements: [],
+    updated: ts,
+    link: null,
+    locked: false,
+    text,
+    originalText: text,
+    fontSize,
+    fontFamily: opts.fontFamily || 1,
+    textAlign,
+    verticalAlign,
+    baseline: fontSize,
+    containerId,
+  };
+}
 
 /**
  * Ellipse node with an inline label.
- * Returns [ellipse] — spread into your elements array.
+ * Returns [ellipse, text] when labeled, [ellipse] otherwise — spread into your elements array.
  *
  * @param {string} id
  * @param {number} x - top-left x
@@ -64,19 +128,22 @@ function base(id, type, x, y, w, h, opts = {}) {
  * @param {object} opts - strokeColor, strokeWidth, strokeStyle, backgroundColor, fontSize
  */
 function node(id, x, y, w, h, label, opts = {}) {
-  const shape = {
-    ...base(id, 'ellipse', x, y, w, h, opts),
-    boundElements: [],
-  };
+  const shape = base(id, 'ellipse', x, y, w, h, opts);
+  const result = [shape];
   if (label) {
-    shape.label = { text: label, fontSize: opts.fontSize || 13 };
+    const textId = `${id}__label`;
+    shape.boundElements = [{ type: 'text', id: textId }];
+    result.push(boundText(textId, id, label, x + w / 2, y + h / 2, {
+      fontSize: opts.fontSize,
+      maxWidth: w - 10,
+    }));
   }
-  return [shape];
+  return result;
 }
 
 /**
  * Rectangle node with an inline label.
- * Returns [rect] — spread into your elements array.
+ * Returns [rect, text] when labeled, [rect] otherwise — spread into your elements array.
  *
  * @param {string} id
  * @param {number} x - top-left x
@@ -88,17 +155,22 @@ function node(id, x, y, w, h, label, opts = {}) {
  */
 function box(id, x, y, w, h, label, opts = {}) {
   const rounded = opts.rounded !== false;
-  const shape = {
-    ...base(id, 'rectangle', x, y, w, h, { ...opts, roundness: rounded ? { type: 3 } : null }),
-    boundElements: [],
-  };
+  const shape = base(id, 'rectangle', x, y, w, h, { ...opts, roundness: rounded ? { type: 3 } : null });
+  const result = [shape];
   if (label) {
-    const labelObj = { text: label, fontSize: opts.fontSize || 13 };
-    if (opts.textAlign) labelObj.textAlign = opts.textAlign;
-    if (opts.verticalAlign) labelObj.verticalAlign = opts.verticalAlign;
-    shape.label = labelObj;
+    const textId = `${id}__label`;
+    const pad = 10;
+    shape.boundElements = [{ type: 'text', id: textId }];
+    result.push(boundText(textId, id, label, x + w / 2, y + h / 2, {
+      fontSize: opts.fontSize,
+      textAlign: opts.textAlign,
+      verticalAlign: opts.verticalAlign,
+      maxWidth: w - 2 * pad,
+      areaWidth: w - 2 * pad,
+      areaHeight: h - 2 * pad,
+    }));
   }
-  return [shape];
+  return result;
 }
 
 /**
@@ -126,6 +198,8 @@ function annotationBox(id, x, y, w, h, text, opts = {}) {
 
 /**
  * Directional arrow between two shapes, bound to their IDs.
+ * Returns a single arrow element, or [arrow, text] when opts.label is set —
+ * spread into your elements array (works either way; document() flattens).
  *
  * @param {string} id
  * @param {string} fromId - ID of source shape
@@ -134,9 +208,10 @@ function annotationBox(id, x, y, w, h, text, opts = {}) {
  * @param {number[]} toCenter   - [x, y] center of target shape
  * @param {object} opts - strokeColor, strokeWidth, strokeStyle, startFocus, endFocus, gap, label, labelColor, labelFontSize
  *
- * When `opts.label` is set, the label is a text element BOUND to the arrow
- * (rendered on the line, with a gap, and moving with it) — not a floating
- * caption. Keep arrow labels terse (1–3 words); long labels crowd the line.
+ * When `opts.label` is set, a separate text element is created with
+ * `containerId` pointing at the arrow, positioned at the arrow's midpoint —
+ * this is what actually renders on the line in Obsidian's embedded preview.
+ * Keep arrow labels terse (1–3 words); long labels crowd the line.
  *
  * The shape→arrow back-reference (`boundElements`) is wired automatically by
  * {@link document}, so you only pass the two shape IDs here.
@@ -181,11 +256,17 @@ function arrow(id, fromId, toId, fromCenter, toCenter, opts = {}) {
     elbowed: false,
   };
 
-  if (opts.label) {
-    el.label = { text: opts.label, fontSize: opts.labelFontSize || 11 };
-  }
+  if (!opts.label) return el;
 
-  return el;
+  const textId = `${id}__label`;
+  el.boundElements = [{ type: 'text', id: textId }];
+  const midX = fromCenter[0] + dx / 2;
+  const midY = fromCenter[1] + dy / 2;
+  const text = boundText(textId, id, opts.label, midX, midY, {
+    fontSize: opts.labelFontSize || 11,
+    strokeColor: opts.labelColor,
+  });
+  return [el, text];
 }
 
 /**
@@ -258,6 +339,9 @@ function linkBindings(flat) {
       if (from) ensure(byId.get(from), { type: 'arrow', id: el.id });
       if (to) ensure(byId.get(to), { type: 'arrow', id: el.id });
     }
+    if (el.type === 'text' && el.containerId) {
+      ensure(byId.get(el.containerId), { type: 'text', id: el.id });
+    }
   }
   return flat;
 }
@@ -327,4 +411,4 @@ function rectEdge(rx, ry, rw, rh, tx, ty) {
   return [cx + t * dx, cy + t * dy];
 }
 
-module.exports = { node, box, annotationBox, arrow, floatingLabel, document, linkBindings, ellipseEdge, rectEdge };
+module.exports = { node, box, annotationBox, arrow, floatingLabel, document, linkBindings, boundText, ellipseEdge, rectEdge };
