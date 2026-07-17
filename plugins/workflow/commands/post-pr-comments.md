@@ -44,6 +44,20 @@ For multi-line ranges, also include:
 - `start_line` (number) — first line of the range
 - `start_side` (string) — always `"RIGHT"`
 
+### Required footer
+
+Append an attribution footer to the end of **every** comment `body`, so reviewers know the finding was machine-generated and at what rigor. Format:
+
+```
+\n\n---\n<sub>🤖 Analysis: <MODEL> · <REASONING> reasoning effort<EXTRA></sub>
+```
+
+- `<MODEL>` — the model that produced the analysis, e.g. `Claude Opus 4.8`.
+- `<REASONING>` — the reasoning/thinking level used, e.g. `high`.
+- `<EXTRA>` — optional ` · <note>` suffix for extra provenance that genuinely applies, e.g. ` · red-teamed before posting` when findings were adversarially verified. Omit entirely if nothing extra applies — do not fabricate it.
+
+Example footer: `\n\n---\n<sub>🤖 Analysis: Claude Opus 4.8 · high reasoning effort · red-teamed before posting</sub>`
+
 Example:
 ```json
 [
@@ -51,7 +65,7 @@ Example:
     "path": "src/foo.swift",
     "line": 42,
     "side": "RIGHT",
-    "body": "**Raw spacing literal**\n\nUse `CortinaSpacing.lg` instead of `12`."
+    "body": "**Raw spacing literal**\n\nUse `CortinaSpacing.lg` instead of `12`.\n\n---\n<sub>🤖 Analysis: Claude Opus 4.8 · high reasoning effort</sub>"
   },
   {
     "path": "src/bar.swift",
@@ -59,7 +73,7 @@ Example:
     "start_side": "RIGHT",
     "line": 15,
     "side": "RIGHT",
-    "body": "This block should use the shared helper."
+    "body": "This block should use the shared helper.\n\n---\n<sub>🤖 Analysis: Claude Opus 4.8 · high reasoning effort</sub>"
   }
 ]
 ```
