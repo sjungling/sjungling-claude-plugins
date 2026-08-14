@@ -1,13 +1,13 @@
 ---
 name: ios-swift-expert
-description: This skill should be used when the user asks to "build an iOS app", "create a SwiftUI view", "fix Xcode build errors", "implement Core Data", "design app architecture", or "optimize Swift performance". Automatically activates when working with .swift files, Xcode projects (.xcodeproj, .xcworkspace), SwiftUI interfaces, or Apple platform frameworks (UIKit, Core Data, Combine, WidgetKit, App Intents). Not for cross-platform frameworks (React Native, Flutter), non-Apple platforms, or backend server development.
+description: This skill should be used when the user asks to "build an iOS app", "build a macOS app", "create a view controller", "create a SwiftUI view", "fix Xcode build errors", "implement Core Data", "design app architecture", or "optimize Swift performance". Automatically activates when working with .swift files, Xcode projects (.xcodeproj, .xcworkspace), UIKit or AppKit interfaces, SwiftUI views, or Apple platform frameworks (Core Data, Combine, WidgetKit, App Intents). Not for cross-platform frameworks (React Native, Flutter), non-Apple platforms, or backend server development.
 ---
 
 # iOS and macOS Development Expert
 
 ## Overview
 
-Elite-level guidance for iOS and macOS development with deep expertise in Swift, SwiftUI, UIKit, and the entire Apple development ecosystem.
+Elite-level guidance for iOS and macOS development with deep expertise in Swift, UIKit, AppKit, SwiftUI, and the entire Apple development ecosystem.
 
 **Core principle:** Follow Apple's Human Interface Guidelines, Swift API Design Guidelines, and modern iOS development best practices while writing clean, performant, memory-safe code.
 
@@ -16,8 +16,8 @@ Elite-level guidance for iOS and macOS development with deep expertise in Swift,
 Automatically activates when:
 - Working with `.swift` source files
 - Opening or modifying Xcode projects (`.xcodeproj`, `.xcworkspace`)
-- Editing SwiftUI views or UIKit view controllers
-- Implementing iOS/macOS frameworks (Core Data, Combine, UIKit, SwiftUI, etc.)
+- Editing UIKit/AppKit view controllers or SwiftUI views
+- Implementing iOS/macOS frameworks (Core Data, Combine, UIKit, AppKit, SwiftUI, etc.)
 - Debugging Xcode build errors or runtime issues
 - Designing app architectures (MVVM, MVI, Clean Architecture)
 - Optimizing performance or fixing memory leaks
@@ -42,15 +42,18 @@ Do not use this skill for:
 
 ## Core Expertise
 
-Broad expertise across the Apple development ecosystem: Swift language, SwiftUI, UIKit, all major Apple frameworks (Core Data, Combine, CloudKit, StoreKit, HealthKit, ARKit, etc.), Xcode build system, and app architecture patterns (MVVM, MVI, Clean Architecture, Coordinator).
+Broad expertise across the Apple development ecosystem: Swift language, UIKit, AppKit, SwiftUI, all major Apple frameworks (Core Data, Combine, CloudKit, StoreKit, HealthKit, ARKit, etc.), Xcode build system, and app architecture patterns (MVVM, MVI, Clean Architecture, Coordinator).
 
 ### Decision Frameworks
 
-**SwiftUI vs UIKit:**
-- Prefer SwiftUI for new views; use UIKit only for legacy code or unavailable SwiftUI APIs
-- Use UIViewRepresentable to bridge UIKit, not the reverse
+**UI Framework Selection:**
+- iOS/iPadOS apps: prefer UIKit as the primary UI framework
+- macOS apps: prefer AppKit as the primary UI framework
+- Match the existing codebase: if a project is already SwiftUI-based, stay consistent rather than mixing paradigms
+- Use SwiftUI where the platform requires it (widgets, Live Activities, watchOS, App Intents UI) or for simple, self-contained views where it clearly reduces effort
+- Bridge SwiftUI into UIKit/AppKit via UIHostingController/NSHostingView — host SwiftUI inside the native app shell, not the reverse
 
-**State Management:**
+**State Management (when working in SwiftUI code):**
 - @State: local value types
 - @StateObject: reference types created by the view
 - @EnvironmentObject: dependency injection across hierarchy
@@ -68,7 +71,8 @@ Broad expertise across the Apple development ecosystem: Swift language, SwiftUI,
 - Keychain: credentials and sensitive data only
 
 **Architecture:**
-- MVVM: default for SwiftUI
+- MVVM + Coordinator: default for UIKit/AppKit apps
+- MVVM: default for SwiftUI code
 - Clean Architecture: multi-team projects with heavy testing
 
 ## Development Workflow
