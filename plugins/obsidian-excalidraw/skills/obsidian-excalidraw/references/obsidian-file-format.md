@@ -62,7 +62,7 @@ Obsidian resolves both to the same file.
 
 ```bash
 # Correct: write new JSON with the same base name
-node helpers/example.js > /path/to/vault/diagram.excalidraw
+./examples/example.py > /path/to/vault/diagram.excalidraw
 # Obsidian converts it → diagram.excalidraw.md (overwrites existing)
 # All ![[diagram.excalidraw]] embeds continue to resolve
 

@@ -9,32 +9,41 @@ Generate `.excalidraw` files programmatically and embed them in Obsidian markdow
 
 ## Quick start
 
-Use the helper module in `scripts/shapes.js` — it generates valid Excalidraw JSON with no dependencies:
+Write a generator script to `$TMPDIR`, make it executable, and run it. The PEP 723
+header pins the SDK and the shebang self-invokes through `uv` — no venv, no install.
+
+```python
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.12"
+# dependencies = ["excaligen==0.11.14"]
+# ///
+import sys
+sys.path.insert(0, "<absolute path to this skill>/scripts")
+
+from obsidian_preset import new_scene, styled
+
+scene = new_scene()
+user = styled(scene.ellipse("User").center(0, 0), "active")
+api = styled(scene.rectangle("API Gateway").center(340, 0), "active")
+scene.arrow("request").bind(user, api)
+print(scene.json())
+```
 
 ```bash
-# Run the working example to generate a diagram
-node examples/example.js > my-diagram.excalidraw
-
-# Inspect or validate generated JSON with jq (never python)
-node examples/example.js | jq '.elements | length'
-node examples/example.js | jq '.elements[] | select(.type == "arrow") | .id'
+chmod +x "$TMPDIR/gen-diagram.py"
+"$TMPDIR/gen-diagram.py" > "$TMPDIR/diagram.excalidraw"
 ```
 
-Or require it in your own script:
+`bind()` computes edge-to-edge geometry, bidirectional bindings, and bound text
+labels automatically. Pass shape objects to `bind()` — never coordinates.
 
-```js
-const ex = require('./scripts/shapes');
+**Labels must be single-line** with no `"`, tab or backslash characters: the
+Obsidian CLI corrupts them. `obsidian_preset` raises `InvalidLabelError` at
+construction rather than letting a corrupt write through. Put longer explanations
+in a separate `scene.text(...)` near the shapes.
 
-const elements = [
-  ...ex.node('alpha', 100, 80,  180, 70, 'Alpha\n(primary)'),
-  ...ex.node('beta',  400, 80,  180, 70, 'Beta\n(secondary)', { strokeStyle: 'dashed', strokeColor: '#6b7280' }),
-  ex.arrow('a1', 'beta', 'alpha', [490, 115], [190, 115]),
-  ex.floatingLabel('l1', 290, 90, 'depends on'),
-];
-
-require('fs').writeFileSync('diagram.excalidraw', JSON.stringify(ex.document(elements), null, 2));
-// shapes.js lives in scripts/ — adjust the relative path if requiring from elsewhere
-```
+Full library API: https://milanpiskla.github.io/excaligen/
 
 Embed in any Obsidian note:
 
@@ -60,7 +69,7 @@ See `references/obsidian-file-format.md` for the full format breakdown and decom
 
 ```bash
 # Correct: same base name → Obsidian converts and overwrites .excalidraw.md
-node myscript.js > /vault/FolderName/diagram.excalidraw
+./gen-diagram.py > /vault/FolderName/diagram.excalidraw
 
 # Wrong: breaks iCloud sync tracking, loses undo history,
 # and leaves dangling ![[diagram.excalidraw]] embeds in other notes
@@ -68,83 +77,6 @@ rm /vault/FolderName/diagram.excalidraw.md   # ❌
 ```
 
 Use the `Write` tool when saving from Claude — it overwrites in place without deleting.
-
-## File format (what you write)
-
-Every `.excalidraw` file you generate is JSON with this structure:
-
-```json
-{
-  "type": "excalidraw",
-  "version": 2,
-  "source": "https://excalidraw.com",
-  "elements": [ ... ],
-  "appState": { "gridSize": null, "viewBackgroundColor": "#ffffff" },
-  "files": {}
-}
-```
-
-`elements` is the only array you need to populate. See `references/element-api.md` for all fields.
-
-## Shape helpers — what's available
-
-| Function | Generates |
-|---|---|
-| `ex.node(id, x, y, w, h, label, opts?)` | Ellipse with inline label (returns single-element array) |
-| `ex.box(id, x, y, w, h, label, opts?)` | Rectangle with inline label (returns single-element array) |
-| `ex.arrow(id, fromId, toId, fromPt, toPt, opts?)` | Connected arrow between two shapes; `opts.label` inline on the line |
-| `ex.floatingLabel(id, x, y, text, opts?)` | Standalone text element |
-| `ex.annotationBox(id, x, y, w, h, text, opts?)` | Note/annotation box with text |
-| `ex.document(elements, opts?)` | Wraps element array in valid Excalidraw JSON (and wires up bindings) |
-| `ex.rectEdge(rx, ry, rw, rh, tx, ty)` | Point on a rect boundary toward (tx,ty) — use as arrow fromPt/toPt |
-| `ex.ellipseEdge(cx, cy, a, b, tx, ty)` | Point on an ellipse boundary toward (tx,ty) — use as arrow fromPt/toPt |
-
-Spread node/box results into the elements array: `[...ex.node(...), ...ex.node(...), ex.arrow(...)]`
-
-## Connecting shapes with arrows (binding)
-
-**Use `ex.arrow(id, fromId, toId, ...)` for any arrow that represents a relationship between two shapes** — a flow, a dependency, a call. A bound arrow stays attached when either shape is moved or resized in Excalidraw, which is what makes a diagram editable rather than a brittle set of free-floating lines.
-
-Connection in Excalidraw is **bidirectional** and both directions are required:
-- the arrow names its endpoints via `startBinding`/`endBinding` (the factory sets these from the two shape IDs you pass), **and**
-- each endpoint shape must list the arrow in its own `boundElements`.
-
-You do **not** wire the second direction by hand — `ex.document(...)` runs a reconcile pass (`linkBindings`) that adds the shape→arrow back-references (and text→container links) automatically and idempotently. Just pass the shape IDs to `ex.arrow` and the labels' `containerId`s are handled for you. If you assemble raw element objects without `ex.document`, call `ex.linkBindings(flatArray)` yourself before wrapping, or the arrows will look connected but won't move with their shapes.
-
-When **not** to bind: a caption, legend, title, or note that isn't anchored to a specific shape edge is a `floatingLabel`/`annotationBox`, not an arrow label. Don't fake a connector with a floating line.
-
-### Always use edge-to-edge points — NOT center-to-center
-
-**Obsidian's embedded preview renders the raw `points` array without applying Excalidraw's live binding calculation.** If you pass shape centers as `fromPt`/`toPt`, every arrow will pass straight through the shapes and converge at their centers in the embedded view.
-
-**Always pass boundary intersection points** using the edge helpers:
-
-```js
-// For an arrow from a node (ellipse) to a box (rectangle):
-const from = ex.ellipseEdge(u.cx, u.cy, u.w/2, u.h/2,  box.cx, box.cy);
-const to   = ex.rectEdge(box.x, box.y, box.w, box.h,    u.cx,   u.cy);
-ex.arrow('a1', 'user', 'api', from, to, { strokeColor: '#1d4ed8', gap: 0 });
-
-// For an arrow between two rectangles:
-const from = ex.rectEdge(src.x, src.y, src.w, src.h,  dst.cx, dst.cy);
-const to   = ex.rectEdge(dst.x, dst.y, dst.w, dst.h,  src.cx, src.cy);
-ex.arrow('a2', 'src', 'dst', from, to, { gap: 0 });
-```
-
-Use `gap: 0` alongside edge points — the default `gap: 6` is designed for center-to-center arrows and adds unnecessary offset when points are already on the boundary.
-
-The `startBinding`/`endBinding` are still set automatically and keep arrows magnetically attached when shapes are moved in the Excalidraw editor.
-
-### Arrow labels: inline and terse
-
-`opts.label` sets an inline `label` property on the arrow element — Excalidraw renders it on the line at the midpoint. **Keep arrow labels to ~1–3 words** (`"act-as hdr"`, `"signed email"`, `"verbatim"`); the label sits on a short line segment and long text overruns it and collides with the shapes. Put any longer explanation in an `annotationBox` near the shapes instead.
-
-```js
-// edge-to-edge, with a terse on-line label
-const from = ex.rectEdge(src.x, src.y, src.w, src.h, dst.cx, dst.cy);
-const to   = ex.rectEdge(dst.x, dst.y, dst.w, dst.h, src.cx, src.cy);
-ex.arrow('a1', 'src', 'dst', from, to, { label: 'calls', strokeColor: '#dc2626', gap: 0 })
-```
 
 ## Status color system
 
@@ -158,7 +90,7 @@ Use stroke color + style to show state. **Always keep fills white** — colored 
 | Paused relationship | `#9ca3af` | transparent | 2 | dashed |
 | Removed relationship | `#dc2626` | transparent | 2 | dashed |
 
-Pass these as `opts`: `ex.node('id', x, y, w, h, 'Label', { strokeColor: '#dc2626', strokeWidth: 3 })`
+`obsidian_preset.SHAPE`/`LINK` encode these; apply with `styled(element, "lapsed")`.
 
 ## Finding the Obsidian vault path
 
@@ -184,18 +116,18 @@ ls "$VAULT" >/dev/null 2>&1 && echo "filesystem-writable" || echo "blocked — u
 Ordinary paths (e.g. `~/Work/knowledge-base`). Write the raw `.excalidraw` and let the plugin convert:
 
 ```bash
-node examples/example.js > "$VAULT/Diagrams/my-diagram.excalidraw"
+./examples/example.py > "$VAULT/Diagrams/my-diagram.excalidraw"
 obsidian create path="Diagrams/overview.md" content="![[my-diagram.excalidraw]]"
 obsidian open path="Diagrams/overview.md"
 ```
 
 ### Route B — iCloud vault (filesystem blocked)
 
-Paths under `~/Library/Mobile Documents/...` return `Operation not permitted` on read/write — only the Obsidian app can touch them. Use the `scripts/write-to-vault.js` helper: it builds the `.excalidraw.md` form, chunks it under the CLI's ~10KB payload limit, streams it via `create`+`append`, retries transient errors, and verifies the result by reading it back. **Run it unsandboxed** (the CLI hangs under the sandbox) and use single-line labels (no `\n`, no `"`):
+Paths under `~/Library/Mobile Documents/...` return `Operation not permitted` on read/write — only the Obsidian app can touch them. Use the `scripts/write_to_vault.py` helper: it builds the `.excalidraw.md` form, chunks it under the CLI's ~10KB payload limit, streams it via `create`+`append`, retries transient errors, and verifies the result by reading it back. **Run it unsandboxed** (the CLI hangs under the sandbox) and use single-line labels (no `\n`, no `"`):
 
 ```bash
-node scripts/your-generator.js > "$TMPDIR/diagram.excalidraw"   # compact, single-line labels
-node scripts/write-to-vault.js \
+./scripts/your-generator.py > "$TMPDIR/diagram.excalidraw"   # compact, single-line labels
+./scripts/write_to_vault.py \
   --vault "My Vault" \
   --path  "Diagrams/my-diagram.excalidraw.md" \
   --input "$TMPDIR/diagram.excalidraw"
@@ -204,34 +136,33 @@ obsidian open vault="My Vault" path="Diagrams/my-diagram.excalidraw.md"
 
 Key gotchas (all handled by the script): the CLI's per-call payload limit is ~10KB and oversized writes **fail silently**; the `Created:`/`Appended to:` confirmation line is omitted for larger successful writes, so success is gated by a read-back element count, not that line; and `overwrite` **no-ops on a note that's currently open** in Obsidian — close it first. Use `$TMPDIR`, never `/tmp` (sandbox blocks `/tmp`).
 
-See `references/icloud-vaults.md` for the full rationale, the manual single-`create` route for tiny diagrams, and verification steps.
+See `references/icloud-vaults.md` for the full rationale and verification steps.
 
 ## Pitfalls
 
 The most common issues:
 
-1. **Colored fills render dark in Obsidian embeds** — use `backgroundColor: "#ffffff"` always; convey state via stroke color/style only.
-2. **`node()` and `box()` return arrays** — spread them: `[...ex.node(...), ex.arrow(...)]` not `[ex.node(...), ex.arrow(...)]`.
-3. **Arrow `points` are relative to arrow `x,y`** — the helper handles this; if writing arrows manually, `points[0]` is always `[0,0]`.
-4. **iCloud vaults can't be written on the filesystem** — `~/Library/Mobile Documents/...` is blocked by macOS; use the CLI route (Route B above) via `scripts/write-to-vault.js`. Single-line labels only, and no `"` characters in label text.
+1. **Colored fills render dark in Obsidian embeds** — keep backgrounds white; convey state via stroke color/style only.
+2. **Very long text overflows shape bounds** — shapes don't auto-grow to fit text; size for the label or keep it short.
+3. **iCloud vaults can't be written on the filesystem** — `~/Library/Mobile Documents/...` is blocked by macOS; use the CLI route (Route B above) via `scripts/write_to_vault.py`. Single-line labels only, and no `"` characters in label text.
+4. **CLI-written labels must not contain `"`** — `obsidian_preset` raises `InvalidLabelError` before you get a corrupt write.
 
-See `references/pitfalls.md` for all 9 pitfalls with examples.
+See `references/pitfalls.md` for all 5 pitfalls with examples.
 
 ## Additional Resources
 
 ### Reference Files
 
-- **`references/element-api.md`** — Full field reference for all element types (ellipse, rectangle, text, arrow), including every required field and valid values
 - **`references/obsidian-file-format.md`** — How Obsidian converts `.excalidraw` to `.excalidraw.md`, the scaffold structure, update-in-place rules, and decompression instructions
 - **`references/icloud-vaults.md`** — Writing diagrams into iCloud-synced vaults (filesystem blocked) via the Obsidian CLI, with the format/escape constraints and verification steps
-- **`references/pitfalls.md`** — 9 common mistakes with before/after examples
+- **`references/pitfalls.md`** — 5 common mistakes with before/after examples
+- **excaligen API docs** — https://milanpiskla.github.io/excaligen/
 
 ### Scripts
 
-- **`scripts/shapes.js`** — Zero-dependency factory module: `node()`, `box()`, `arrow()`, `annotationBox()`, `floatingLabel()`, `document()`
-- **`scripts/write-to-vault.js`** — Recommended writer for iCloud vaults (Route B). Takes `--vault`, `--path`, `--input` (or stdin); builds the `.excalidraw.md`, chunks under the CLI ~10KB limit, streams via `create`+`append` with retries, and verifies by read-back. Run unsandboxed.
-- **`scripts/to-obsidian-md.js`** — Lower-level helper: wrap compact `.excalidraw` JSON into single-line `.excalidraw.md` content for a single manual `create` (tiny diagrams only). Guards against escape-sequence corruption.
+- **`scripts/obsidian_preset.py`** — `new_scene()` (Obsidian-safe defaults), `styled(el, status)`, and the `SHAPE`/`LINK` palettes. Rejects multi-line labels.
+- **`scripts/write_to_vault.py`** — the writer for all vaults. Takes `--vault`, `--path`, `--input`; chunks under the CLI ~10KB limit, streams via `create`+`append` with retries, and verifies by read-back. Run unsandboxed.
 
 ### Examples
 
-- **`examples/example.js`** — Runnable org-chart diagram; pipe to a `.excalidraw` file and drop into an Obsidian vault to verify output
+- **`examples/example.py`** — Runnable service-overview diagram; run it and pipe to a `.excalidraw` file to verify output

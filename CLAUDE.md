@@ -58,6 +58,11 @@ Each plugin can contain:
 **git-tools** (`plugins/git-tools/`):
 - Skill: `git-bisect-debugging` - Systematic workflow for using git bisect to identify which commit introduced a bug. Supports automated test scripts, manual verification, and hybrid approaches with subagent architecture for isolated execution. Integrates with superpowers:systematic-debugging for root cause analysis.
 
+**obsidian-excalidraw** (`plugins/obsidian-excalidraw/`):
+- Skill: `obsidian-excalidraw` - Generate `.excalidraw` diagrams programmatically and embed them in Obsidian notes. Writes a throwaway Python script per diagram using the `excaligen` SDK (pinned, PEP 723 self-invoking via `uv`), then writes to the vault via the Obsidian CLI.
+- Script: `skills/obsidian-excalidraw/scripts/obsidian_preset.py` - Obsidian-safe scene defaults and status palettes; rejects labels the Obsidian CLI would corrupt.
+- Script: `skills/obsidian-excalidraw/scripts/write_to_vault.py` - Writes diagrams into any vault (required for iCloud vaults, which are TCC-blocked). Chunks under the CLI's ~10KB limit and verifies by read-back. Must run unsandboxed.
+
 **workflow** (`plugins/workflow/`):
 - Command: `/spotlight [on|off|status]` - Spotlight worktree changes into main worktree for testing (like Conductor Spotlight). Merges committed worktree changes via `git merge --no-commit` so you can test in the main worktree's environment, then cleanly abort when done.
 - Command: `/review-unstaged` - Review unstaged changes for code quality, style, and potential issues

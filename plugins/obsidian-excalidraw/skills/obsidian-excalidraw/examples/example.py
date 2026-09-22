@@ -7,10 +7,7 @@
 import pathlib
 import sys
 
-sys.path.insert(
-    0,
-    str(pathlib.Path(__file__).resolve().parent.parent / "skills" / "obsidian-excalidraw" / "scripts"),
-)
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent / "scripts"))
 
 from obsidian_preset import new_scene, styled
 
