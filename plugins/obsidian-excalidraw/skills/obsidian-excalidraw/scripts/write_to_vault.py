@@ -180,3 +180,130 @@ def extract_json(note_text):
             "in Obsidian (overwrite no-ops on open notes) or a chunk exceeded the IPC "
             "limit. Close the note or lower --chunk-bytes, then retry."
         ) from exc
+
+
+def run_obsidian(args, runner=subprocess.run, timeout=60, retries=3):
+    """Run one obsidian CLI command, retrying transient errors and timeouts.
+
+    The confirmation line is NOT required — it is omitted for larger successful
+    payloads. Correctness is gated by the read-back verify instead.
+    """
+    for attempt in range(1, retries + 2):
+        try:
+            result = runner(
+                ["obsidian", *args], capture_output=True, text=True, timeout=timeout
+            )
+        except FileNotFoundError:
+            raise RuntimeError("`obsidian` CLI not found on PATH.") from None
+        except subprocess.TimeoutExpired:
+            if attempt <= retries:
+                print(f"  (timeout, retry {attempt}/{retries})", file=sys.stderr)
+                time.sleep(3)
+                continue
+            raise RuntimeError(
+                f"CLI timed out ({timeout}s) after {retries} retries. Run UNSANDBOXED "
+                "(the socket hangs under the sandbox); the app may also be wedged — "
+                "restart Obsidian."
+            ) from None
+
+        output = f"{filter_banner(result.stdout)}\n{filter_banner(result.stderr)}".strip()
+        verdict = classify(output)
+        if verdict == "transient" and attempt <= retries:
+            print(f"  (transient CLI error, retry {attempt}/{retries})", file=sys.stderr)
+            time.sleep(2.5)
+            continue
+        if verdict == "hard":
+            raise RuntimeError(
+                f"CLI error: {output}\nCheck the vault name, path, and that the "
+                "payload is under --chunk-bytes."
+            )
+        return output
+    raise RuntimeError("exhausted retries")
+
+
+def write_diagram(doc, vault, path, chunk_bytes, verify, runner=subprocess.run):
+    check_escapes(compact(doc))
+    header = build_header(doc["elements"])
+    bodies = split_bodies(doc, chunk_bytes)
+
+    reassembled = json.loads("".join(bodies))
+    if len(reassembled["elements"]) != len(doc["elements"]):
+        raise VerifyError("internal: reassembly changed element count")
+
+    vault_arg, path_arg = f"vault={vault}", f"path={path}"
+    print(
+        f"write-to-vault: {len(doc['elements'])} elements, {len(bodies)} chunk(s) "
+        f"→ {vault}:{path}",
+        file=sys.stderr,
+    )
+
+    run_obsidian(["create", vault_arg, path_arg, f"content={header}", "overwrite"], runner=runner)
+    print("  header written", file=sys.stderr)
+
+    for i, body in enumerate(bodies, 1):
+        run_obsidian(["append", vault_arg, path_arg, f"content={body}"], runner=runner)
+        print(f"  append {i}/{len(bodies)} ({len(body)} bytes)", file=sys.stderr)
+
+    run_obsidian(["append", vault_arg, path_arg, "content=```"], runner=runner)
+    run_obsidian(["append", vault_arg, path_arg, "content=%%"], runner=runner)
+    print("  closing fence written", file=sys.stderr)
+
+    if not verify:
+        print("  (verify skipped)", file=sys.stderr)
+        return len(doc["elements"])
+
+    back = extract_json(run_obsidian(["read", vault_arg, path_arg], runner=runner))
+    if len(back["elements"]) != len(doc["elements"]):
+        raise VerifyError(
+            f"verify: read-back has {len(back['elements'])} elements, expected "
+            f"{len(doc['elements'])}. The note may have been OPEN in Obsidian (close "
+            "it) or a chunk was dropped (lower --chunk-bytes)."
+        )
+    print(f"  verified: {len(back['elements'])} elements round-tripped", file=sys.stderr)
+    return len(back["elements"])
+
+
+def parse_args(argv):
+    parser = argparse.ArgumentParser(
+        prog="write_to_vault.py",
+        description="Write an .excalidraw diagram into an Obsidian vault via the CLI.",
+    )
+    parser.add_argument("--vault", required=True, help="vault name as shown by `obsidian vaults`")
+    parser.add_argument("--path", required=True, help="target note path; coerced to .excalidraw.md")
+    parser.add_argument("--input", help="diagram JSON file (default: stdin)")
+    parser.add_argument("--chunk-bytes", type=int, default=CHUNK_BYTES_DEFAULT,
+                        help=f"max append payload (default {CHUNK_BYTES_DEFAULT}; stay under ~12000)")
+    parser.add_argument("--no-verify", action="store_true", help="skip the read-back validation")
+    return parser.parse_args(argv)
+
+
+def main(argv=None):
+    opts = parse_args(argv)
+    raw = open(opts.input, encoding="utf-8").read() if opts.input else sys.stdin.read()
+    try:
+        doc = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        print(f"write-to-vault: input is not valid JSON: {exc}", file=sys.stderr)
+        return 1
+    if not isinstance(doc.get("elements"), list):
+        print("write-to-vault: input JSON has no `elements` array.", file=sys.stderr)
+        return 1
+
+    path = coerce_path(opts.path)
+    if not path.endswith(".excalidraw.md"):
+        print(
+            f'write-to-vault: warning — --path does not end in .excalidraw.md (got "{path}"); '
+            "the embed may not resolve.",
+            file=sys.stderr,
+        )
+    try:
+        write_diagram(doc, opts.vault, path, opts.chunk_bytes, not opts.no_verify)
+    except (EscapeError, VerifyError, ChunkTooLargeError, RuntimeError) as exc:
+        print(f"write-to-vault: {exc}", file=sys.stderr)
+        return 1
+    print("write-to-vault: done", file=sys.stderr)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

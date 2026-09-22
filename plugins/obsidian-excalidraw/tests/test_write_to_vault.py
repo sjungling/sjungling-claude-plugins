@@ -187,3 +187,81 @@ def test_extract_json_raises_on_malformed_body():
 ])
 def test_coerce_path(given, expected):
     assert coerce_path(given) == expected
+
+
+# --- CLI driver ---
+
+import types
+
+from write_to_vault import main, run_obsidian, write_diagram
+
+
+class FakeRunner:
+    """Stands in for subprocess.run, recording calls and replaying outputs."""
+
+    def __init__(self, outputs=None):
+        self.calls = []
+        self.outputs = list(outputs or [])
+
+    def __call__(self, args, **kwargs):
+        self.calls.append(args)
+        out = self.outputs.pop(0) if self.outputs else ""
+        return types.SimpleNamespace(stdout=out, stderr="", returncode=0)
+
+
+def test_run_obsidian_retries_transient_then_succeeds():
+    runner = FakeRunner(["NativeImage error", "fine"])
+    assert run_obsidian(["read"], runner=runner, retries=3) == "fine"
+    assert len(runner.calls) == 2
+
+
+def test_run_obsidian_raises_on_hard_error():
+    runner = FakeRunner(["Broken pipe"])
+    with pytest.raises(RuntimeError):
+        run_obsidian(["create"], runner=runner)
+
+
+def test_run_obsidian_strips_banner_from_result():
+    runner = FakeRunner(["Loading updated app package /x.asar\npayload"])
+    assert run_obsidian(["read"], runner=runner).strip() == "payload"
+
+
+def test_write_diagram_issues_create_then_appends_then_fences():
+    doc = make_doc(3)
+    verify_note = '```json\n' + json.dumps(doc) + '\n```'
+    runner = FakeRunner(["", "", "", "", verify_note])
+    count = write_diagram(doc, "V", "Diagrams/a.excalidraw.md", 100_000, True, runner)
+    assert count == 3
+    # calls are recorded as ["obsidian", <subcommand>, ...]
+    commands = [c[1] for c in runner.calls]
+    assert commands[0] == "create"
+    assert commands[1] == "append"
+    assert commands[-1] == "read"
+
+
+def test_write_diagram_verify_detects_element_count_mismatch():
+    doc = make_doc(3)
+    short = make_doc(1)
+    verify_note = '```json\n' + json.dumps(short) + '\n```'
+    runner = FakeRunner(["", "", "", "", verify_note])
+    with pytest.raises(VerifyError):
+        write_diagram(doc, "V", "Diagrams/a.excalidraw.md", 100_000, True, runner)
+
+
+def test_write_diagram_skips_read_when_verify_disabled():
+    doc = make_doc(2)
+    runner = FakeRunner(["", "", "", ""])
+    write_diagram(doc, "V", "Diagrams/a.excalidraw.md", 100_000, False, runner)
+    assert "read" not in [c[1] for c in runner.calls]
+
+
+def test_main_rejects_input_without_elements(tmp_path):
+    bad = tmp_path / "bad.excalidraw"
+    bad.write_text('{"type":"excalidraw"}')
+    assert main(["--vault", "V", "--path", "a.excalidraw.md", "--input", str(bad)]) == 1
+
+
+def test_main_rejects_invalid_json(tmp_path):
+    bad = tmp_path / "bad.excalidraw"
+    bad.write_text("not json")
+    assert main(["--vault", "V", "--path", "a.excalidraw.md", "--input", str(bad)]) == 1
