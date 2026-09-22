@@ -8,13 +8,14 @@ This is a personal collection of Claude Code plugins. Plugins extend Claude Code
 
 ## Development Commands
 
-This repository doesn't require a build step - it's a collection of markdown-based plugin definitions. Key operations:
+Most plugins are markdown-only and need no build step, but `obsidian-excalidraw` ships Python with its own test suite. Key operations:
 
 - **Validate marketplace structure**: Ensure `.claude-plugin/marketplace.json` is valid JSON
 - **Test plugin locally**: Use `/plugin marketplace add /Users/scott.jungling/Work/sjungling-claude-plugins` to add this marketplace
 - **Install plugin**: Use `/plugin install <plugin-name>@sjungling-plugins` to test installation
 - **Validate agent/command syntax**: Check YAML frontmatter in markdown files is properly formatted
 - **Bump plugin version**: Always increment `version` in `plugins/<plugin-name>/.claude-plugin/plugin.json` when making any changes to a plugin. Claude Code won't detect updates on reinstall without a version bump.
+- **Run plugin tests**: `cd plugins/obsidian-excalidraw && uv run --python 3.12 --with pytest --with excaligen==0.11.14 python -m pytest tests/ -v` (obsidian-excalidraw only; must run unsandboxed)
 
 ## Architecture
 
@@ -57,6 +58,11 @@ Each plugin can contain:
 
 **git-tools** (`plugins/git-tools/`):
 - Skill: `git-bisect-debugging` - Systematic workflow for using git bisect to identify which commit introduced a bug. Supports automated test scripts, manual verification, and hybrid approaches with subagent architecture for isolated execution. Integrates with superpowers:systematic-debugging for root cause analysis.
+
+**obsidian-excalidraw** (`plugins/obsidian-excalidraw/`):
+- Skill: `obsidian-excalidraw` - Generate `.excalidraw` diagrams programmatically and embed them in Obsidian notes. Writes a throwaway Python script per diagram using the `excaligen` SDK (pinned, PEP 723 self-invoking via `uv`), then writes to the vault via the Obsidian CLI.
+- Script: `skills/obsidian-excalidraw/scripts/obsidian_preset.py` - Obsidian-safe scene defaults and status palettes; rejects labels the Obsidian CLI would corrupt.
+- Script: `skills/obsidian-excalidraw/scripts/write_to_vault.py` - Writes diagrams into any vault (required for iCloud vaults, which are TCC-blocked). Chunks under the CLI's ~10KB limit and verifies by read-back. Must run unsandboxed.
 
 **workflow** (`plugins/workflow/`):
 - Command: `/spotlight [on|off|status]` - Spotlight worktree changes into main worktree for testing (like Conductor Spotlight). Merges committed worktree changes via `git merge --no-commit` so you can test in the main worktree's environment, then cleanly abort when done.

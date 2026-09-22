@@ -11,14 +11,14 @@
  * `obsidian` CLI proxies to the running app, which holds the entitlement.
  * Also works for any other vault.
  *
- * Adapted from obsidian-excalidraw's write-to-vault.js (same plugin repo) —
+ * Adapted from obsidian-excalidraw's write_to_vault.py (same plugin repo) —
  * same lessons (payload ceiling, unreliable confirmation line, run
  * unsandboxed) — simplified for plain markdown: there's no JSON structure to
  * split on, so the escaped content is chunked at arbitrary byte boundaries
  * (never inside a `\n`/`\t` escape pair) and every chunk after the first is
  * appended with `inline` so no extra newline is introduced at the seam.
  *
- * CORRECTION vs write-to-vault.js's stated assumption: empirically (CLI
+ * CORRECTION vs write_to_vault.py's stated assumption: empirically (CLI
  * 1.12.7) the CLI does NOT unescape `\\` → `\`. It does a single left-to-right
  * scan for literal `\n`/`\t` and converts matches to real newline/tab; any
  * other backslash is left untouched. There is therefore no way to escape a
@@ -179,7 +179,7 @@ for (let i = 1; i < chunks.length; i++) {
 
 // ---------------------------------------------------------------- verify
 // The per-call confirmation line is unreliable for larger payloads (see
-// write-to-vault.js), so the real success gate is a read-back comparison.
+// write_to_vault.py), so the real success gate is a read-back comparison.
 if (opts.verify) {
   const back = obsidian(['read', V, P]);
   // `read` may print its own banner/header noise beyond BANNER — compare by
