@@ -283,7 +283,11 @@ def parse_args(argv):
 
 def main(argv=None):
     opts = parse_args(argv)
-    raw = open(opts.input, encoding="utf-8").read() if opts.input else sys.stdin.read()
+    if opts.input:
+        with open(opts.input, encoding="utf-8") as handle:
+            raw = handle.read()
+    else:
+        raw = sys.stdin.read()
     try:
         doc = json.loads(raw)
     except json.JSONDecodeError as exc:

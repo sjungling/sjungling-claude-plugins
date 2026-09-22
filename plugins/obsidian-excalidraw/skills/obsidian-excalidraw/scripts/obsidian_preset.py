@@ -65,6 +65,12 @@ def new_scene():
 
 
 def styled(element, status):
-    spec = SHAPE[status] if status in SHAPE else LINK[status]
+    try:
+        spec = SHAPE[status] if status in SHAPE else LINK[status]
+    except KeyError:
+        raise KeyError(
+            f"unknown status {status!r} — shape states: {', '.join(SHAPE)}; "
+            f"relationship states: {', '.join(LINK)}"
+        ) from None
     element.color(spec["color"]).thickness(spec["thickness"]).stroke(spec["stroke"])
     return element

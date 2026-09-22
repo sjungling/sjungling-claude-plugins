@@ -78,9 +78,14 @@ def test_styled_returns_element_for_chaining():
 
 
 def test_styled_rejects_unknown_status():
+    """The error must name the valid statuses — a bare KeyError on a typo'd
+    status leaves the caller guessing."""
     s = new_scene()
-    with pytest.raises(KeyError):
+    with pytest.raises(KeyError) as excinfo:
         styled(s.rectangle("Box"), "nonexistent")
+    message = str(excinfo.value)
+    assert "nonexistent" in message
+    assert "active" in message and "removed" in message
 
 
 @pytest.mark.parametrize("bad", ["Two\nLines", 'Has "quotes"', "Tab\there", "Back\\slash"])
