@@ -64,7 +64,7 @@ def test_lapsed_is_thicker_than_active():
 
 
 def test_shape_and_link_palettes_are_distinct_groups():
-    """Shape states keep white fills; relationship states are transparent.
+    """Shape and relationship states are separate palettes with separate keys.
     Flattening these into one dict loses a deliberate distinction."""
     assert set(SHAPE) == {"active", "lapsed", "secondary"}
     assert set(LINK) == {"paused", "removed"}

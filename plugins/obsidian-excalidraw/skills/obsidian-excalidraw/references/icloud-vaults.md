@@ -37,10 +37,10 @@ crosses the CLI's per-call limit.
 
 ```bash
 # Generate compact .excalidraw JSON (SINGLE-LINE labels only — see caveat)
-./scripts/your-generator.py > "$TMPDIR/diagram.excalidraw"
+"$TMPDIR/gen-diagram.py" > "$TMPDIR/diagram.excalidraw"
 
 # Write it (run UNSANDBOXED — the CLI hangs under the sandbox)
-./scripts/write_to_vault.py \
+${CLAUDE_PLUGIN_ROOT}/skills/obsidian-excalidraw/scripts/write_to_vault.py \
   --vault "My Vault" \
   --path  "Diagrams/my-diagram.excalidraw.md" \
   --input "$TMPDIR/diagram.excalidraw"

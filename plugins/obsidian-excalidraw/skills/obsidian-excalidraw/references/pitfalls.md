@@ -31,8 +31,8 @@
 **Fix:** Write through the Obsidian CLI with `scripts/write_to_vault.py`, which proxies to the running app. Run the CLI **unsandboxed** (it hangs under the sandbox) and use **single-line labels** (the CLI corrupts `\n` in content).
 
 ```bash
-./scripts/your-generator.py > "$TMPDIR/d.excalidraw"      # single-line labels, no " chars
-./scripts/write_to_vault.py --vault "My Vault" \
+"$TMPDIR/gen-diagram.py" > "$TMPDIR/d.excalidraw"      # single-line labels, no " chars
+${CLAUDE_PLUGIN_ROOT}/skills/obsidian-excalidraw/scripts/write_to_vault.py --vault "My Vault" \
   --path "Diagrams/d.excalidraw.md" --input "$TMPDIR/d.excalidraw"
 ```
 
@@ -51,7 +51,7 @@ Use `$TMPDIR`, never `/tmp` (the sandbox blocks `/tmp`). See `icloud-vaults.md` 
 
 **Cause:** A `"` inside a text value is serialized by JSON encoding as `\"` — a backslash. The Obsidian CLI's `content=` interprets backslash escapes (`\n`, `\t`, `\\`), so any backslash in the drawing JSON gets corrupted on write. `obsidian_preset` raises `InvalidLabelError` at construction rather than letting a corrupt write through.
 
-This only applies to the iCloud CLI route. Filesystem-writable vaults (raw `.excalidraw` written directly) have no such restriction.
+This is enforced for both routes — `obsidian_preset`'s `_check()` rejects these characters unconditionally, not just on the CLI path. For explanatory text that needs a line break, don't embed it in a label: add a separate `scene.text(...)` element positioned near the shapes instead.
 
 ---
 

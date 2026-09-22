@@ -19,7 +19,7 @@ header pins the SDK and the shebang self-invokes through `uv` — no venv, no in
 # dependencies = ["excaligen==0.11.14"]
 # ///
 import sys
-sys.path.insert(0, "<absolute path to this skill>/scripts")
+sys.path.insert(0, "${CLAUDE_PLUGIN_ROOT}/skills/obsidian-excalidraw/scripts")
 
 from obsidian_preset import new_scene, styled
 
@@ -34,6 +34,11 @@ print(scene.json())
 chmod +x "$TMPDIR/gen-diagram.py"
 "$TMPDIR/gen-diagram.py" > "$TMPDIR/diagram.excalidraw"
 ```
+
+The generated script runs as a standalone process, so `${CLAUDE_PLUGIN_ROOT}` must be
+expanded to a literal absolute path when you write the script — a shell variable
+won't resolve there. Get it with `echo "$CLAUDE_PLUGIN_ROOT"`; if unset, locate the
+installed plugin directory (e.g. `find ~/.claude/plugins -path "*/obsidian-excalidraw/skills/obsidian-excalidraw/scripts" 2>/dev/null | head -1`).
 
 `bind()` computes edge-to-edge geometry, bidirectional bindings, and bound text
 labels automatically. Pass shape objects to `bind()` — never coordinates.
@@ -78,6 +83,11 @@ rm /vault/FolderName/diagram.excalidraw.md   # ❌
 
 Use the `Write` tool when saving from Claude — it overwrites in place without deleting.
 
+**But Route A diagrams can't be read back.** Once Obsidian converts a `.excalidraw` to
+`.excalidraw.md`, the `## Drawing` block is `compressed-json` — excaligen has no decoder.
+To "update" one: ask the user to run Obsidian's "Decompress current Excalidraw file", or
+regenerate the diagram from its description rather than reading the old one back.
+
 ## Status color system
 
 Use stroke color + style to show state. **Always keep fills white** — colored fills render dark in Obsidian's embedded preview regardless of the file content.
@@ -87,8 +97,8 @@ Use stroke color + style to show state. **Always keep fills white** — colored 
 | Active / normal | `#1d4ed8` (blue) | `#ffffff` | 2 | solid |
 | Lapsed / cancelled | `#dc2626` (red) | `#ffffff` | 3 | solid |
 | Secondary / decorative | `#6b7280` (gray) | `#ffffff` | 2 | dashed |
-| Paused relationship | `#9ca3af` | transparent | 2 | dashed |
-| Removed relationship | `#dc2626` | transparent | 2 | dashed |
+| Paused relationship | `#9ca3af` | `#ffffff` | 2 | dashed |
+| Removed relationship | `#dc2626` | `#ffffff` | 2 | dashed |
 
 `obsidian_preset.SHAPE`/`LINK` encode these; apply with `styled(element, "lapsed")`.
 
@@ -116,7 +126,7 @@ ls "$VAULT" >/dev/null 2>&1 && echo "filesystem-writable" || echo "blocked — u
 Ordinary paths (e.g. `~/Work/knowledge-base`). Write the raw `.excalidraw` and let the plugin convert:
 
 ```bash
-./examples/example.py > "$VAULT/Diagrams/my-diagram.excalidraw"
+"$TMPDIR/gen-diagram.py" > "$VAULT/Diagrams/my-diagram.excalidraw"
 obsidian create path="Diagrams/overview.md" content="![[my-diagram.excalidraw]]"
 obsidian open path="Diagrams/overview.md"
 ```
@@ -126,8 +136,8 @@ obsidian open path="Diagrams/overview.md"
 Paths under `~/Library/Mobile Documents/...` return `Operation not permitted` on read/write — only the Obsidian app can touch them. Use the `scripts/write_to_vault.py` helper: it builds the `.excalidraw.md` form, chunks it under the CLI's ~10KB payload limit, streams it via `create`+`append`, retries transient errors, and verifies the result by reading it back. **Run it unsandboxed** (the CLI hangs under the sandbox) and use single-line labels (no `\n`, no `"`):
 
 ```bash
-./scripts/your-generator.py > "$TMPDIR/diagram.excalidraw"   # compact, single-line labels
-./scripts/write_to_vault.py \
+"$TMPDIR/gen-diagram.py" > "$TMPDIR/diagram.excalidraw"   # compact, single-line labels
+${CLAUDE_PLUGIN_ROOT}/skills/obsidian-excalidraw/scripts/write_to_vault.py \
   --vault "My Vault" \
   --path  "Diagrams/my-diagram.excalidraw.md" \
   --input "$TMPDIR/diagram.excalidraw"
@@ -146,6 +156,7 @@ The most common issues:
 2. **Very long text overflows shape bounds** — shapes don't auto-grow to fit text; size for the label or keep it short.
 3. **iCloud vaults can't be written on the filesystem** — `~/Library/Mobile Documents/...` is blocked by macOS; use the CLI route (Route B above) via `scripts/write_to_vault.py`. Single-line labels only, and no `"` characters in label text.
 4. **CLI-written labels must not contain `"`** — `obsidian_preset` raises `InvalidLabelError` before you get a corrupt write.
+5. **Route A diagrams can't be read back for updates** — Obsidian's conversion compresses the `## Drawing` block and excaligen has no decoder; regenerate from the description instead.
 
 See `references/pitfalls.md` for all 5 pitfalls with examples.
 

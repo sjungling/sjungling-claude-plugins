@@ -8,13 +8,14 @@ This is a personal collection of Claude Code plugins. Plugins extend Claude Code
 
 ## Development Commands
 
-This repository doesn't require a build step - it's a collection of markdown-based plugin definitions. Key operations:
+Most plugins are markdown-only and need no build step, but `obsidian-excalidraw` ships Python with its own test suite. Key operations:
 
 - **Validate marketplace structure**: Ensure `.claude-plugin/marketplace.json` is valid JSON
 - **Test plugin locally**: Use `/plugin marketplace add /Users/scott.jungling/Work/sjungling-claude-plugins` to add this marketplace
 - **Install plugin**: Use `/plugin install <plugin-name>@sjungling-plugins` to test installation
 - **Validate agent/command syntax**: Check YAML frontmatter in markdown files is properly formatted
 - **Bump plugin version**: Always increment `version` in `plugins/<plugin-name>/.claude-plugin/plugin.json` when making any changes to a plugin. Claude Code won't detect updates on reinstall without a version bump.
+- **Run plugin tests**: `cd plugins/obsidian-excalidraw && uv run --python 3.12 --with pytest --with excaligen==0.11.14 python -m pytest tests/ -v` (obsidian-excalidraw only; must run unsandboxed)
 
 ## Architecture
 
