@@ -43,14 +43,22 @@ def test_arrow_points_start_at_origin(scene_json):
 def test_bindings_are_bidirectional(scene_json):
     arrow = by_type(scene_json, "arrow")[0]
     ellipse = by_type(scene_json, "ellipse")[0]
+    rect = by_type(scene_json, "rectangle")[0]
     assert arrow["startBinding"]["elementId"] == ellipse["id"]
+    assert arrow["endBinding"]["elementId"] == rect["id"]
     assert any(b["id"] == arrow["id"] for b in ellipse["boundElements"])
+    assert any(b["id"] == arrow["id"] for b in rect["boundElements"])
 
 
 def test_labels_become_bound_text_elements(scene_json):
     texts = {e["text"]: e for e in by_type(scene_json, "text")}
     assert set(texts) == {"User", "API", "calls"}
-    assert all(t["containerId"] for t in texts.values())
+    ellipse = by_type(scene_json, "ellipse")[0]
+    rect = by_type(scene_json, "rectangle")[0]
+    arrow = by_type(scene_json, "arrow")[0]
+    assert texts["User"]["containerId"] == ellipse["id"]
+    assert texts["API"]["containerId"] == rect["id"]
+    assert texts["calls"]["containerId"] == arrow["id"]
 
 
 def test_element_ids_are_unique(scene_json):
