@@ -206,11 +206,28 @@ def extract_json(note_text):
         ) from exc
 
 
-def run_obsidian(args, runner=subprocess.run, timeout=60, retries=3):
+def _should_retry(attempt, retries, delay, label, sleeper):
+    """Back off for another attempt, or report that the budget is spent.
+
+    A timeout and a transient CLI error need this identical shape, and getting
+    the exhaustion case wrong once returned an erroring result as success.
+    The caller raises, so each failure keeps its own message and context.
+    """
+    if attempt > retries:
+        return False
+    print(f"  ({label}, retry {attempt}/{retries})", file=sys.stderr)
+    sleeper(delay)
+    return True
+
+
+def run_obsidian(args, runner=subprocess.run, timeout=60, retries=3, sleeper=time.sleep):
     """Run one obsidian CLI command, retrying transient errors and timeouts.
 
     The confirmation line is NOT required — it is omitted for larger successful
     payloads. Correctness is gated by the read-back verify instead.
+
+    `sleeper` is injectable so tests can exercise the retry budget without
+    spending real seconds on backoff meant for a flaky CLI.
     """
     for attempt in range(1, retries + 2):
         try:
@@ -220,9 +237,7 @@ def run_obsidian(args, runner=subprocess.run, timeout=60, retries=3):
         except FileNotFoundError:
             raise RuntimeError("`obsidian` CLI not found on PATH.") from None
         except subprocess.TimeoutExpired:
-            if attempt <= retries:
-                print(f"  (timeout, retry {attempt}/{retries})", file=sys.stderr)
-                time.sleep(3)
+            if _should_retry(attempt, retries, 3, "timeout", sleeper):
                 continue
             raise RuntimeError(
                 f"CLI timed out ({timeout}s) after {retries} retries. Run UNSANDBOXED "
@@ -233,9 +248,7 @@ def run_obsidian(args, runner=subprocess.run, timeout=60, retries=3):
         output = f"{filter_banner(result.stdout)}\n{filter_banner(result.stderr)}".strip()
         verdict = classify(output)
         if verdict == "transient":
-            if attempt <= retries:
-                print(f"  (transient CLI error, retry {attempt}/{retries})", file=sys.stderr)
-                time.sleep(2.5)
+            if _should_retry(attempt, retries, 2.5, "transient CLI error", sleeper):
                 continue
             raise RuntimeError(
                 f"CLI kept returning a transient error after {retries} retries: {output}\n"

@@ -1,15 +1,12 @@
 import json
 
 import pytest
+from conftest import by_type
 from obsidian_preset import LINK, SHAPE, InvalidLabelError, new_scene, styled
 
 
 def render(scene):
     return json.loads(scene.json())
-
-
-def by_type(doc, kind):
-    return [e for e in doc["elements"] if e["type"] == kind]
 
 
 def test_fills_are_white_not_transparent():
@@ -131,3 +128,35 @@ def test_json_rejects_unsafe_text_object_passed_as_shape_label():
     s.rectangle(label)
     with pytest.raises(InvalidLabelError):
         s.json()
+
+
+def test_every_label_taking_factory_is_overridden():
+    """ObsidianScene names six factories by hand so validation fails at the call
+    site with a useful traceback. That list is hand-maintained: if excaligen
+    gains a new label-taking factory, this fails loudly rather than letting the
+    new one fall back silently to the weaker serialization-time error."""
+    import inspect
+
+    from excaligen.SceneBuilder import SceneBuilder
+    from obsidian_preset import ObsidianScene
+
+    def first_param(member):
+        try:
+            return next(iter(list(inspect.signature(member).parameters)[1:]), None)
+        except (TypeError, ValueError):
+            return None
+
+    label_taking = {
+        name
+        for name in dir(SceneBuilder)
+        if not name.startswith("_")
+        and callable(getattr(SceneBuilder, name))
+        and first_param(getattr(SceneBuilder, name)) in {"label", "title", "text"}
+    }
+    unguarded = {
+        name
+        for name in label_taking
+        if getattr(ObsidianScene, name) is getattr(SceneBuilder, name)
+    }
+    assert label_taking == {"rectangle", "ellipse", "diamond", "arrow", "text", "frame"}
+    assert not unguarded, f"label-taking factories not overridden: {sorted(unguarded)}"

@@ -216,6 +216,10 @@ import types
 from write_to_vault import main, run_obsidian, write_diagram
 
 
+def no_sleep(_seconds):
+    """Backoff is real seconds against a flaky CLI; tests shouldn't pay it."""
+
+
 class FakeRunner:
     """Stands in for subprocess.run, recording calls and replaying outputs."""
 
@@ -231,7 +235,7 @@ class FakeRunner:
 
 def test_run_obsidian_retries_transient_then_succeeds():
     runner = FakeRunner(["NativeImage error", "fine"])
-    assert run_obsidian(["read"], runner=runner, retries=3) == "fine"
+    assert run_obsidian(["read"], runner=runner, retries=3, sleeper=no_sleep) == "fine"
     assert len(runner.calls) == 2
 
 
@@ -253,7 +257,7 @@ def test_run_obsidian_raises_when_transient_error_persists():
     'no json block' error pointing at a corrupt diagram."""
     runner = FakeRunner(["NativeImage error", "NativeImage error"])
     with pytest.raises(RuntimeError, match="transient"):
-        run_obsidian(["read"], runner=runner, retries=1)
+        run_obsidian(["read"], runner=runner, retries=1, sleeper=no_sleep)
     assert len(runner.calls) == 2
 
 

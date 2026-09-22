@@ -3,6 +3,7 @@ geometry or binding, these fail rather than silently producing broken diagrams."
 import json
 
 import pytest
+from conftest import by_type
 from excaligen.SceneBuilder import SceneBuilder
 
 
@@ -13,10 +14,6 @@ def scene_json():
     rect = s.rectangle("API").center(320, 0)
     s.arrow("calls").bind(ellipse, rect)
     return json.loads(s.json())
-
-
-def by_type(doc, kind):
-    return [e for e in doc["elements"] if e["type"] == kind]
 
 
 def test_arrow_starts_on_shape_boundary_not_center(scene_json):
