@@ -208,17 +208,21 @@ def run_obsidian(args, runner=subprocess.run, timeout=60, retries=3):
 
         output = f"{filter_banner(result.stdout)}\n{filter_banner(result.stderr)}".strip()
         verdict = classify(output)
-        if verdict == "transient" and attempt <= retries:
-            print(f"  (transient CLI error, retry {attempt}/{retries})", file=sys.stderr)
-            time.sleep(2.5)
-            continue
+        if verdict == "transient":
+            if attempt <= retries:
+                print(f"  (transient CLI error, retry {attempt}/{retries})", file=sys.stderr)
+                time.sleep(2.5)
+                continue
+            raise RuntimeError(
+                f"CLI kept returning a transient error after {retries} retries: {output}\n"
+                "Obsidian may be wedged — restart it and retry."
+            )
         if verdict == "hard":
             raise RuntimeError(
                 f"CLI error: {output}\nCheck the vault name, path, and that the "
                 "payload is under --chunk-bytes."
             )
         return output
-    raise RuntimeError("exhausted retries")
 
 
 def write_diagram(doc, vault, path, chunk_bytes, verify, runner=subprocess.run):

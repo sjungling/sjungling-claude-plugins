@@ -226,6 +226,17 @@ def test_run_obsidian_strips_banner_from_result():
     assert run_obsidian(["read"], runner=runner).strip() == "payload"
 
 
+def test_run_obsidian_raises_when_transient_error_persists():
+    """Exhausting retries on a transient error must raise, not return the
+    erroring output as a successful result. A persistent NativeImage failure
+    during the verify read would otherwise surface as a misleading
+    'no json block' error pointing at a corrupt diagram."""
+    runner = FakeRunner(["NativeImage error", "NativeImage error"])
+    with pytest.raises(RuntimeError, match="transient"):
+        run_obsidian(["read"], runner=runner, retries=1)
+    assert len(runner.calls) == 2
+
+
 def test_write_diagram_issues_create_then_appends_then_fences():
     doc = make_doc(3)
     verify_note = '```json\n' + json.dumps(doc) + '\n```'
