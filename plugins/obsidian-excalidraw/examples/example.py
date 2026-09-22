@@ -4,9 +4,13 @@
 # dependencies = ["excaligen==0.11.14"]
 # ///
 """Reference shape for a generated diagram script. Pipe stdout to a .excalidraw file."""
+import pathlib
 import sys
 
-sys.path.insert(0, "/Users/scott.jungling/Work/sjungling-claude-plugins/.claude/worktrees/feat-integrate-python-sdk-for-exclidraw-134E/plugins/obsidian-excalidraw/skills/obsidian-excalidraw/scripts")
+sys.path.insert(
+    0,
+    str(pathlib.Path(__file__).resolve().parent.parent / "skills" / "obsidian-excalidraw" / "scripts"),
+)
 
 from obsidian_preset import new_scene, styled
 
