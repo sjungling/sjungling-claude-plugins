@@ -57,11 +57,9 @@ This only applies to the iCloud CLI route. Filesystem-writable vaults (raw `.exc
 
 ## 5. Compressed diagrams can't be read back for updates
 
-Diagrams this skill writes use a plain ```json block and are readable. But once
-a human opens and edits one in Obsidian, the plugin re-saves it as a
-`compressed-json` block — and excaligen is write-only, with no decoder.
+excaligen is write-only — no decoder — so updating an existing diagram means reading its JSON back out of the `.excalidraw.md`. Whether that is possible depends on how the diagram got there:
 
-Readability therefore depends on whether anyone has touched the file since it
-was written. On hitting a `compressed-json` block, ask the user to run Obsidian's
-"Decompress current Excalidraw file" command, or rebuild the diagram from its
-description. Do not fail silently.
+- **Route A** (write a raw `.excalidraw`, let Obsidian convert it): the `## Drawing` block is `compressed-json` from the moment of conversion. Not readable, even untouched.
+- **Route B** (`write_to_vault.py`): a plain ```json block, readable — until a human opens and edits it in Obsidian, which re-saves it compressed.
+
+On hitting a `compressed-json` block, ask the user to run Obsidian's "Decompress current Excalidraw file" command, or rebuild the diagram from its description. Do not fail silently.
