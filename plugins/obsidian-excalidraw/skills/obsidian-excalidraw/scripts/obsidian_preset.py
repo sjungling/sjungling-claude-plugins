@@ -4,6 +4,8 @@ Obsidian's embedded preview is stricter than excalidraw.com: colored fills
 render dark, and diagrams written through the Obsidian CLI cannot contain
 escape sequences. This module makes both constraints structural.
 """
+import json
+
 from excaligen.SceneBuilder import SceneBuilder
 
 SHAPE = {
@@ -53,6 +55,21 @@ class ObsidianScene(SceneBuilder):
 
     def frame(self, title=None):
         return super().frame(_check(title))
+
+    def json(self):
+        """Validate every text element at serialization — the gate nothing gets past.
+
+        The per-factory checks above fail at the offending call, which gives a
+        useful traceback, but they only see labels passed as strings. A `Text`
+        object passed as a label, or `.content()` called after construction,
+        slips past them. Nothing reaches a vault without being serialized here,
+        and excaligen's `save()` routes through this method too.
+        """
+        payload = super().json()
+        for element in json.loads(payload).get("elements", []):
+            if element.get("type") == "text":
+                _check(element.get("text"))
+        return payload
 
 
 def new_scene():

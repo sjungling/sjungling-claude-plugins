@@ -110,7 +110,14 @@ def build_header(elements):
 
 
 def split_bodies(doc, chunk_bytes=CHUNK_BYTES_DEFAULT):
-    """Split the JSON body BETWEEN elements so each append stays under the limit."""
+    """Split the JSON body BETWEEN elements so each append stays under the limit.
+
+    The first body carries PREFIX and the last carries suffix, so both are
+    budgeted here — an append over the CLI ceiling is dropped silently. Which
+    group ends up last is unknown while packing, so suffix is reserved from
+    every group: it is tiny whenever `files` is empty, and an extra append
+    costs less than a dropped one.
+    """
     suffix = (
         '],"appState":'
         + compact(doc.get("appState") or {"gridSize": None, "viewBackgroundColor": "#ffffff"})
@@ -118,16 +125,25 @@ def split_bodies(doc, chunk_bytes=CHUNK_BYTES_DEFAULT):
         + compact(doc.get("files") or {})
         + "}"
     )
+    overhead = len(PREFIX) + len(suffix)
+    if overhead >= chunk_bytes:
+        raise ChunkTooLargeError(
+            f"the document prefix and suffix need {overhead} bytes on their own, at or "
+            f"over --chunk-bytes {chunk_bytes}. A populated `files` map (embedded images) "
+            "is the usual cause. Raise --chunk-bytes (stay under ~12000)."
+        )
+    budget = chunk_bytes - overhead
     serialized = [compact(e) for e in doc["elements"]]
 
     groups, current, length = [], [], 0
     for item in serialized:
-        if len(item) + len(PREFIX) > chunk_bytes:
+        if len(item) > budget:
             raise ChunkTooLargeError(
-                f"a single element serializes to {len(item)} bytes, over "
-                f"--chunk-bytes {chunk_bytes}. Raise it (stay under ~12000)."
+                f"a single element serializes to {len(item)} bytes, over the {budget}-byte "
+                f"element budget (--chunk-bytes {chunk_bytes} less {overhead} bytes of "
+                "document prefix/suffix). Raise --chunk-bytes (stay under ~12000)."
             )
-        if current and length + len(item) + 1 > chunk_bytes:
+        if current and length + len(item) + 1 > budget:
             groups.append(current)
             current, length = [], 0
         current.append(item)
@@ -152,6 +168,14 @@ def filter_banner(text):
 
 
 def classify(output):
+    """Judge a CLI result from its output text.
+
+    The exit code is deliberately ignored, not overlooked: this CLI returns 0
+    for everything — a nonexistent path, an unknown subcommand, even an unknown
+    vault (all verified against the installed CLI). Non-zero would add no
+    signal, and zero would mask silent drops. The read-back element count in
+    write_diagram is the real gate.
+    """
     if any(marker in output for marker in TRANSIENT_ERRORS):
         return "transient"
     if any(marker in output for marker in HARD_ERRORS):

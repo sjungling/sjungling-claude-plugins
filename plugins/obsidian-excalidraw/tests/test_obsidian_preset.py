@@ -110,3 +110,24 @@ def test_label_validation_covers_all_element_types():
     for factory in (s.rectangle, s.ellipse, s.diamond, s.arrow, s.text, s.frame):
         with pytest.raises(InvalidLabelError):
             factory("bad\nlabel")
+
+
+def test_json_rejects_unsafe_text_set_after_construction():
+    """`.content()` is a public setter that writes straight past the factory
+    checks. Serialization is the gate nothing gets around."""
+    s = new_scene()
+    label = s.text("safe")
+    label.content("now\nmultiline")
+    with pytest.raises(InvalidLabelError):
+        s.json()
+
+
+def test_json_rejects_unsafe_text_object_passed_as_shape_label():
+    """excaligen accepts a `Text` object where a str label goes; _check() sees
+    the object, not its content, so only serialization catches this."""
+    s = new_scene()
+    label = s.text("safe")
+    label.content('has "quotes"')
+    s.rectangle(label)
+    with pytest.raises(InvalidLabelError):
+        s.json()

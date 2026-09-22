@@ -90,19 +90,39 @@ def test_header_skips_non_text_elements():
 
 def test_split_bodies_reassembles_to_valid_json():
     doc = make_doc(20)
-    reassembled = json.loads("".join(split_bodies(doc, chunk_bytes=200)))
+    reassembled = json.loads("".join(split_bodies(doc, chunk_bytes=400)))
     assert len(reassembled["elements"]) == 20
 
 
 def test_split_bodies_respects_chunk_limit():
-    """The element payload of each chunk stays under the limit. The first chunk
-    also carries the document prefix and the last the suffix; those sit outside
-    the per-append budget."""
-    bodies = split_bodies(make_doc(30), chunk_bytes=200)
+    """EVERY assembled body must fit the limit — including the first, which
+    carries the document prefix, and the last, which carries the suffix. An
+    append over the CLI ceiling is dropped silently."""
+    bodies = split_bodies(make_doc(30), chunk_bytes=400)
     assert len(bodies) > 1
-    payloads = [b[len(PREFIX):] if i == 0 else b for i, b in enumerate(bodies)]
-    for payload in payloads[:-1]:
-        assert len(payload) <= 200
+    assert bodies[0].startswith(PREFIX)
+    for body in bodies:
+        assert len(body) <= 400
+
+
+def test_split_bodies_budgets_suffix_with_large_files_map():
+    """A populated `files` map (embedded images) inflates the suffix carried by
+    the final body. Unbudgeted, that append silently exceeded the ceiling."""
+    doc = make_doc(10)
+    doc["files"] = {"img": {"dataURL": "x" * 500}}
+    bodies = split_bodies(doc, chunk_bytes=900)
+    for body in bodies:
+        assert len(body) <= 900
+    assert json.loads("".join(bodies))["files"] == doc["files"]
+
+
+def test_split_bodies_rejects_when_prefix_and_suffix_alone_exceed_limit():
+    """No packing can succeed when the document scaffolding outgrows the
+    ceiling — say so instead of emitting chunks that will be dropped."""
+    doc = make_doc(1)
+    doc["files"] = {"img": {"dataURL": "x" * 5000}}
+    with pytest.raises(ChunkTooLargeError):
+        split_bodies(doc, chunk_bytes=1000)
 
 
 def test_split_bodies_single_chunk_when_small():
@@ -112,7 +132,7 @@ def test_split_bodies_single_chunk_when_small():
 def test_split_bodies_preserves_appstate_and_files():
     doc = make_doc(5)
     doc["appState"]["gridSize"] = 20
-    result = json.loads("".join(split_bodies(doc, chunk_bytes=200)))
+    result = json.loads("".join(split_bodies(doc, chunk_bytes=400)))
     assert result["appState"]["gridSize"] == 20
     assert result["files"] == {}
 
