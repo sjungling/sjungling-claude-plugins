@@ -39,6 +39,7 @@ Each plugin can contain:
 
 **swift-engineer** (`plugins/swift-engineer/`):
 - Skill: `ios-swift-expert` - Elite iOS and macOS development expertise that automatically activates when working with Swift, SwiftUI, UIKit, Xcode projects, or Apple frameworks
+- Command: `/build-and-run [scheme] [destination]` - Builds, fixes build errors, launches, and verifies the app started (console-output check). Prefers Apple's Xcode MCP server (`mcp__xcode__*`, Xcode 26+) over `xcodebuild`/`simctl`, falling back to the CLI when it's unavailable. Merged `build-and-sim` into this command in v4.0.0 — the MCP makes simulator vs. macOS purely a run-destination choice. Verified tool list, behaviours, and CLI fallback table live in `commands/references/xcode-mcp.md`.
 - Command: `swift-lint.md` - Runs swift-format for code formatting and linting
 - Command: `generate-docs.md` - Builds symbol graph documentation via xcodebuild docbuild, extracts .symbolgraph.json files to .build/symbol-graphs/, and updates the target project's CLAUDE.md with jq query examples for LLM-friendly API discovery
 - Agent (legacy): `ios-swift-expert.md` - Original agent implementation (prefer skills for automatic activation)

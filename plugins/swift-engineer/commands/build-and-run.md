@@ -1,105 +1,106 @@
 ---
-description: Build the Xcode project, fix errors, then run the application
-argument-hint: "[scheme]"
+description: Build the Xcode project, fix build errors, and launch it on a simulator, device, or macOS
+argument-hint: "[scheme] [destination]"
 allowed-tools:
+  - mcp__xcode
   - Bash
   - Read
   - Edit
   - Glob
   - Grep
+  - ToolSearch
   - AskUserQuestion
 ---
 
-Build and run the current Xcode project.
+Build the current Xcode project, fix any build errors, launch it, and confirm it actually started.
 
-**Important:** Run all `xcodebuild` commands as background tasks. Builds can take significant time (30s–5m+ depending on project size). Use Bash with `run_in_background: true` parameter to avoid blocking. Poll build completion and capture output for error analysis.
+Arguments are free-form hints, not positional flags. Match `$ARGUMENTS` loosely against the real scheme
+and destination lists once discovered — `MyApp`, `iPhone 17 Pro`, `My Mac`, and `MyApp on iPad` are all
+valid. Infer anything not supplied.
+
+## Tooling
+
+Prefer Apple's Xcode MCP server (`mcp__xcode__*`) over shell commands for every operation it covers. It
+drives a live Xcode instance: scheme and run destination are mutable state, so **set the state, then
+build** — there is no destination flag to pass.
+
+Read `references/xcode-mcp.md` for the verified tool list, behaviours, and the CLI fallback table. Use
+the CLI path only when the MCP tools are absent or Xcode is not running.
 
 ## Workflow
 
-### Step 1: Find the Project
+### 1. Resolve the workspace
 
-Look for `.xcworkspace` (preferred) or `.xcodeproj` in current directory. If multiple exist, ask the user which to use.
+`XcodeListWorkspaces` for what is already open. If nothing is open, find the `.xcworkspace` (preferred
+over `.xcodeproj`) in the working directory and `XcodeOpenWorkspace` it. Ask only when several candidates
+exist and the arguments do not disambiguate.
 
-### Step 2: Find the Scheme
+### 2. Resolve scheme and destination
 
-Get available schemes with:
-```bash
-xcodebuild -workspace <workspace> -list -quiet
+List schemes and run destinations, then pick:
+
+- **Scheme** — from `$ARGUMENTS` if given, else the already-active scheme, else the one matching the
+  project name. Ask only when genuinely ambiguous. Use `disambiguatedName` when names collide.
+- **Destination** — from `$ARGUMENTS` if given; otherwise a simulator preference declared in the
+  project's `CLAUDE.md` (phrasings like `simulator: iPhone 17 Pro`, "preferred simulator", "test on");
+  otherwise the active destination if eligible; otherwise the newest eligible device for the scheme's
+  platform.
+
+Apply the scheme first, then the destination — switching schemes can move the destination on its own.
+Read back `activeDestinationDisplayTitle` rather than assuming the switch held.
+
+Ask the user when a preference was declared but is unavailable, or when the platform is genuinely
+ambiguous. Offer real entries from the destination list, prioritising the same device family. If no
+simulator runtimes exist at all, offer to install one (`xcodebuild -downloadPlatform iOS`) or point at
+Xcode → Settings → Components.
+
+### 3. Build and fix
+
+`BuildProject`, then `GetBuildLog` with `severity: "error"` on failure — do not read the full log.
+
+Fix each error at its root cause, rebuild, and repeat. `XcodeRefreshCodeIssuesInFile` gives per-file
+diagnostics while iterating.
+
+Bounds on the fix loop:
+
+- **Stop after 3 failed build attempts** and report what remains. Do not keep grinding.
+- **Stop immediately and ask** if a fix would delete functionality, disable a test, comment out a call
+  site, or loosen a type just to satisfy the compiler.
+- Only touch files implicated by the errors. Build failures are not licence for unrelated refactoring.
+- Fix errors before warnings, and leave pre-existing warnings alone.
+
+### 4. Launch
+
+`RunProject`. It builds, installs, boots the simulator if needed, and launches — one call. Do not pair it
+with `simctl`, and do not scrape `BUILT_PRODUCTS_DIR`.
+
+Pass `attachDebugger: true` only when the user wants to debug; `InvokeDebuggerCommand` then takes any
+lldb command.
+
+### 5. Confirm it is actually running
+
+A clean build is not a working app. After launch, check `GetConsoleOutput` for startup failures —
+filter on errors and faults rather than pulling everything:
+
+```
+GetConsoleOutput(pattern: "error|fatal|crash|exception|Terminating", oslogSeverity: ["error", "fault"], tailLimit: 100)
 ```
 
-or 
+If it crashed on launch, treat the trace as the next bug: fix it and return to step 3, under the same
+3-attempt bound.
 
-```bash
-xcodebuild -project <project> -list -quiet
-```
+### 6. Report
 
-If multiple schemes exist, ask the user which to build. If scheme is provided as `$1`, use that.
+State the scheme, destination, build result, and launch state. Report what the evidence shows — if the
+build succeeded but the app crashed on launch, or errors remain after 3 attempts, say so plainly with
+the relevant output. Never describe an unverified launch as working.
 
-### Step 3: Build
+Mention `StopProject` if the app is left running.
 
-**Run as background task** to avoid blocking.
+## Notes
 
-For macOS projects, build for native architecture:
-```bash
-ARCH=$(uname -m)
-xcodebuild -project <project> -scheme <scheme> -destination "platform=macOS,arch=$ARCH" -quiet build
-```
-
-For iOS projects, determine available simulator and build:
-```bash
-SIMULATOR=$(xcrun simctl list devices available -j | python3 -c "import sys,json; devs=[d for r in json.load(sys.stdin)['devices'].values() for d in r if d['isAvailable']]; iphones=[d for d in devs if 'iPhone' in d['name']]; print(iphones[-1]['name'] if iphones else '')")
-xcodebuild -project <project> -scheme <scheme> -destination "platform=iOS Simulator,name=$SIMULATOR" -quiet build
-```
-
-When build completes (exit code 0 = success, non-zero = failure), proceed to Step 4 if errors, or Step 5 if successful.
-
-### Step 4: Fix Build Errors
-
-If build fails, read error messages and fix each issue:
-1. Read the file with the error
-2. Identify and fix the issue
-3. Re-run build
-4. Repeat until build succeeds
-
-Prioritize errors over warnings.
-
-### Step 5: Run the App
-
-**For macOS:**
-```bash
-# Get native architecture and build output directory
-ARCH=$(uname -m)
-BUILT_PRODUCTS_DIR=$(xcodebuild -project <project> -scheme <scheme> -destination "platform=macOS,arch=$ARCH" -quiet -showBuildSettings | grep ' BUILT_PRODUCTS_DIR =' | awk '{print $3}')
-
-# Kill previous instance and run
-if [ -f .build.pid ]; then
-  OLD_PID=$(cat .build.pid)
-  kill -0 "$OLD_PID" 2>/dev/null && kill "$OLD_PID" 2>/dev/null
-fi
-
-open "$BUILT_PRODUCTS_DIR/<app-name>.app"
-sleep 1
-pgrep -f "$BUILT_PRODUCTS_DIR/<app-name>" > .build.pid
-```
-
-**For iOS:**
-```bash
-# Get bundle identifier from Info.plist or build settings
-BUNDLE_ID=$(xcodebuild -project <project> -scheme <scheme> -quiet -showBuildSettings | grep ' PRODUCT_BUNDLE_IDENTIFIER =' | awk '{print $3}')
-
-# Boot simulator and launch
-xcrun simctl boot "$SIMULATOR" 2>/dev/null
-xcrun simctl launch --terminate-running-process booted "$BUNDLE_ID"
-```
-
-Report success or errors to the user.
-
-## Troubleshooting: Clean Build Cache
-
-If build issues persist or changes aren't being picked up, clean DerivedData and rebuild:
-
-```bash
-rm -rf ~/Library/Developer/Xcode/DerivedData/*
-```
-
-Then rebuild from Step 3. This removes all cached build artifacts and forces a fresh build. Use sparingly—only when a rebuild doesn't pick up code changes or when encountering mysterious build failures.
+- Do not run `BuildProject` and `RunProject` in sequence for a plain run — `RunProject` already builds.
+  Build separately only when the goal is to check compilation without launching.
+- `GetTargetBuildSettings` reads build settings; never parse `project.pbxproj`.
+- Clearing DerivedData (`rm -rf ~/Library/Developer/Xcode/DerivedData/*`) is a last resort for stale
+  artifacts, not a routine step — it forces a full rebuild of every project on the machine.
