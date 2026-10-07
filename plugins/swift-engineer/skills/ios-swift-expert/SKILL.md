@@ -7,8 +7,6 @@ description: This skill should be used when the user asks to "build an iOS app",
 
 ## Overview
 
-Elite-level guidance for iOS and macOS development with deep expertise in Swift, UIKit, AppKit, SwiftUI, and the entire Apple development ecosystem.
-
 **Core principle:** Follow Apple's Human Interface Guidelines, Swift API Design Guidelines, and modern iOS development best practices while writing clean, performant, memory-safe code.
 
 ## When to Use
@@ -41,8 +39,6 @@ Do not use this skill for:
 - Desktop development on non-Apple platforms
 
 ## Core Expertise
-
-Broad expertise across the Apple development ecosystem: Swift language, UIKit, AppKit, SwiftUI, all major Apple frameworks (Core Data, Combine, CloudKit, StoreKit, HealthKit, ARKit, etc.), Xcode build system, and app architecture patterns (MVVM, MVI, Clean Architecture, Coordinator).
 
 ### Decision Frameworks
 
@@ -79,7 +75,7 @@ Broad expertise across the Apple development ecosystem: Swift language, UIKit, A
 
 ### 1. Build Verification
 
-Verify builds using `xcodebuild -project <project> -scheme <scheme> build` or `-workspace` for multi-target projects. Use the `-quiet` flag to suppress verbose output. Check exit code to confirm success.
+Verify builds with the Xcode MCP `BuildProject` tool when available (see `/build-and-run`); otherwise fall back to `xcodebuild -scheme <scheme> build -quiet` and check the exit code.
 
 ### 2. Code Standards
 
@@ -177,7 +173,7 @@ See `./references/apple-guidelines.md` for detailed requirements and best practi
 
 ### 4. Validation
 
-- Verify code builds successfully with `xcodebuild`
+- Verify code builds successfully
 - Test on simulator and, when possible, physical devices
 - Check for retain cycles and memory leaks
 - Validate accessibility and localization
@@ -213,7 +209,7 @@ See `./references/apple-guidelines.md` for detailed requirements and best practi
 
 Guidance is successful when:
 
-- Code builds successfully using `xcodebuild` with `-quiet` flag
+- Code builds successfully
 - Solutions follow Apple's Human Interface Guidelines
 - Implementations are memory-safe and performant
 - Code adheres to Swift API Design Guidelines

@@ -30,18 +30,14 @@ This skill focuses on straightforward scenarios. It does NOT handle:
 
 For these scenarios, manual git bisect with user guidance is recommended.
 
-## Critical Rules
+## Rules
 
-These are non-negotiable. No exceptions for time pressure, production incidents, or "simple" cases:
+Announce the skill and track the four phases in a checklist. Then:
 
-1. **ANNOUNCE** skill usage at start
-2. **CREATE TodoWrite checklist** immediately (copy from "The Process" below)
-3. **VERIFY safety checks** in Phase 1 -- working directory must be clean, good commit must be verified good, bad commit must be verified bad. If any check fails, abort and fix before proceeding.
-4. **USE AskUserQuestion** for strategy selection in Phase 2 -- present all 3 approaches, do not default to automated without asking
-5. **LAUNCH subagents** for verification in Phase 3 -- never run verification in main context; each commit tested in isolated subagent via Task tool
-6. **HANDOFF to systematic-debugging** in Phase 4 -- after finding the bad commit, investigate root cause, not just what changed
-
-**If tempted to skip any rule:** STOP. Follow the 4-phase workflow exactly. Skipping safety checks, skipping TodoWrite, defaulting to automated, running tests in main context, or stopping after finding the commit are all violations.
+1. Phase 1: confirm the working directory is clean and the good commit is verified good and the bad commit verified bad. A bisect over a wrong range wastes the whole run; if a check fails, fix it before proceeding.
+2. Phase 2: ask the user which strategy to use (automated, manual, hybrid) rather than defaulting to automated.
+3. Phase 3: test each commit in an isolated subagent so the main context stays clean.
+4. Phase 4: after finding the bad commit, hand off to systematic-debugging to investigate root cause, not just what changed.
 
 ## The Process
 

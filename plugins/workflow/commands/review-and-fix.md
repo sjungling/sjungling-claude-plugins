@@ -92,7 +92,7 @@ For each auto-fix finding, apply the suggested change using Edit or Write. After
 1. Re-read the file to confirm the edit landed correctly
 2. Keep a running list of `(path, description)` pairs for the commit message
 
-Do NOT batch edits — apply one finding at a time so failures are isolated.
+Apply one finding at a time so failures are isolated.
 
 ## Step 5: Build Verification
 
@@ -112,7 +112,7 @@ Find the build command:
 Run the build. If it fails:
 
 1. Show the error output to the user
-2. Do NOT attempt to fix the build failure automatically — the fix may require reverting a finding
+2. Don't fix the build failure automatically — the fix may require reverting a finding
 3. Stop and wait for user guidance
 
 If the build passes, continue.
