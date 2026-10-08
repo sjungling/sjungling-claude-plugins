@@ -71,7 +71,7 @@ Write triage prose — 3-6 sentences of narrative that traces the call chain fro
   <permalink_base>/<file>#L<start>-L<end>
 
 Format: [`ClassName.methodName`](permalink) or [`fieldName`](permalink)
-Do NOT show raw file paths as visible link text. Do NOT write a separate table or list of code references.
+Render references as inline code permalinks, not as raw-path link text or a separate table.
 
 Verify every file exists with `test -f <path>` before building its permalink. Skip any file that does not exist.
 

@@ -42,7 +42,6 @@ Each plugin can contain:
 - Command: `/build-and-run [scheme] [destination]` - Builds, fixes build errors, launches, and verifies the app started (console-output check). Prefers Apple's Xcode MCP server (`mcp__xcode__*`, Xcode 26+) over `xcodebuild`/`simctl`, falling back to the CLI when it's unavailable. Merged `build-and-sim` into this command in v4.0.0 — the MCP makes simulator vs. macOS purely a run-destination choice. Verified tool list, behaviours, and CLI fallback table live in `commands/references/xcode-mcp.md`.
 - Command: `swift-lint.md` - Runs swift-format for code formatting and linting
 - Command: `generate-docs.md` - Builds symbol graph documentation via xcodebuild docbuild, extracts .symbolgraph.json files to .build/symbol-graphs/, and updates the target project's CLAUDE.md with jq query examples for LLM-friendly API discovery
-- Agent (legacy): `ios-swift-expert.md` - Original agent implementation (prefer skills for automatic activation)
 
 **cli-developer** (`plugins/cli-developer/`):
 - Agent: `cli-ux-designer.md` - Expert CLI/TUI design consultant for command structure, visual design, accessibility, and UX patterns
@@ -82,6 +81,18 @@ Each plugin can contain:
 **tmux-tools** (`plugins/tmux-tools/`):
 - Skill: `tmux-aware` - TMUX session awareness and process management. Automatically activates when running in a TMUX session (detected by SessionStart hook). Manages services in dedicated panes within a `claude-controlled` window, captures pane output, detects errors, and finds panes by name.
 - Hook: SessionStart - Detects TMUX environment and provides session context
+
+**flow** (`plugins/flow/`):
+- Command: `/flow` - Interactive flow/diagram viewer using React Flow; renders a JSON graph in the browser with live two-way sync between the LLM and user.
+
+**obsidian** (`plugins/obsidian/`):
+- Command: `/add-to-daily-note` - Quick-capture summaries into today's Obsidian daily note via the Obsidian CLI.
+
+**obsidian-plans** (`plugins/obsidian-plans/`):
+- Hook: opens Claude Code plan files in Obsidian when presented for review.
+
+**token-tracker** (`plugins/token-tracker/`):
+- Hook: PostToolUse - reports estimated token usage and cost per tool call. Pricing synced via `scripts/sync-pricing.sh`.
 
 **tailscale-notify** (`plugins/tailscale-notify/`):
 - Hook: Notification - Sends Claude Code notifications to a Tailscale endpoint via HTTP POST. Configurable via `TAILSCALE_NOTIFY_URL` environment variable.
@@ -141,7 +152,7 @@ When adding a new plugin to the marketplace:
    - Use `description` for help text, `argument-hint` for auto-completion, `allowed-tools` for explicit permissions
    - Content is the command's prompt/workflow that executes when invoked
 
-7. **Skill file format** (`skills/<name>.md`):
+7. **Skill file format** (`skills/<name>/SKILL.md`):
    ```markdown
    ---
    name: skill-name
@@ -150,11 +161,6 @@ When adding a new plugin to the marketplace:
 
    [Skill prompt content]
    ```
-
-8. **Skills index format** (`SKILL.md`):
-   - Required if plugin contains skills
-   - Documents all skills in the plugin
-   - Includes usage examples and reference materials
 
 ## Installing Plugins from This Marketplace
 
