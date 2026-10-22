@@ -50,7 +50,7 @@ ISSUE=<ISSUE>
 OPTION_ID=<OPTION_ID>
 REPO=<REPO>   # e.g. moderneinc/codegenomeproject; empty if not specified
 
-ITEMS=$(gh project item-list 8 --owner moderneinc --format json --limit 1000)
+ITEMS=$(gh project item-list 8 --owner moderneinc --format json --limit 10000)
 
 if [ -n "$REPO" ]; then
   # .content.repository is "owner/repo" — the reliable disambiguator.
