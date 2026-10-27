@@ -2,7 +2,7 @@ import json
 
 import pytest
 from conftest import by_type
-from obsidian_preset import LINK, SHAPE, InvalidLabelError, new_scene, styled
+from obsidian_preset import LINK, SHAPE, InvalidLabelError, fit, new_scene, styled
 
 
 def render(scene):
@@ -160,3 +160,65 @@ def test_every_label_taking_factory_is_overridden():
     }
     assert label_taking == {"rectangle", "ellipse", "diamond", "arrow", "text", "frame"}
     assert not unguarded, f"label-taking factories not overridden: {sorted(unguarded)}"
+
+
+LONG = "A long label that excaligen will neither wrap nor grow a shape for"
+
+
+def test_default_shape_overflows_a_long_label():
+    """Why fit() exists: the shape stays 130x80 whatever its label measures."""
+    s = new_scene()
+    s.rectangle(LONG).center(0, 0)
+    doc = render(s)
+    assert by_type(doc, "text")[0]["width"] > by_type(doc, "rectangle")[0]["width"]
+
+
+@pytest.mark.parametrize("shape", ["rectangle", "ellipse", "diamond"])
+def test_fit_holds_the_label_it_was_sized_for(shape):
+    s = new_scene()
+    make = getattr(s, shape)
+    make(LONG).size(*fit(LONG, shape=shape)).center(0, 0)
+    doc = render(s)
+    text, box = by_type(doc, "text")[0], by_type(doc, shape)[0]
+    scale = 2 ** 0.5 if shape != "rectangle" else 1
+    assert text["width"] * scale <= box["width"]
+    assert text["height"] * scale <= box["height"]
+
+
+def test_fit_keeps_short_labels_at_a_legible_minimum():
+    assert fit("OK") == (120, 60)
+
+
+def test_fit_scales_with_font_size():
+    assert fit(LONG, fontsize=24)[0] > fit(LONG, fontsize=16)[0]
+
+
+def test_arrows_keep_sizes_positive_and_put_direction_in_points():
+    """Real Excalidraw never stores a negative width or height; an arrow that
+    runs up or left says so in its points. Hand-built JSON must do the same."""
+    s = new_scene()
+    a = s.rectangle("A").center(0, 0)
+    b = s.rectangle("B").center(-340, -200)
+    s.arrow("back").bind(a, b)
+    arrow = by_type(render(s), "arrow")[0]
+    assert arrow["width"] > 0 and arrow["height"] > 0
+    assert arrow["points"][-1][0] < 0 and arrow["points"][-1][1] < 0
+
+
+def test_labels_and_bindings_are_recorded_on_both_sides():
+    """Bound text names its container and the container lists the text; an
+    arrow's binding is mirrored in the target's boundElements."""
+    s = new_scene()
+    a = s.rectangle("A").center(0, 0)
+    b = s.rectangle("B").center(340, 0)
+    s.arrow("to").bind(a, b)
+    doc = render(s)
+    shapes = {e["id"]: e for e in by_type(doc, "rectangle")}
+    arrow = by_type(doc, "arrow")[0]
+    for text in by_type(doc, "text"):
+        owner = shapes.get(text["containerId"]) or arrow
+        assert {"type": "text", "id": text["id"]} in owner["boundElements"]
+    for end in ("startBinding", "endBinding"):
+        target = shapes[arrow[end]["elementId"]]
+        assert {"type": "arrow", "id": arrow["id"]} in target["boundElements"]
+        assert set(arrow[end]) >= {"elementId", "focus", "gap"}

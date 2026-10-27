@@ -12,13 +12,21 @@
 
 ---
 
-## 2. Very long text overflows ellipse bounds
+## 2. Long text overflows its shape
 
-**Symptom:** Text is clipped or overflows outside the shape.
+**Symptom:** Text spills outside the shape or runs into its neighbours.
 
-**Cause:** Ellipses don't auto-grow to fit text. The text element height must fit within the shape's height.
+**Cause:** excaligen neither wraps a label nor grows its shape. Shapes default to 130×80 whatever the label measures: a 60-character label is about 576 px wide in a 130 px shape.
 
-**Fix:** Use a smaller `fontsize` for multi-line labels in a short shape, or increase the shape's height. Rule of thumb: `height >= lineCount * (fontsize * 1.4)`.
+**Fix:** Size each shape from its label, before positioning it:
+
+```python
+from obsidian_preset import fit
+scene.rectangle(label).size(*fit(label)).center(x, y)
+scene.ellipse(label).size(*fit(label, shape="ellipse")).center(x, y)
+```
+
+`fit` estimates the text at 0.6 × `fontsize` per character and adds padding, with a 120×60 floor. If a label is still too wide for the layout, shorten it, or put the detail in a separate `scene.text(...)` beside the shape.
 
 ---
 
@@ -63,3 +71,13 @@ excaligen is write-only — no decoder — so updating an existing diagram means
 - **Route B** (`write_to_vault.py`): a plain ```json block, readable — until a human opens and edits it in Obsidian, which re-saves it compressed.
 
 On hitting a `compressed-json` block, ask the user to run Obsidian's "Decompress current Excalidraw file" command, or rebuild the diagram from its description. Do not fail silently.
+
+---
+
+## 6. Negative arrow `width` or `height` in hand-built JSON
+
+**Symptom:** An arrow you wrote by hand points the wrong way or draws oddly; Excalidraw-compatible services may reject the element.
+
+**Cause:** `width` and `height` are an arrow's bounding box and are never negative. Direction is carried by `points`. Upstream examples that show `"height": -100` do not match what Excalidraw stores.
+
+**Fix:** Keep sizes positive and put the sign in the points: an arrow running up and left is `width: 210, height: 123, points: [[0, 0], [-210, -123]]`. Normally don't write arrows by hand: `scene.arrow().bind(a, b)` does it right. See `element-format.md`.

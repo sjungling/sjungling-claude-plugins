@@ -9,14 +9,14 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent / "scripts"))
 
-from obsidian_preset import new_scene, styled
+from obsidian_preset import fit, new_scene, styled
 
 scene = new_scene()
 
-user = styled(scene.ellipse("User").center(0, 0), "active")
-api = styled(scene.rectangle("API Gateway").center(340, 0), "active")
-db = styled(scene.rectangle("Postgres").center(680, 0), "active")
-legacy = styled(scene.rectangle("Legacy Sync").center(340, 220), "lapsed")
+user = styled(scene.ellipse("User").size(*fit("User", shape="ellipse")).center(0, 0), "active")
+api = styled(scene.rectangle("API Gateway").size(*fit("API Gateway")).center(340, 0), "active")
+db = styled(scene.rectangle("Postgres").size(*fit("Postgres")).center(680, 0), "active")
+legacy = styled(scene.rectangle("Legacy Sync").size(*fit("Legacy Sync")).center(340, 220), "lapsed")
 
 scene.arrow("request").bind(user, api)
 scene.arrow("query").bind(api, db)

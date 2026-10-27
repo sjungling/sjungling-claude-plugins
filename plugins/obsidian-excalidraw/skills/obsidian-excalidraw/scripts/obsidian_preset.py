@@ -22,6 +22,17 @@ LINK = {
 UNSAFE_CHARS = ("\n", "\t", '"', "\\")
 
 
+# Excalidraw measures text at about this many font-size units per character and
+# this many per line. excaligen records the same numbers on a text element but
+# never wraps a label or grows its shape, so a shape has to be sized to fit.
+CHAR_WIDTH = 0.6
+LINE_HEIGHT = 1.25
+MIN_SHAPE = (120, 60)
+PADDING = (20, 12)
+# Text fits an ellipse only inside its inscribed rectangle, about 1/sqrt(2) of each side.
+ELLIPSE_SCALE = 2 ** 0.5
+
+
 class InvalidLabelError(ValueError):
     pass
 
@@ -70,6 +81,19 @@ class ObsidianScene(SceneBuilder):
             if element.get("type") == "text":
                 _check(element.get("text"))
         return payload
+
+
+def fit(label, fontsize=16, shape="rectangle"):
+    """Width and height for a shape that holds `label` without overflowing.
+
+    Use before positioning: `scene.rectangle(label).size(*fit(label)).center(x, y)`.
+    Never smaller than 120x60, so shapes stay legible and line up.
+    """
+    width = len(label) * fontsize * CHAR_WIDTH + 2 * PADDING[0]
+    height = fontsize * LINE_HEIGHT + 2 * PADDING[1]
+    if shape in ("ellipse", "diamond"):
+        width, height = width * ELLIPSE_SCALE, height * ELLIPSE_SCALE
+    return max(MIN_SHAPE[0], round(width)), max(MIN_SHAPE[1], round(height))
 
 
 def new_scene():
