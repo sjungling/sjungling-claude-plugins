@@ -61,7 +61,8 @@ Each plugin can contain:
 
 **obsidian-excalidraw** (`plugins/obsidian-excalidraw/`):
 - Skill: `obsidian-excalidraw` - Generate `.excalidraw` diagrams programmatically and embed them in Obsidian notes. Writes a throwaway Python script per diagram using the `excaligen` SDK (pinned, PEP 723 self-invoking via `uv`), then writes to the vault via the Obsidian CLI.
-- Script: `skills/obsidian-excalidraw/scripts/obsidian_preset.py` - Obsidian-safe scene defaults and status palettes; rejects labels the Obsidian CLI would corrupt.
+- Script: `skills/obsidian-excalidraw/scripts/obsidian_preset.py` - Obsidian-safe scene defaults and status palettes; `fit(label)` sizes a shape to hold its label (excaligen neither wraps nor grows shapes); rejects labels the Obsidian CLI would corrupt.
+- Reference: `skills/obsidian-excalidraw/references/element-format.md` - The element shape behind a diagram (bound text, arrow bindings, positive arrow sizes, text-size estimates, layout rules) with a `jq` sanity check.
 - Script: `skills/obsidian-excalidraw/scripts/write_to_vault.py` - Writes diagrams into any vault (required for iCloud vaults, which are TCC-blocked). Chunks under the CLI's ~10KB limit and verifies by read-back. Must run unsandboxed.
 
 **workflow** (`plugins/workflow/`):
