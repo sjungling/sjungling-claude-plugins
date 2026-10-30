@@ -61,6 +61,10 @@
     {
       "name": "obsidian",
       "source": "./plugins/obsidian"
+    },
+    {
+      "name": "output-styles",
+      "source": "./plugins/output-styles"
     }
   ]
 }

@@ -1,0 +1,10 @@
+{
+  "name": "output-styles",
+  "version": "0.1.0",
+  "description": "Custom Claude Code output styles, starting with a Laconic style adapted from zieka/ike",
+  "author": {
+    "name": "Scott Jungling"
+  },
+  "license": "MIT",
+  "keywords": ["output-style"]
+}
