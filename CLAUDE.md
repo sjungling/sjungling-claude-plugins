@@ -98,6 +98,9 @@ Each plugin can contain:
 **tailscale-notify** (`plugins/tailscale-notify/`):
 - Hook: Notification - Sends Claude Code notifications to a Tailscale endpoint via HTTP POST. Configurable via `TAILSCALE_NOTIFY_URL` environment variable.
 
+**output-styles** (`plugins/output-styles/`):
+- Output style: `laconic` - Fewest words that keep the full meaning. Adapted from zieka/ike (MIT); edit `output-styles/laconic.md` to customize reply format.
+
 ## Creating New Plugins
 
 When adding a new plugin to the marketplace:
