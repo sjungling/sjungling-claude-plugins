@@ -24,7 +24,7 @@ Prefer Apple's Xcode MCP server (`mcp__xcode__*`) over shell commands for every 
 drives a live Xcode instance: scheme and run destination are mutable state, so **set the state, then
 build** — there is no destination flag to pass.
 
-Read `references/xcode-mcp.md` for the verified tool list, behaviours, and the CLI fallback table. Use
+Read `${CLAUDE_PLUGIN_ROOT}/commands/references/xcode-mcp.md` for the verified tool list, behaviours, and the CLI fallback table. Use
 the CLI path only when the MCP tools are absent or Xcode is not running.
 
 ## Workflow

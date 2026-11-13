@@ -10,8 +10,8 @@ allowed-tools:
 Capture `$ARGUMENTS` into today's daily note in Obsidian.
 
 The full CLI surface and every caveat live in the shared reference: the
-`technical-writer:obsidian-vault-manager` skill →
-`references/obsidian-cli-reference.md` (see the **Default / active vault**, **Daily
+`technical-writer:obsidian-vault-manager` skill. Invoke it, then read
+`references/obsidian-cli-reference.md` from the skill's base directory (see the **Default / active vault**, **Daily
 notes**, and **iCloud vaults & sandboxing** sections). Consult it if any step is unclear.
 
 Two things that will bite you if ignored:
@@ -94,7 +94,8 @@ separates the new heading from earlier content.
    ```
    For a body beyond the CLI's ~10KB IPC ceiling, invoke the
    `technical-writer:obsidian-vault-manager` skill and use its chunked, verified
-   `scripts/write-markdown-to-vault.js` instead.
+   `scripts/write-markdown-to-vault.js` (run it by its full path under the skill's
+   base directory, not a bare relative path) instead.
 3. Link it from the daily note under its own H3 heading (same shape as Step 4a):
    ```bash
    BLOCK=$(printf '\n### %s\n\n- [[%s]] — %s' "<Topic>" "<Title>" "<one-line gist>")
