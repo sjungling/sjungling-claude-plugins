@@ -8,7 +8,7 @@ color: green
 
 Build symbol graph documentation for the current Xcode project and make it discoverable to future LLM sessions. The dispatching command will provide context including the plugin root path and optional scheme argument.
 
-For the visual workflow diagram, see `./references/generate-docs-workflow.mmd` relative to the plugin commands directory.
+For the visual workflow diagram, see `<plugin-root>/commands/references/generate-docs-workflow.mmd`.
 
 ## Step 1: Run generate-docs.sh
 

@@ -38,7 +38,7 @@ Before performing vault operations:
 | Vault path | `obsidian vault "<name>" info=path` | Path only, good for scripting |
 | List folders | `obsidian "vault=<name>" folders` | Quote vault name if it has spaces |
 | Read note | `obsidian "vault=<name>" read "<note name>"` | Reads by name (fuzzy) |
-| Create note (large/iCloud) | `node scripts/write-markdown-to-vault.js --vault <name> --path <path> --input <file>` | Chunked, retried, verified — run unsandboxed |
+| Create note (large/iCloud) | `node ${CLAUDE_PLUGIN_ROOT}/skills/obsidian-vault-manager/scripts/write-markdown-to-vault.js --vault <name> --path <path> --input <file>` | Chunked, retried, verified — run unsandboxed |
 | Create note (small, non-iCloud) | `obsidian "vault=<name>" create path="folder/name.md" content="$CONTENT"` | Use `printf` to build `$CONTENT` for multi-line |
 | Overwrite note | `obsidian "vault=<name>" create path="..." content="$CONTENT" overwrite` | |
 | Append to note | `obsidian "vault=<name>" append path="<path>" content="<text>"` | |

@@ -172,6 +172,16 @@ When adding a new plugin to the marketplace:
    [Skill prompt content]
    ```
 
+## Bundled File Paths
+
+Commands, agents, and shell commands run from the user's project, not the plugin directory. A bare relative path (`references/x.md`, `scripts/x.sh`, `./scripts/x`) to a bundled file will not resolve there.
+
+- In commands, agents, and hooks, write bundled paths as `${CLAUDE_PLUGIN_ROOT}/<path-from-plugin-root>`.
+- In any `bash`/`node`/`python` invocation, including inside a `SKILL.md`, use the full `${CLAUDE_PLUGIN_ROOT}/...` path.
+- Prose links inside a `SKILL.md` to its own `references/` files may stay relative; the skill loads with a base directory.
+- Never reference another plugin's files by path. Invoke its skill and use its base directory.
+- When adding or editing a plugin, check for violations: `grep -nE "(references|scripts|assets|templates)/" plugins/*/commands/*.md plugins/*/agents/*.md | grep -v CLAUDE_PLUGIN_ROOT`, then scan `SKILL.md` command lines. Fix them in the same change.
+
 ## Installing Plugins from This Marketplace
 
 Add this marketplace to Claude Code:
