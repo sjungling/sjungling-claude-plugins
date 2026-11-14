@@ -54,11 +54,9 @@ Leave running. Save pane and write-up to `ledgers/`, verify on `gh`, report, ask
 ## Safety and shell
 
 - Before `send-keys` into an SSM or ssh pane, confirm `hostname` and `whoami` are remote. A dropped session falls back to the local shell.
-- Pass `AWS_PROFILE` to new panes; `default` is AWSDenyAll (use `Engineering-297794628946`).
 - Wrap `gh` and `devpod` in `timeout`; ignore `coder ssh` noise lines.
 - zsh doesn't word-split. BSD `sed -i` needs `''`; use `perl -pi -e`.
 - Foreground `sleep` is blocked; use bounded loops. Keep tool calls small and separate.
-- SDKMAN's `java` function fails; use `~/.sdkman/candidates/java/<ver>/bin/java`.
 
 ## Cadence
 

@@ -18,20 +18,20 @@ The first word is the flavor (`review`, `research`, `factory`); the rest is the 
 ## Size
 
 Size is fixed at creation; the smallest that fits what the task runs.
-- `t4g.large`: read-only review or research. Tell the prompt not to run the full test suite.
-- `m9g.xlarge`: a review or change that must build or test one repo; floor for a UI repo you must test.
+- `t4g.large`: read-only review or research.
+- `m9g.xlarge`: a review or change that must build or test one repo.
 - `m9g.2xlarge` (default): factory work, Gradle/Maven builds, recipe runs.
 - `m9g.4xlarge`: long builds or 50+ repo corpus runs. Ask before `m9g.8xlarge`.
 - Unsure: larger for factory, smaller for review and research.
 
-Every devpod gets 200 GiB. If a task needs over 150 GB, tell the user first and have the prompt clone shallow, build in batches and delete what it no longer needs. After launch, check `coder ssh <name> -- 'nproc; free -g; df -h ~'`; if load or memory is far over, suggest a bigger pod and move the work through git.
+Every devpod gets a fixed 200 GiB disk; there is no flag to shrink it. Review and research need far less. If a task needs over 150 GB, tell the user first and have the prompt clone shallow, build in batches and delete what it no longer needs. After launch, check `coder ssh <name> -- 'nproc; free -g; df -h ~'`; if load or memory is far over, suggest a bigger pod and move the work through git.
 
 ## review `<PR url>`
 
 Prompt content:
 - Check out the PR branch in a clone under `~/work`.
-- Run `/code-review <PR url>`, `/simplify`, and `/pr-review-toolkit:review-pr tests errors types comments` (only aspects the PR touches). Its helper agents fail on a devpod ("Not logged in"); review those aspects in the chat. Red-team all findings before acting.
-- Significant simplify gains: make them on a branch stacked on the PR branch with `gh stack`, test first, open a short stacked PR. Never push to the PR's branch.
+- Run `/code-review <PR url>`; it covers correctness plus reuse and simplification cleanups. Red-team its findings before acting.
+- Significant cleanup gains (real cuts in code or complexity, not nits): make them on a branch stacked on the PR branch with `gh stack`, test first, open a short stacked PR. Never push to the PR's branch.
 - Surviving critical or important findings: run `/workflow:post-pr-comments` for those only. Nothing for minor ones.
 - None surviving: `gh pr review N -R <repo> --approve` with no body, then verify an APPROVED review with an empty body.
 - After commenting, write the standing instruction to `~/followup.txt` and follow it: poll `gh` at least every 10 minutes for up to 6 hours for replies, commits and comments; re-read the code at the new head; approve (no body) once every finding is resolved and no new one holds up; if one is partly resolved, reply once on the thread. Post to the message board on approval or when you stop.
