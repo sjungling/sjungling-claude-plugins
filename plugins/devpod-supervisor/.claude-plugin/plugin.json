@@ -1,0 +1,11 @@
+{
+  "name": "devpod-supervisor",
+  "description": "Run a Claude session as the supervisor for a fleet of devpods: periodic checks, safe nudges, verification with gh, and a handoff so another session can take over.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Scott",
+    "email": "scott.jungling@gmail.com"
+  },
+  "license": "MIT",
+  "keywords": ["devpod", "supervisor", "tmux", "gh", "monitoring"]
+}

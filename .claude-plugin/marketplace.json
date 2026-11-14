@@ -65,6 +65,10 @@
     {
       "name": "output-styles",
       "source": "./plugins/output-styles"
+    },
+    {
+      "name": "devpod-supervisor",
+      "source": "./plugins/devpod-supervisor"
     }
   ]
 }
