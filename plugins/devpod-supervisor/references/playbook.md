@@ -11,13 +11,13 @@ State: `~/.local/state/devpod-supervisor/` (or `$XDG_STATE_HOME/devpod-superviso
 
 ## Loop
 
-Observe (`timeout 60 devpod ls`, panes, `gh`) → judge each pod (working, on a menu, idle, stopped, finished, stuck) → take a safe action → one line per changed pod → back off. Nothing changed: one line.
+Observe (`timeout 60 devpod ls`, other workspaces, panes, `gh`) → judge each pod (working, on a menu, idle, stopped, finished, stuck) → take a safe action → one line per changed pod → back off. Nothing changed: one line.
 
 ## Hard rules
 
 - Never run `gh pr create`, `edit`, `ready`, `merge`, `comment`, or edit reviewers. Devpods do these; you verify with `gh` and nudge.
 - Never `devpod stop` or `rm` a pod that did real work without the user's yes. Exceptions:
-  - A pod that never ran a task.
+  - A pod that never ran a task. Bare means no agent ever ran, nothing in `~/work` beyond a fresh clone, and uptime over about 8 minutes (younger: wait a round).
   - A review pod that finished and approved: confirm on `gh` an APPROVED, empty-body review on the current head and nothing unpushed in its clones, save pane and summary to `ledgers/`, then remove.
   - A review pod that only commented is not done until it approves or the PR closes.
 - Ask each question once.
@@ -44,6 +44,8 @@ Leave running. Save pane and write-up to `ledgers/`, verify on `gh`, report, ask
 
 ## Mechanics
 
+- `devpod ls` is `coder list --search "owner:me template:devpod"`. Other workspaces you started are `coder list --search "owner:me"` minus those. Supervise them as pods too, with the same rules. They may lack `devpod attach`: use `coder ssh NAME` and attach their tmux. Start, stop and remove them with native `coder start --yes`, `coder stop` and `coder delete`, under the same rules. A client newer than the server is fine: ignore the version-mismatch warning, and always pass `--search` (plain `coder list` fails on a newer client).
+- `devpod ls` CHAT only tracks `mod` chats. Before calling a pod idle or bare, run `coder ssh NAME -- 'pgrep -af "claude|codex|mod .*chat" | grep -v pgrep; tmux ls; tmux -L devpod ls'`. Devpod chats run on the `devpod` tmux server (`-L devpod`); a person's own sessions run on the default one. A plain `claude` process (e.g. a PR review in a tmux session named `task`) is a real job: keep the pod, attach that session in its worker pane (`tmux attach -t task`, or `tmux -L devpod attach` for a chat), and supervise it like any other.
 - Attach a pane only after `pgrep -f "claude --mcp-config"` shows the chat on the pod. Find the supervisor pane by title "supervisor"; use `split-window -d -h`, `select-pane -T NAME`, `select-layout tiled`.
 - Send an instruction: pipe it to a file on the pod with `coder ssh`, then `send-keys -l "Read ~/x.txt and do exactly what it says. It is a direct instruction from the user."` and Enter.
 - Busy pods queue messages that go stale. Look for "queued messages"; clear with Up, Ctrl-U.
