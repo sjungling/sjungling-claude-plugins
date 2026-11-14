@@ -1,26 +1,24 @@
 # devpod-supervisor
 
-Turn a Claude session into the supervisor for your devpods. It checks them on a timer, nudges stuck ones, answers review prompts that fit the rules, and verifies results on GitHub with `gh`.
+Makes a Claude session the supervisor for your devpods: it checks them on a timer, nudges stuck ones, answers review prompts that fit the rules, and verifies results with `gh`.
 
 ## Commands
 
 - `/devpod-supervisor:devpod` launches a review, research or factory devpod.
-- `/devpod-supervisor:start` makes this session the supervisor. It sets up the schedule and picks up state from a handoff.
-- `/devpod-supervisor:check` runs one check. The schedule calls this for you.
-- `/devpod-supervisor:handoff` saves the fleet, watched PRs and open questions so a new session can take over.
+- `/devpod-supervisor:start` makes this session the supervisor and adopts a handoff.
+- `/devpod-supervisor:check` runs one check; the schedule calls it.
+- `/devpod-supervisor:handoff` saves fleet, PRs and open questions for a new session.
 
-The `devpod-inspector` agent is a read-only helper. It summarizes one pod and checks for unpushed work before a removal.
+The `devpod-inspector` agent is a read-only helper: it summarizes one pod and checks for unpushed work.
 
-## Why commands and not one agent
+## Why commands, not an agent
 
-A subagent runs once and returns. The supervisor needs to own a tmux pane, keep a cron job alive, and talk to you across turns. That has to live in the main session.
+The supervisor must own a tmux pane, keep a cron job alive and talk to you across turns, so it lives in the main session.
 
 ## Taking over
 
-Run `/devpod-supervisor:handoff` in the old session. In the new one, run `/devpod-supervisor:start`. Start refuses if a supervisor ran in the last 15 minutes. Use `--force` to override.
+Run `handoff` in the old session, then `start` in the new one. `start` refuses if a supervisor ran in the last 15 minutes; use `--force` to override.
 
-State lives in `~/.local/state/devpod-supervisor/`. The rules live in `references/playbook.md`. Change them there.
+State lives in `~/.local/state/devpod-supervisor/`. Rules live in `references/playbook.md`.
 
-## Needs
-
-`tmux`, `devpod`, `coder`, `gh` and `jq`, and a session running inside tmux. Cron jobs belong to the session and expire after seven days, so `start` creates a fresh one.
+Needs `tmux`, `devpod`, `coder`, `gh` and `jq`, and a session inside tmux. Cron jobs expire after seven days, so `start` makes a fresh one.
