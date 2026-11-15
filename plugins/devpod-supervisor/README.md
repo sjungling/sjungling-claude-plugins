@@ -7,7 +7,7 @@ Makes a Claude session the supervisor for your devpods: it checks them on a time
 - `/devpod-supervisor:devpod` launches a review, research or factory devpod.
 - `/devpod-supervisor:start` makes this session the supervisor and adopts a handoff.
 - `/devpod-supervisor:check` runs one check; the schedule calls it.
-- `/devpod-supervisor:handoff` saves fleet, PRs and open questions for a new session.
+- `/devpod-supervisor:handoff` refreshes `STATE.md` in full, with what only this conversation knows.
 
 The `devpod-inspector` agent is a read-only helper: it summarizes one pod and checks for unpushed work.
 
@@ -17,7 +17,7 @@ The supervisor must own a tmux pane, keep a cron job alive and talk to you acros
 
 ## Taking over
 
-Run `handoff` in the old session, then `start` in the new one. `start` refuses if a supervisor ran in the last 15 minutes; use `--force` to override.
+`STATE.md` is updated on every check that changes something, so a new session can usually just run `start`. Run `handoff` first when you can, to add standing instructions from the conversation. `start` refuses if a supervisor ran in the last 15 minutes; use `--force` to override.
 
 State lives in `~/.local/state/devpod-supervisor/`. Rules live in `references/playbook.md`.
 

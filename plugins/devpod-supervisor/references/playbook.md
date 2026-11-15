@@ -3,7 +3,7 @@
 The one source of truth for the supervisor role. Change rules here only.
 
 State: `~/.local/state/devpod-supervisor/` (or `$XDG_STATE_HOME/devpod-supervisor`), called `$STATE`. It survives reboots.
-- `HANDOFF.md`: snapshot from `/devpod-supervisor:handoff`
+- `STATE.md`: the living snapshot of the fleet. Every tick that changes something updates it, and `/devpod-supervisor:handoff` refreshes it in full (see "Keeping state")
 - `heartbeat`: epoch of the last check; under 15 minutes old means a supervisor is live
 - `schedule.txt`: cadence override, e.g. `60m until 2026-11-16T09:00`
 - `stopped-by-user.txt`: pod names, one per line; leave stopped, never report
@@ -12,6 +12,15 @@ State: `~/.local/state/devpod-supervisor/` (or `$XDG_STATE_HOME/devpod-superviso
 ## Loop
 
 Observe (`timeout 60 devpod ls`, other workspaces, panes, `gh`) → judge each pod (working, on a menu, idle, stopped, finished, stuck) → take a safe action → one line per changed pod → back off. Nothing changed: one line.
+
+## Keeping state
+
+A new session must be able to take over from `STATE.md` alone, so keep it current instead of writing it only at the end.
+- Update it on any tick where a pod, PR, decision or cadence changed. Quiet ticks only write `heartbeat`.
+- Sections: Fleet, Watched PRs, Pending user decisions (asked, unanswered; never re-ask), Standing instructions, Cadence, Open cleanup, Recent actions (last 10, one line each with time).
+- Write what you did, not only what you saw, so a replacement does not repeat a nudge or an answer.
+- Update before you send a question to the user, so it is recorded as asked.
+- No secrets.
 
 ## Hard rules
 
