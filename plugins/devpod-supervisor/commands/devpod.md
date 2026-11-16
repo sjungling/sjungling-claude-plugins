@@ -1,11 +1,11 @@
 ---
-description: Launch a devpod: review <PR url>, research <question>, or factory <task or issue url>
-argument-hint: review <PR url> | research <question> | factory <task or issue url>
+description: Launch a devpod: review <PR url>, research <question>, factory <task or issue url>, or dependabot <repos>
+argument-hint: review <PR url> | research <question> | factory <task or issue url> | dependabot <repo...>
 ---
 
 Launch a devpod for: $ARGUMENTS
 
-The first word is the flavor (`review`, `research`, `factory`); the rest is the target. If either is missing or unknown, ask and stop. Supervision rules are in `${CLAUDE_PLUGIN_ROOT}/references/playbook.md`.
+The first word is the flavor (`review`, `research`, `factory`, `dependabot`); the rest is the target. If either is missing or unknown, ask and stop. Supervision rules are in `${CLAUDE_PLUGIN_ROOT}/references/playbook.md`.
 
 ## Steps
 
@@ -18,7 +18,7 @@ The first word is the flavor (`review`, `research`, `factory`); the rest is the 
 ## Size
 
 Size is fixed at creation; the smallest that fits what the task runs.
-- `t4g.large`: read-only review or research.
+- `t4g.large`: read-only review or research, and Dependabot sweeps (burstable is enough; use `t4g.xlarge` if a repo's failing check runs out of memory).
 - `m9g.xlarge`: a review or change that must build or test one repo.
 - `m9g.2xlarge` (default): factory work, Gradle/Maven builds, recipe runs.
 - `m9g.4xlarge`: long builds or 50+ repo corpus runs. Ask before `m9g.8xlarge`.
@@ -60,3 +60,24 @@ Prompt content:
 - Stop only when blocked (a human decision, missing access, or the same failure three times). Say what you tried and need.
 - No Claude attribution in commits. Short commit and PR text with the why. Never merge or push to the default branch.
 - Before finishing, report each done criterion as met or not met.
+
+## dependabot `<repo...>`
+
+A factory pod that sweeps the open Dependabot PRs of one or more repos (`org/repo` names or URLs). Size `t4g.large` (burstable; `t4g.xlarge` if a repo's checks need more memory). Before launching, write `~/.local/state/devpod-supervisor/ledgers/<name>-GOAL.md` with the repos and these done criteria: every open Dependabot PR handled, each with a risk and reason in the ledger, LOW and MED merged with an empty-body approval, HIGH rebased, fixed and approved but not merged, and a final summary.
+
+Prompt content:
+- Work one repo at a time and one PR at a time, oldest first (`gh pr list -R <repo> --author app/dependabot --state open`). Re-list after each merge, since merges rebase or conflict the rest. Clone each repo once under `~/work`.
+- Per PR: read the description and its changelog or release notes, explore the code briefly for use of the changed APIs, then rate it:
+  - LOW: patch or minor update, dev tooling, or no breaking change touching code we use.
+  - MED: minor update of a runtime dependency, or notable changes near code we use, but nothing breaking.
+  - HIGH: a major bump, breaking changes touching code we use, a build or runtime toolchain change, or anything you cannot rule out after a quick look.
+- Append a row to `~/dependabot-ledger.md`: repo, PR, title, version change, risk, reason, action.
+- If CI is red: first rebase on origin/main (`gh pr update-branch N -R <repo> --rebase`, or one `@dependabot rebase` comment if that is refused), wait for CI, and decide again. If it is still red, fix it with minimal code changes that match the existing code and the library's idioms, run only the failing check locally, and push to the PR branch. Never force-push and never push to a default branch. Re-rate after a fix; a large or uncertain fix means stop on that PR, change nothing more, and report what you found.
+- Once CI is green, approve with no body (`gh pr review N -R <repo> --approve`), verify an APPROVED review with an empty body, then:
+  - LOW and MED: squash-merge (`gh pr merge N -R <repo> --squash`).
+  - HIGH: do everything except merge. Never merge a HIGH PR; leave it to the user.
+- Do not post comments, except the single `@dependabot rebase`. Do not run full test suites.
+- Post to the message board at start and finish. No Claude attribution; use `uv` for Python.
+- Finish with a table: every PR with repo, number, version change, risk, reason, CI, and outcome (merged, approved and waiting for the user, or blocked), plus links.
+
+The user pre-confirms the approvals, merges and pushes above.

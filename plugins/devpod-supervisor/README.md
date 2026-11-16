@@ -4,7 +4,7 @@ Makes a Claude session the supervisor for your devpods: it checks them on a time
 
 ## Commands
 
-- `/devpod-supervisor:devpod` launches a review, research or factory devpod.
+- `/devpod-supervisor:devpod` launches a review, research, factory or Dependabot-sweep devpod.
 - `/devpod-supervisor:start` makes this session the supervisor and adopts a handoff.
 - `/devpod-supervisor:check` runs one check; the schedule calls it.
 - `/devpod-supervisor:handoff` refreshes `STATE.md` in full, with what only this conversation knows.
