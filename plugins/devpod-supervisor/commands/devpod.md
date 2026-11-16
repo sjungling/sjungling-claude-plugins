@@ -10,7 +10,7 @@ The first word is the flavor (`review`, `research`, `factory`); the rest is the 
 ## Steps
 
 1. Pick a name: letters, digits and single hyphens, 32 characters at most (`review-rr-134`). Add a number if it exists in `devpod ls`.
-2. Write the prompt to `/tmp/devpod-prompts/<name>.md`. Every prompt starts with the target, says to use `gh`, and ends by asking for a short summary: done, pushed or posted (with links), and not done.
+2. Write the prompt to `/tmp/devpod-prompts/<name>.md`. Every prompt starts with the target, says to use `gh` and to install the stacking extension first if `gh stack` is missing (`gh extension install github/gh-stack`), and ends by asking for a short summary: done, pushed or posted (with links), and not done.
 3. Pick the size (below) and launch in the background: `devpod run <name> [--size=TYPE] -- mod claude chat . --prompt @/tmp/devpod-prompts/<name>.md`.
 4. Reply with name, flavor and size, one line each, and why that size. Do not wait for startup.
 5. If the "Devpod supervisor check" cron job is slowed and `schedule.txt` has no active override, reset it to `3-58/5 * * * *` (create the new job first, then delete the old).
