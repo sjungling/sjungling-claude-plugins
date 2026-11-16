@@ -18,8 +18,8 @@ The first word is the flavor (`review`, `research`, `factory`, `dependabot`); th
 ## Size
 
 Size is fixed at creation; the smallest that fits what the task runs.
-- `t4g.large`: read-only review or research.
-- `m9g.xlarge`: a review or change that must build or test one repo, and Dependabot sweeps.
+- `t4g.large`: read-only review or research, and Dependabot sweeps (burstable is enough; use `t4g.xlarge` if a repo's failing check runs out of memory).
+- `m9g.xlarge`: a review or change that must build or test one repo.
 - `m9g.2xlarge` (default): factory work, Gradle/Maven builds, recipe runs.
 - `m9g.4xlarge`: long builds or 50+ repo corpus runs. Ask before `m9g.8xlarge`.
 - Unsure: larger for factory, smaller for review and research.
@@ -63,7 +63,7 @@ Prompt content:
 
 ## dependabot `<repo...>`
 
-A factory pod that sweeps the open Dependabot PRs of one or more repos (`org/repo` names or URLs). Size `m9g.xlarge`. Before launching, write `~/.local/state/devpod-supervisor/ledgers/<name>-GOAL.md` with the repos and these done criteria: every open Dependabot PR handled, each with a risk and reason in the ledger, LOW and MED merged with an empty-body approval, HIGH rebased, fixed and approved but not merged, and a final summary.
+A factory pod that sweeps the open Dependabot PRs of one or more repos (`org/repo` names or URLs). Size `t4g.large` (burstable; `t4g.xlarge` if a repo's checks need more memory). Before launching, write `~/.local/state/devpod-supervisor/ledgers/<name>-GOAL.md` with the repos and these done criteria: every open Dependabot PR handled, each with a risk and reason in the ledger, LOW and MED merged with an empty-body approval, HIGH rebased, fixed and approved but not merged, and a final summary.
 
 Prompt content:
 - Work one repo at a time and one PR at a time, oldest first (`gh pr list -R <repo> --author app/dependabot --state open`). Re-list after each merge, since merges rebase or conflict the rest. Clone each repo once under `~/work`.
