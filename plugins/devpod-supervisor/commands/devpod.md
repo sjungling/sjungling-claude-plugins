@@ -30,14 +30,15 @@ Every devpod gets a fixed 200 GiB disk; there is no flag to shrink it. Review an
 
 Prompt content:
 - Check out the PR branch in a clone under `~/work`.
-- Run `/code-review <PR url>`; it covers correctness plus reuse and simplification cleanups. Red-team its findings before acting.
-- Significant cleanup gains (real cuts in code or complexity, not nits): make them on a branch stacked on the PR branch with `gh stack`, test first, open a short stacked PR. Never push to the PR's branch.
-- Surviving critical or important findings: run `/workflow:post-pr-comments` for those only. Nothing for minor ones.
+- Run `/pr-review-toolkit:review-pr`. Its helper agents fail on a devpod ("Not logged in"); if they do, review those aspects (code, tests, errors, types, comments) in the chat yourself.
+- Red-team all findings, then keep only Critical or Important ones. Drop everything minor.
+- Judge by two priorities: consistency with the existing code, and idiomatic use of any framework or library involved (Material UI, Apollo GraphQL, React, and so on). Advocate minimally invasive changes: flag changes larger than the problem needs, and prefer existing patterns and helpers over new ones.
+- For each surviving finding, first look for an existing PR comment that covers it (`gh api` review and issue comments). If one exists, add a threaded reply. Otherwise post a new inline comment on the relevant line. `/workflow:post-pr-comments` can post them.
 - None surviving: `gh pr review N -R <repo> --approve` with no body, then verify an APPROVED review with an empty body.
 - After commenting, write the standing instruction to `~/followup.txt` and follow it: poll `gh` at least every 10 minutes for up to 6 hours for replies, commits and comments; re-read the code at the new head; approve (no body) once every finding is resolved and no new one holds up; if one is partly resolved, reply once on the thread. Post to the message board on approval or when you stop.
 - Never request changes, merge, resolve threads or push to the PR's branch. Extra text after the URL is review focus; "don't approve" overrides the approve steps.
 - The user pre-confirms the posts above, which satisfies a repo `CLAUDE.md` confirmation rule. Post without asking; if a menu appears, the supervisor answers it.
-- If a slash command or `gh stack` is missing, say so and do the closest equivalent.
+- If a slash command is missing, say so and do the closest equivalent.
 
 ## research `<question>`
 
