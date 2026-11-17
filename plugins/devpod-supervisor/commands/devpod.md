@@ -84,21 +84,21 @@ The user pre-confirms the approvals, merges and pushes above.
 
 ## factory recipes `<library> <release notes or migration guide URL>`
 
-A factory pod that turns a library's breaking changes into OpenRewrite recipes, then proves them on real repositories. Name `factory-<library>-recipes`. Size `m9g.2xlarge`. Write the GOAL file as for any factory, with these done criteria:
-- existing recipes for the library searched across `moderneinc` and `openrewrite` `rewrite-*` repos, findings written up
+A factory pod that turns a library's breaking changes into OpenRewrite recipes, then proves them on real repositories. The library can be in any language OpenRewrite supports (Java, Kotlin, JavaScript or TypeScript, Python, C#, and so on). Name `factory-<library>-recipes`. Size `m9g.2xlarge`. Write the GOAL file as for any factory, with these done criteria:
+- existing recipes for the library searched in the Moderne and OpenRewrite organizations on Moderne, findings written up
 - every breaking change mapped to a recipe idea or a reason to skip
 - 12-24 recipes, including major and minor version declarative recipes
-- recipes written in the right module with tests, `recipes.csv` regenerated
+- recipes written in the right module with tests, and the module's recipe catalog regenerated if it keeps one
 - recipes validated against a synced corpus, diffs reviewed
 - draft PR open, CI green or failures explained
 
 Prompt content, in order:
-1. **Discover.** Read the URL and the pages it links to. Use `gh search code` for existing recipes, so we extend instead of duplicate. Pick the home module after the search and say why in the PR. For JS and TS libraries, `moderneinc/rewrite-nodejs` and its `library-major-upgrades.yml` are the usual home.
+1. **Discover.** Read the URL and the pages it links to. Search for existing recipes with `mod`, so we extend instead of duplicate: `mod config recipes search <library>` for published recipes, and `mod search moderne://ALL "<query>"` for code in the Moderne and OpenRewrite organizations. Pick the home module after the search, matching the library's language (for example `rewrite-migrate-java`, `rewrite-spring`, `rewrite-python` or `rewrite-nodejs`), and say why in the PR.
 2. **Assess.** Map each breaking change to a recipe or a reason to skip. Keep only changes you can detect from source. Stop short of 24 instead of padding. Write the assessment to `~/research/<name>.md`.
-3. **Build.** Use YAML for dependency bumps, composite upgrades and import moves (`ChangeImport`). YAML cannot match call expressions, so use TypeScript or Java for call-level rewrites. Without type information, match by name and prefer a `Find` marker recipe over a risky rewrite. Test first. If there is no lockfile, run `npm install`. Before pushing, regenerate and validate `recipes.csv` with the module's `recipeCsvGenerate` and `recipeCsvValidate` tasks; the `cgp` check fails without them.
+3. **Build.** Follow the module's conventions and its existing recipes for the same kind of change. Use YAML for dependency bumps, composite upgrades and moves that a declarative recipe already covers (such as `ChangeType`, `ChangeMethodName` or `ChangeImport`). Write an imperative recipe in the module's language for the rest. Without type information, match by name and prefer a `Find` marker recipe over a risky rewrite. Test first. Run the module's full build and tests, and any catalog or metadata check its CI has (for example regenerating `recipes.csv`), before pushing.
 4. **Validate.** Do this before finishing, not after:
-   - Use `mod` (installed and logged in) to find and sync 10-30 varied repos that use the library. A plain `mod git sync` brings LSTs only; add `--with-sources` to get the code.
-   - JS recipes need the JS runtime: `npm install @openrewrite/rewrite` where `mod` runs, and install the recipe module locally with `mod config recipes`.
+   - Use `mod search moderne://ALL "<dependency or API query>" --output=repositories` to find 10-30 varied repos that use the library, then `mod git sync` them. A sync brings LSTs only; add `--with-sources` to get the code.
+   - Install the recipe module locally with `mod config recipes`. Recipe hosts that need a runtime (for example `npm install @openrewrite/rewrite` for JS and TS) must have it installed where `mod` runs.
    - Build the LSTs, run each recipe with `mod run`, and read every diff. Check for false positives, missed cases and unsafe edits. Run each twice and expect no second diff. Run the repos' own build or tests on a few changed repos.
    - Fix the recipes and repeat. Keep all of this local: no pushes, PRs or comments on corpus repos.
 5. **Ship.** Open a draft PR with a short assessment and a validation section: repos used, what each recipe changed, problems found and fixed, what remains. Watch CI until green. Never merge.
