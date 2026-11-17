@@ -1,11 +1,11 @@
 ---
-description: Launch a devpod: review <PR url>, research <question>, factory <task or issue url>, or dependabot <repos>
-argument-hint: review <PR url> | research <question> | factory <task or issue url> | dependabot <repo...>
+description: Launch a devpod: review <PR url>, research <question>, factory <task or issue url>, factory recipes <library> <URL>, or dependabot <repos>
+argument-hint: review <PR url> | research <question> | factory <task or issue url> | factory recipes <library> <release or migration URL> | dependabot <repo...>
 ---
 
 Launch a devpod for: $ARGUMENTS
 
-The first word is the flavor (`review`, `research`, `factory`, `dependabot`); the rest is the target. If either is missing or unknown, ask and stop. Supervision rules are in `${CLAUDE_PLUGIN_ROOT}/references/playbook.md`.
+The first word is the flavor (`review`, `research`, `factory`, `dependabot`); the rest is the target. `factory recipes` is a factory subcommand: the target starts with `recipes`. If either is missing or unknown, ask and stop. Supervision rules are in `${CLAUDE_PLUGIN_ROOT}/references/playbook.md`.
 
 ## Steps
 
@@ -81,3 +81,26 @@ Prompt content:
 - Finish with a table: every PR with repo, number, version change, risk, reason, CI, and outcome (merged, approved and waiting for the user, or blocked), plus links.
 
 The user pre-confirms the approvals, merges and pushes above.
+
+## factory recipes `<library> <release notes or migration guide URL>`
+
+A factory pod that turns a library's breaking changes into OpenRewrite recipes, then proves them on real repositories. Name `factory-<library>-recipes`. Size `m9g.2xlarge`. Write the GOAL file as for any factory, with these done criteria:
+- existing recipes for the library searched across `moderneinc` and `openrewrite` `rewrite-*` repos, findings written up
+- every breaking change mapped to a recipe idea or a reason to skip
+- 12-24 recipes, including major and minor version declarative recipes
+- recipes written in the right module with tests, `recipes.csv` regenerated
+- recipes validated against a synced corpus, diffs reviewed
+- draft PR open, CI green or failures explained
+
+Prompt content, in order:
+1. **Discover.** Read the URL and the pages it links to. Use `gh search code` for existing recipes, so we extend instead of duplicate. Pick the home module after the search and say why in the PR. For JS and TS libraries, `moderneinc/rewrite-nodejs` and its `library-major-upgrades.yml` are the usual home.
+2. **Assess.** Map each breaking change to a recipe or a reason to skip. Keep only changes you can detect from source. Stop short of 24 instead of padding. Write the assessment to `~/research/<name>.md`.
+3. **Build.** Use YAML for dependency bumps, composite upgrades and import moves (`ChangeImport`). YAML cannot match call expressions, so use TypeScript or Java for call-level rewrites. Without type information, match by name and prefer a `Find` marker recipe over a risky rewrite. Test first. If there is no lockfile, run `npm install`. Before pushing, regenerate and validate `recipes.csv` with the module's `recipeCsvGenerate` and `recipeCsvValidate` tasks; the `cgp` check fails without them.
+4. **Validate.** Do this before finishing, not after:
+   - Use `mod` (installed and logged in) to find and sync 10-30 varied repos that use the library. A plain `mod git sync` brings LSTs only; add `--with-sources` to get the code.
+   - JS recipes need the JS runtime: `npm install @openrewrite/rewrite` where `mod` runs, and install the recipe module locally with `mod config recipes`.
+   - Build the LSTs, run each recipe with `mod run`, and read every diff. Check for false positives, missed cases and unsafe edits. Run each twice and expect no second diff. Run the repos' own build or tests on a few changed repos.
+   - Fix the recipes and repeat. Keep all of this local: no pushes, PRs or comments on corpus repos.
+5. **Ship.** Open a draft PR with a short assessment and a validation section: repos used, what each recipe changed, problems found and fixed, what remains. Watch CI until green. Never merge.
+
+Builds and corpus runs are slow. A pod waiting on a background monitor or `mod build` is working, not idle.

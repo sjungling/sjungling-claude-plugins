@@ -66,7 +66,7 @@ Each plugin can contain:
 - Script: `skills/obsidian-excalidraw/scripts/write_to_vault.py` - Writes diagrams into any vault (required for iCloud vaults, which are TCC-blocked). Chunks under the CLI's ~10KB limit and verifies by read-back. Must run unsandboxed.
 
 **devpod-supervisor** (`plugins/devpod-supervisor/`):
-- Command: `/devpod-supervisor:devpod review|research|factory|dependabot <target>` - launch a devpod (moved from the user-level `/devpod`)
+- Command: `/devpod-supervisor:devpod review|research|factory|factory recipes|dependabot <target>` - launch a devpod (moved from the user-level `/devpod`)
 - Commands: `/devpod-supervisor:start` (become the supervisor, adopt a handoff, schedule checks), `:check` (one tick), `:handoff` (write state to `~/.local/state/devpod-supervisor/HANDOFF.md`)
 - Agent: `devpod-inspector` - read-only pod summary and unpushed-work check
 - Rules live in `references/playbook.md`; commands reference it via `${CLAUDE_PLUGIN_ROOT}`

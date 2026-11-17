@@ -46,6 +46,7 @@ Each check, compare the pane to `<pod>-GOAL.md`.
 - Stopped with criteria unmet: send a continue message listing what remains.
 - Looping: nudge toward a different approach.
 - Done only when every criterion is reported met and you confirmed the PR on `gh`.
+- A pod waiting on background monitors or a long `mod build` is working, not idle; do not nudge it.
 
 ## Finished pods
 
