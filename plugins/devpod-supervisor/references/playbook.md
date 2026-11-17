@@ -45,7 +45,7 @@ When one waits on a post menu, read the draft and check it against the PR head. 
 Each check, compare the pane to `<pod>-GOAL.md`.
 - Stopped with criteria unmet: send a continue message listing what remains.
 - Looping: nudge toward a different approach.
-- Done only when every criterion is reported met and you confirmed the PR on `gh`.
+- Done only when every criterion is reported met, you confirmed the PR on `gh`, and the pod's own "remaining", "not done" or "not fixed" list holds nothing fixable. A criterion can read as met while the pod names a gap. Judge each item: nudge the fixable ones (list them in the message), and report the rest to the user with the pod's reason. Do not call the pod finished before that.
 - A pod waiting on background monitors or a long `mod build` is working, not idle; do not nudge it.
 
 ## Finished pods

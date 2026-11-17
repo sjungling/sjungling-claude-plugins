@@ -59,7 +59,7 @@ Prompt content:
 - Open a draft PR, watch CI, fix until green. Link the issue.
 - Stop only when blocked (a human decision, missing access, or the same failure three times). Say what you tried and need.
 - No Claude attribution in commits. Short commit and PR text with the why. Never merge or push to the default branch.
-- Before finishing, report each done criterion as met or not met.
+- Before finishing, fix every limit or gap you found that you can fix. Then report each done criterion as met or not met, and list anything left open with the reason it cannot be fixed.
 
 ## dependabot `<repo...>`
 
