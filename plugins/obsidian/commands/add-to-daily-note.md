@@ -9,12 +9,11 @@ allowed-tools:
 
 Capture `$ARGUMENTS` into today's daily note in Obsidian.
 
-The full CLI surface and every caveat live in the shared reference: the
-`technical-writer:obsidian-vault-manager` skill. Invoke it, then read
-`references/obsidian-cli-reference.md` from the skill's base directory (see the **Default / active vault**, **Daily
-notes**, and **iCloud vaults & sandboxing** sections). Consult it if any step is unclear.
+Invoke the official `obsidian:obsidian-cli` skill for CLI syntax. For iCloud and sandbox
+caveats, invoke `technical-writer:obsidian-vault-manager` and read
+`references/obsidian-cli-reference.md` from its base directory.
 
-Two things that will bite you if ignored:
+Three things that will bite you if ignored:
 
 - **Run every `obsidian` CLI call with the sandbox disabled.** The CLI talks to the
   running Obsidian app over a local socket the command sandbox blocks, so a sandboxed
@@ -23,6 +22,7 @@ Two things that will bite you if ignored:
   package…", installer-out-of-date, an `obsidian.md` URL). Always filter it when
   capturing output into a variable — the snippets below do this positionally
   (`grep '^name'`, `grep '\.md$'`).
+- **The CLI exits 0 even when a command fails.** Read its output before reporting success.
 
 If the capture text (`$ARGUMENTS`) is empty, ask the user what to capture — don't append
 an empty bullet.
@@ -80,9 +80,11 @@ BLOCK=$(printf '\n### %s\n\n%s' "$TOPIC" "<summary text>")
 obsidian "vault=$VAULT" daily:append content="$BLOCK"
 ```
 
-Build the block with `printf`, not a plain double-quoted string — the CLI strips literal
-`\n` from `content=` values but honors `printf`-produced newlines. The leading `\n`
-separates the new heading from earlier content.
+Keep `vault=` as the first parameter; anywhere else the CLI ignores it. The CLI turns
+every literal `\n` and `\t` in `content=` into a newline or tab, with no escape. If the
+summary contains backslashes (LaTeX, Windows paths, escape examples), use the linked-note
+branch (Step 4b) so the body goes through the writer script. The leading newline separates
+the new heading from earlier content.
 
 ## Step 4b — Create a linked note
 
@@ -92,7 +94,7 @@ separates the new heading from earlier content.
    ```bash
    obsidian "vault=$VAULT" create path="<folder>/<Title>.md" content="$BODY"
    ```
-   For a body beyond the CLI's ~10KB IPC ceiling, invoke the
+   For a body over ~4KB, one with backslashes, or any iCloud vault, invoke the
    `technical-writer:obsidian-vault-manager` skill and use its chunked, verified
    `scripts/write-markdown-to-vault.js` (run it by its full path under the skill's
    base directory, not a bare relative path) instead.
@@ -105,6 +107,5 @@ separates the new heading from earlier content.
 ## Step 5 — Report
 
 Report the vault, the daily note path, whether the capture went inline or into a linked
-note (with its path), and the exact line(s) added. If the capture text contained literal
-`\n`/`\t` sequences, flag it — the CLI converts them to real newlines/tabs (a known CLI
-limitation, not something this command can prevent).
+note (with its path), and the exact line(s) added. Confirm the append landed with
+`obsidian "vault=$VAULT" daily:read` before reporting, since the exit code proves nothing.
